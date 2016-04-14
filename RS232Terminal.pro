@@ -1,5 +1,4 @@
-QT       += core gui
-QT += widgets serialport
+QT       += widgets serialport
 
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -9,6 +8,14 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        dialog.cpp
+        Dialog.cpp \
+    rs232terminalprotocol.cpp \
+    ComPort.cpp
 
-HEADERS  += dialog.h
+HEADERS  += Dialog.h \
+    rs232terminalprotocol.h \
+    ComPort.h \
+    IProtocol.h
+
+RESOURCES += \
+    RS232Terminal.qrc

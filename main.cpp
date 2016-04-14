@@ -3,9 +3,9 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    Dialog w(QString::fromUtf8("RS232 Terminal"));
-    w.show();
+    QApplication app(argc, argv);
+    Dialog window(QString::fromUtf8("RS232 Terminal"));
+    window.show();
 
-    return a.exec();
+    return app.exec();
 }
