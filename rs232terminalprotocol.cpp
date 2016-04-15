@@ -1,13 +1,5 @@
 #include "RS232TerminalProtocol.h"
 
-#ifdef DEBUG
-#include <QDebug>
-#endif
-
-#define STARTBYTE 0x55
-#define STOPBYTE 0xAA
-#define BYTESLENGTH 3
-
 RS232TerminalProtocol::RS232TerminalProtocol(ComPort *comPort, QObject *parent) :
     IProtocol(parent),
     itsComPort(comPort),
@@ -53,16 +45,9 @@ void RS232TerminalProtocol::writeData()
 {
     QByteArray ba;
 
-    ba.append(STARTBYTE);
     ba.append(itsWriteData.toInt());
-    ba.append(STOPBYTE);
 
     itsComPort->setWriteData(ba);
-#ifdef DEBUG
-    for(int i = 0; i < ba.size(); ++i) {
-        qDebug() << "ba =" << (int)ba.at(i);
-    }
-#endif
     itsComPort->writeData();
 }
 
