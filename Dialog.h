@@ -8,7 +8,9 @@
 #include <QTextEdit>
 #include <QTimer>
 #include <QSerialPort>
+#include <QCheckBox>
 #include <QSpinBox>
+#include <QLineEdit>
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
 
@@ -24,6 +26,9 @@ class Dialog : public QWidget
     QSpinBox *m_sbBytesCount;
     QTextEdit *m_eLogRead;
     QTextEdit *m_eLogWrite;
+    QSpinBox *m_sbRepeatSendCount;
+    QLineEdit *m_leSendPackage;
+    QPushButton *m_bSendPackage;
 
     QTimer *m_BlinkTimeTxNone;
     QTimer *m_BlinkTimeRxNone;
@@ -34,7 +39,8 @@ class Dialog : public QWidget
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
 
-    int BytesCount;
+    int DisplayByteIndex;
+    QString DisplayBuffer;
 
     void view();
     void connections();
@@ -43,8 +49,8 @@ private slots:
     void start();
     void stop();
     void received(bool isReceived);
-    //void changeBytesCount();
-    void displayData(QString string);
+    void sendPackage();
+    void displayData(QString string, QTextEdit *edit);
     void colorIsRx();
     void colorRxNone();
     void colorIsTx();

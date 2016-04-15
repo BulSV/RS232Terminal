@@ -1,11 +1,14 @@
 #include "Dialog.h"
 #include <QGridLayout>
+#include <QString>
 #include <QApplication>
 #include <QSerialPortInfo>
 #include "rs232terminalprotocol.h"
 
-#define BLINKTIMETX 200 // ms
-#define BLINKTIMERX 500 // ms
+#define BLINKTIMETX 200
+#define BLINKTIMERX 500
+
+#define SEPARATOR "$"
 
 Dialog::Dialog(QString title, QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
@@ -18,6 +21,9 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_sbBytesCount(new QSpinBox(this))
     , m_eLogRead(new QTextEdit(this))
     , m_eLogWrite(new QTextEdit(this))
+    , m_sbRepeatSendCount(new QSpinBox(this))
+    , m_leSendPackage(new QLineEdit(this))
+    , m_bSendPackage(new QPushButton("Send", this))
     , m_BlinkTimeTxNone(new QTimer(this))
     , m_BlinkTimeRxNone(new QTimer(this))
     , m_BlinkTimeTxColor(new QTimer(this))
@@ -31,12 +37,16 @@ Dialog::Dialog(QString title, QWidget *parent)
     view();
     connections();
 
+    m_eLogRead->setReadOnly(true);
+    m_eLogWrite->setReadOnly(true);
+
     m_bStop->setEnabled(false);
 
+    m_sbRepeatSendCount->setRange(1, 100000);
+
     m_sbBytesCount->setRange(0, 32);
-    m_sbBytesCount->setSingleStep(2);
     m_sbBytesCount->setValue(6);
-    BytesCount = 6;
+    DisplayByteIndex = 0;
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
@@ -74,15 +84,21 @@ void Dialog::view()
     configLayout->addWidget(m_sbBytesCount, 6, 1);
     configLayout->setSpacing(5);
 
-    QGridLayout *logLayout = new QGridLayout;
-    logLayout->addWidget(new QLabel("Read:", this), 0, 1);
-    logLayout->addWidget(new QLabel("Write:", this), 0, 0);
-    logLayout->addWidget(m_eLogRead, 1, 1);
-    logLayout->addWidget(m_eLogWrite, 1, 0);
+    QGridLayout *sendPackageLayout = new QGridLayout;
+    sendPackageLayout->addWidget(m_leSendPackage, 0, 0);
+    sendPackageLayout->addWidget(m_sbRepeatSendCount, 0, 1);
+    sendPackageLayout->addWidget(m_bSendPackage, 0, 2);
+
+    QGridLayout *dataLayout = new QGridLayout;
+    dataLayout->addWidget(new QLabel("Read:", this), 0, 1);
+    dataLayout->addWidget(new QLabel("Write:", this), 0, 0);
+    dataLayout->addWidget(m_eLogRead, 1, 1);
+    dataLayout->addWidget(m_eLogWrite, 1, 0);
+    dataLayout->addLayout(sendPackageLayout, 2, 0, 2, 0);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->addLayout(configLayout, 0, 0);
-    allLayouts->addLayout(logLayout, 0, 1);
+    allLayouts->addLayout(dataLayout, 0, 1);
     setLayout(allLayouts);
 }
 
@@ -91,14 +107,14 @@ void Dialog::connections()
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
 
+    connect(m_bSendPackage, SIGNAL(clicked()), this, SLOT(sendPackage()));
+
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
     connect(m_BlinkTimeTxColor, SIGNAL(timeout()), this, SLOT(colorIsTx()));
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
     connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
-
-    //connect(m_sbBytesCount, SIGNAL(valueChanged(int)), this, SLOT(changeBytesCount()));
 }
 
 void Dialog::start()
@@ -182,7 +198,7 @@ void Dialog::received(bool isReceived)
             m_BlinkTimeRxColor->start();
             m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         }
-        displayData(m_Protocol->getReadedData());
+        displayData(m_Protocol->getReadedData(), m_eLogRead);
     }
 }
 
@@ -205,17 +221,63 @@ void Dialog::colorIsTx()
     m_BlinkTimeTxNone->start();
 }
 
-//void Dialog::changeBytesCount()
-//{
-//
-//}
-
-void Dialog::displayData(QString string)
+void Dialog::sendPackage()
 {
-    for (int i = 0; i < string.length(); i++)
+    if (m_Port->isOpen())
+    {   QString out;
+        QStringList byteList = m_leSendPackage->text().split(SEPARATOR, QString::SkipEmptyParts);
+        for (int i = 0; i < m_sbRepeatSendCount->value(); i++)
+        {
+            foreach (QString s, byteList)
+            {
+                bool ok;
+                m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+                if (ok)
+                {
+                    m_Protocol->writeData();
+                    out += s + " ";
+                }
+            }
+            displayData(out, m_eLogWrite);
+        }
+    }
+}
+
+void Dialog::displayData(QString string, QTextEdit *edit)
+{
+    for (int i = 2; !(i >= string.length()); i += 3)
     {
-        m_eLogRead->append(string.mid(0,2));
-        string.remove(0, 2);
+        string.insert(i, SEPARATOR);
+    }
+
+    QStringList listOfBytes = string.split(SEPARATOR);
+    for (int i = 0; i < listOfBytes.count(); i++)
+    {
+        DisplayBuffer += listOfBytes[i];
+        DisplayByteIndex++;
+
+        if (DisplayByteIndex == m_sbBytesCount->value())
+        {
+           edit->insertPlainText(DisplayBuffer.toUpper() + "\n");
+           DisplayBuffer.clear();
+           DisplayByteIndex = 0;
+
+           QTextCursor cursor =  edit->textCursor();
+           cursor.movePosition(QTextCursor::End);
+           edit->setTextCursor(cursor);
+        }
+        else
+            DisplayBuffer += " ";
+    }
+    if (DisplayByteIndex < m_sbBytesCount->value() && !DisplayBuffer.isEmpty())
+    {
+        edit->insertPlainText(DisplayBuffer.toUpper() + "\n");
+        DisplayBuffer.clear();
+        DisplayByteIndex = 0;
+
+        QTextCursor cursor =  edit->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        edit->setTextCursor(cursor);
     }
 }
 
