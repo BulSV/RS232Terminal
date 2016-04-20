@@ -11,6 +11,7 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QLineEdit>
+#include <QSignalMapper>
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
 
@@ -21,6 +22,10 @@ class Dialog : public QWidget
     QComboBox *m_cbBaud;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
+    QPushButton *m_bWriteLogClear;
+    QPushButton *m_bReadLogClear;
+    QPushButton *m_bOffsetLeft;
+    QPushButton *m_bOffsetRight;
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;
@@ -48,9 +53,12 @@ class Dialog : public QWidget
 private slots:
     void start();
     void stop();
+    void clearReadLog();
+    void clearWriteLog();
     void received(bool isReceived);
     void sendPackage();
-    void displayData(QString string, QTextEdit *edit);
+    void setDisplayData(QString string, QTextEdit *edit);
+    void displayData(QTextEdit *edit);
     void colorIsRx();
     void colorRxNone();
     void colorIsTx();

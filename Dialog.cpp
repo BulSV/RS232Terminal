@@ -16,6 +16,10 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_cbBaud(new QComboBox(this))
     , m_bStart(new QPushButton("Start", this))
     , m_bStop(new QPushButton("Stop", this))
+    , m_bWriteLogClear(new QPushButton("Clear", this))
+    , m_bReadLogClear(new QPushButton("Clear", this))
+    , m_bOffsetLeft(new QPushButton("<--", this))
+    , m_bOffsetRight(new QPushButton("-->", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
@@ -82,6 +86,8 @@ void Dialog::view()
     configLayout->addWidget(m_lRx, 5, 1);
     configLayout->addWidget(new QLabel("Bytes count:", this), 6, 0);
     configLayout->addWidget(m_sbBytesCount, 6, 1);
+    configLayout->addWidget(m_bOffsetLeft, 7, 0);
+    configLayout->addWidget(m_bOffsetRight, 7, 1);
     configLayout->setSpacing(5);
 
     QGridLayout *sendPackageLayout = new QGridLayout;
@@ -89,9 +95,17 @@ void Dialog::view()
     sendPackageLayout->addWidget(m_sbRepeatSendCount, 0, 1);
     sendPackageLayout->addWidget(m_bSendPackage, 0, 2);
 
+    QGridLayout *labelWriteLayout = new QGridLayout;
+    labelWriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
+    labelWriteLayout->addWidget(m_bWriteLogClear, 0, 1);
+
+    QGridLayout *labelReadLayout = new QGridLayout;
+    labelReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
+    labelReadLayout->addWidget(m_bReadLogClear, 0, 1);
+
     QGridLayout *dataLayout = new QGridLayout;
-    dataLayout->addWidget(new QLabel("Read:", this), 0, 1);
-    dataLayout->addWidget(new QLabel("Write:", this), 0, 0);
+    dataLayout->addLayout(labelWriteLayout, 0, 0);
+    dataLayout->addLayout(labelReadLayout, 0, 1);
     dataLayout->addWidget(m_eLogRead, 1, 1);
     dataLayout->addWidget(m_eLogWrite, 1, 0);
     dataLayout->addLayout(sendPackageLayout, 2, 0, 2, 0);
@@ -104,6 +118,9 @@ void Dialog::view()
 
 void Dialog::connections()
 {
+    connect(m_bReadLogClear, SIGNAL(clicked()), this, SLOT(clearReadLog()));
+    connect(m_bWriteLogClear, SIGNAL(clicked()), this, SLOT(clearWriteLog()));
+
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
 
@@ -198,7 +215,7 @@ void Dialog::received(bool isReceived)
             m_BlinkTimeRxColor->start();
             m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         }
-        displayData(m_Protocol->getReadedData(), m_eLogRead);
+        setDisplayData(m_Protocol->getReadedData(), m_eLogRead);
     }
 }
 
@@ -235,15 +252,15 @@ void Dialog::sendPackage()
                 if (ok)
                 {
                     m_Protocol->writeData();
-                    out += s + " ";
+                    out += s;
                 }
             }
-            displayData(out, m_eLogWrite);
+            setDisplayData(out, m_eLogWrite);
         }
     }
 }
 
-void Dialog::displayData(QString string, QTextEdit *edit)
+void Dialog::setDisplayData(QString string, QTextEdit *edit)
 {
     for (int i = 2; !(i >= string.length()); i += 3)
     {
@@ -258,27 +275,36 @@ void Dialog::displayData(QString string, QTextEdit *edit)
 
         if (DisplayByteIndex == m_sbBytesCount->value())
         {
-           edit->insertPlainText(DisplayBuffer.toUpper() + "\n");
-           DisplayBuffer.clear();
-           DisplayByteIndex = 0;
-
-           QTextCursor cursor =  edit->textCursor();
-           cursor.movePosition(QTextCursor::End);
-           edit->setTextCursor(cursor);
+            displayData(edit);
         }
         else
             DisplayBuffer += " ";
     }
     if (DisplayByteIndex < m_sbBytesCount->value() && !DisplayBuffer.isEmpty())
     {
-        edit->insertPlainText(DisplayBuffer.toUpper() + "\n");
-        DisplayBuffer.clear();
-        DisplayByteIndex = 0;
-
-        QTextCursor cursor =  edit->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        edit->setTextCursor(cursor);
+        displayData(edit);
     }
+}
+
+void Dialog::displayData(QTextEdit *edit)
+{
+    edit->insertPlainText(DisplayBuffer.toUpper() + "\n");
+    DisplayBuffer.clear();
+    DisplayByteIndex = 0;
+
+    QTextCursor cursor =  edit->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    edit->setTextCursor(cursor);
+}
+
+void Dialog::clearReadLog()
+{
+    m_eLogRead->clear();
+}
+
+void Dialog::clearWriteLog()
+{
+    m_eLogWrite->clear();
 }
 
 void Dialog::colorTxNone()
