@@ -41,6 +41,8 @@ Dialog::Dialog(QString title, QWidget *parent)
     view();
     connections();
 
+    Offset = 0;
+
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
 
@@ -49,7 +51,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_sbRepeatSendCount->setRange(1, 100000);
 
     m_sbBytesCount->setRange(0, 32);
-    m_sbBytesCount->setValue(6);
+    m_sbBytesCount->setValue(12);
     DisplayByteIndex = 0;
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
@@ -120,6 +122,9 @@ void Dialog::connections()
 {
     connect(m_bReadLogClear, SIGNAL(clicked()), this, SLOT(clearReadLog()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), this, SLOT(clearWriteLog()));
+
+    connect(m_bOffsetLeft, SIGNAL(clicked()), this, SLOT(offsetDec()));
+    connect(m_bOffsetRight, SIGNAL(clicked()), this, SLOT(offsetInc()));
 
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
@@ -310,6 +315,16 @@ void Dialog::clearWriteLog()
 void Dialog::colorTxNone()
 {
     m_BlinkTimeTxNone->stop();
+}
+
+void Dialog::offsetDec()
+{
+    Offset--;
+}
+
+void Dialog::offsetInc()
+{
+    Offset++;
 }
 
 Dialog::~Dialog()

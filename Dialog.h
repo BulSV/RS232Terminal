@@ -44,6 +44,7 @@ class Dialog : public QWidget
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
 
+    int Offset;
     int DisplayByteIndex;
     QString DisplayBuffer;
 
@@ -53,6 +54,8 @@ class Dialog : public QWidget
 private slots:
     void start();
     void stop();
+    void offsetDec();
+    void offsetInc();
     void clearReadLog();
     void clearWriteLog();
     void received(bool isReceived);
