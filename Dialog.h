@@ -31,14 +31,16 @@ class Dialog : public QWidget
     QSpinBox *m_sbBytesCount;
     QTextEdit *m_eLogRead;
     QTextEdit *m_eLogWrite;
-    QSpinBox *m_sbRepeatSendCount;
+    QSpinBox *m_sbRepeatSendInterval;
     QLineEdit *m_leSendPackage;
-    QPushButton *m_bSendPackage;
+    QCheckBox *m_cbSendPackage;
 
     QTimer *m_BlinkTimeTxNone;
     QTimer *m_BlinkTimeRxNone;
     QTimer *m_BlinkTimeTxColor;
     QTimer *m_BlinkTimeRxColor;
+
+    QTimer *m_tSend;
 
     QSerialPort *m_Port;
     ComPort *m_ComPort;
@@ -46,10 +48,14 @@ class Dialog : public QWidget
 
     int Offset;
     int DisplayByteIndex;
-    QString DisplayBuffer;
+    QStringList listOfBytes;
+    QString DisplayReadBuffer;
 
     void view();
     void connections();
+    QStringList doOffset(QStringList list);
+    void displayReadData(QString string);
+    void displayWriteData(QString string);
 
 private slots:
     void start();
@@ -60,12 +66,11 @@ private slots:
     void clearWriteLog();
     void received(bool isReceived);
     void sendPackage();
-    void setDisplayData(QString string, QTextEdit *edit);
-    void displayData(QTextEdit *edit);
     void colorIsRx();
     void colorRxNone();
     void colorIsTx();
     void colorTxNone();
+    void startSending();
 
 public:
     explicit Dialog(QString title, QWidget *parent = 0);

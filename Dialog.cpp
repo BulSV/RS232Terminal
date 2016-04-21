@@ -1,7 +1,9 @@
+#include <QDebug>
 #include "Dialog.h"
 #include <QGridLayout>
 #include <QString>
 #include <QApplication>
+#include <QLineEdit>
 #include <QSerialPortInfo>
 #include "rs232terminalprotocol.h"
 
@@ -18,26 +20,28 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_bStop(new QPushButton("Stop", this))
     , m_bWriteLogClear(new QPushButton("Clear", this))
     , m_bReadLogClear(new QPushButton("Clear", this))
-    , m_bOffsetLeft(new QPushButton("<--", this))
-    , m_bOffsetRight(new QPushButton("-->", this))
+    , m_bOffsetLeft(new QPushButton("<---", this))
+    , m_bOffsetRight(new QPushButton("--->", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
     , m_eLogRead(new QTextEdit(this))
     , m_eLogWrite(new QTextEdit(this))
-    , m_sbRepeatSendCount(new QSpinBox(this))
+    , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , m_bSendPackage(new QPushButton("Send", this))
+    , m_cbSendPackage(new QCheckBox("Start", this))
     , m_BlinkTimeTxNone(new QTimer(this))
     , m_BlinkTimeRxNone(new QTimer(this))
     , m_BlinkTimeTxColor(new QTimer(this))
     , m_BlinkTimeRxColor(new QTimer(this))
+    , m_tSend(new QTimer(this))
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
 
 {
     setWindowTitle(title);
+    resize(800, 500);
     view();
     connections();
 
@@ -46,12 +50,13 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
 
+    m_cbSendPackage->setEnabled(false);
     m_bStop->setEnabled(false);
 
-    m_sbRepeatSendCount->setRange(1, 100000);
+    m_sbRepeatSendInterval->setRange(0, 100000);
 
-    m_sbBytesCount->setRange(0, 32);
-    m_sbBytesCount->setValue(12);
+    m_sbBytesCount->setRange(0, 64);
+    m_sbBytesCount->setValue(0);
     DisplayByteIndex = 0;
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
@@ -94,8 +99,8 @@ void Dialog::view()
 
     QGridLayout *sendPackageLayout = new QGridLayout;
     sendPackageLayout->addWidget(m_leSendPackage, 0, 0);
-    sendPackageLayout->addWidget(m_sbRepeatSendCount, 0, 1);
-    sendPackageLayout->addWidget(m_bSendPackage, 0, 2);
+    sendPackageLayout->addWidget(m_sbRepeatSendInterval, 0, 1);
+    sendPackageLayout->addWidget(m_cbSendPackage, 0, 2);
 
     QGridLayout *labelWriteLayout = new QGridLayout;
     labelWriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
@@ -129,9 +134,11 @@ void Dialog::connections()
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
 
-    connect(m_bSendPackage, SIGNAL(clicked()), this, SLOT(sendPackage()));
+    connect(m_cbSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending()));
 
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
+
+    connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendPackage()));
 
     connect(m_BlinkTimeTxColor, SIGNAL(timeout()), this, SLOT(colorIsTx()));
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
@@ -187,6 +194,7 @@ void Dialog::start()
         m_bStop->setEnabled(true);
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
+        m_cbSendPackage->setEnabled(true);
         m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     }
@@ -210,7 +218,10 @@ void Dialog::stop()
     m_bStart->setEnabled(true);
     m_cbPort->setEnabled(true);
     m_cbBaud->setEnabled(true);
-    //m_Protocol->resetProtocol();
+    m_cbSendPackage->setEnabled(false);
+    m_tSend->stop();
+    m_cbSendPackage->setChecked(false);
+    m_Protocol->resetProtocol();
 }
 
 void Dialog::received(bool isReceived)
@@ -220,7 +231,7 @@ void Dialog::received(bool isReceived)
             m_BlinkTimeRxColor->start();
             m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         }
-        setDisplayData(m_Protocol->getReadedData(), m_eLogRead);
+        displayReadData(m_Protocol->getReadedData());
     }
 }
 
@@ -236,70 +247,104 @@ void Dialog::colorRxNone()
     m_BlinkTimeRxNone->stop();
 }
 
-void Dialog::colorIsTx()
+void Dialog::startSending()
 {
-    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_BlinkTimeTxColor->stop();
-    m_BlinkTimeTxNone->start();
+    if (m_cbSendPackage->isChecked())
+    {
+        if (m_Port->isOpen())
+        {
+            if (m_sbRepeatSendInterval->value() == 0)
+            {
+                sendPackage();
+                m_cbSendPackage->setChecked(false);
+            } else
+            {
+                m_tSend->setInterval(m_sbRepeatSendInterval->value());
+                m_tSend->start();
+            }
+        }
+    }
+    if (!m_cbSendPackage->isChecked())
+    {
+        m_tSend->stop();
+    }
 }
 
 void Dialog::sendPackage()
 {
-    if (m_Port->isOpen())
-    {   QString out;
-        QStringList byteList = m_leSendPackage->text().split(SEPARATOR, QString::SkipEmptyParts);
-        for (int i = 0; i < m_sbRepeatSendCount->value(); i++)
+    if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
+        m_BlinkTimeTxColor->start();
+        m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
+    }
+    QString out;
+    QStringList byteList = m_leSendPackage->text().split(SEPARATOR, QString::SkipEmptyParts);
+    foreach (QString s, byteList)
+    {
+        bool ok;
+        m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+        if (ok)
         {
-            foreach (QString s, byteList)
-            {
-                bool ok;
-                m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
-                if (ok)
-                {
-                    m_Protocol->writeData();
-                    out += s;
-                }
-            }
-            setDisplayData(out, m_eLogWrite);
+            m_Protocol->writeData();
+            out += s;
         }
     }
+    displayWriteData(m_leSendPackage->text());
+    m_tSend->setInterval(m_sbRepeatSendInterval->value());
 }
 
-void Dialog::setDisplayData(QString string, QTextEdit *edit)
+void Dialog::displayReadData(QString string)
 {
     for (int i = 2; !(i >= string.length()); i += 3)
     {
         string.insert(i, SEPARATOR);
     }
 
-    QStringList listOfBytes = string.split(SEPARATOR);
-    for (int i = 0; i < listOfBytes.count(); i++)
+    // if bytes count = 0
+    if (!m_sbBytesCount->value())
     {
-        DisplayBuffer += listOfBytes[i];
-        DisplayByteIndex++;
-
-        if (DisplayByteIndex == m_sbBytesCount->value())
+        listOfBytes += string.split(SEPARATOR);
+        for (int i = 0; i < listOfBytes.count(); i++)
         {
-            displayData(edit);
+            DisplayReadBuffer += listOfBytes[i];
+            if (i != listOfBytes.count()-1)
+                DisplayReadBuffer += " ";
         }
-        else
-            DisplayBuffer += " ";
+        m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
+        DisplayReadBuffer.clear();
+        listOfBytes.clear();
+
+        QTextCursor cursor =  m_eLogRead->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        m_eLogRead->setTextCursor(cursor);
     }
-    if (DisplayByteIndex < m_sbBytesCount->value() && !DisplayBuffer.isEmpty())
-    {
-        displayData(edit);
-    }
+    //  TODO: if bytes count != 0
 }
 
-void Dialog::displayData(QTextEdit *edit)
+QStringList Dialog::doOffset(QStringList list)
 {
-    edit->insertPlainText(DisplayBuffer.toUpper() + "\n");
-    DisplayBuffer.clear();
-    DisplayByteIndex = 0;
+    if (Offset)
+    {
+        if (Offset > 0)
+        {
+            for (int i = 0; i < abs(Offset); i++)
+                list.insert(0, list.takeLast());
+        }
+        if (Offset < 0)
+        {
+            for (int i = 0; i < abs(Offset); i++)
+                list.append(list.takeFirst());
+        }
+    }
+    return list;
+}
 
-    QTextCursor cursor =  edit->textCursor();
+void Dialog::displayWriteData(QString string)
+{
+    m_eLogWrite->insertPlainText(string.replace("$", " ") + "\n");
+
+    QTextCursor cursor =  m_eLogWrite->textCursor();
     cursor.movePosition(QTextCursor::End);
-    edit->setTextCursor(cursor);
+    m_eLogWrite->setTextCursor(cursor);
 }
 
 void Dialog::clearReadLog()
@@ -312,6 +357,13 @@ void Dialog::clearWriteLog()
     m_eLogWrite->clear();
 }
 
+void Dialog::colorIsTx()
+{
+    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_BlinkTimeTxColor->stop();
+    m_BlinkTimeTxNone->start();
+}
+
 void Dialog::colorTxNone()
 {
     m_BlinkTimeTxNone->stop();
@@ -319,12 +371,18 @@ void Dialog::colorTxNone()
 
 void Dialog::offsetDec()
 {
-    Offset--;
+    if (abs(Offset) == m_sbBytesCount->value())
+    {
+        Offset = 0;
+    } else Offset--;
 }
 
 void Dialog::offsetInc()
 {
-    Offset++;
+    if (Offset == m_sbBytesCount->value())
+    {
+        Offset = 0;
+    } else Offset++;
 }
 
 Dialog::~Dialog()
