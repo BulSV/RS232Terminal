@@ -10,6 +10,8 @@
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
 
+#define MAXLOGROWSCOUNT 10000
+
 #define SEPARATOR "$"
 
 Dialog::Dialog(QString title, QWidget *parent)
@@ -41,7 +43,7 @@ Dialog::Dialog(QString title, QWidget *parent)
 
 {
     setWindowTitle(title);
-    resize(800, 500);
+    resize(800, 400);
     view();
     connections();
 
@@ -221,6 +223,7 @@ void Dialog::stop()
     m_cbSendPackage->setEnabled(false);
     m_tSend->stop();
     m_cbSendPackage->setChecked(false);
+    Offset = 0;
     m_Protocol->resetProtocol();
 }
 
@@ -294,15 +297,41 @@ void Dialog::sendPackage()
 
 void Dialog::displayReadData(QString string)
 {
+    logReadRowsCount++;
     for (int i = 2; !(i >= string.length()); i += 3)
     {
         string.insert(i, SEPARATOR);
     }
-
-    // if bytes count = 0
     if (!m_sbBytesCount->value())
     {
-        listOfBytes += string.split(SEPARATOR);
+        QString out;
+        listOfBytes = string.split(SEPARATOR);
+        for (int i = 0; i < listOfBytes.count(); i++)
+        {
+            out += listOfBytes[i];
+            if (i != listOfBytes.count()-1)
+                out += " ";
+        }
+        m_eLogRead->insertPlainText(out.toUpper() + "\n");
+        listOfBytes.clear();
+
+        QTextCursor cursor =  m_eLogRead->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        m_eLogRead->setTextCursor(cursor);
+    }
+    else
+    {
+        listOfBytes = string.split(SEPARATOR);
+        listOfBytes = doOffset(listOfBytes);
+
+        if (listOfBytes.count() > m_sbBytesCount->value())
+        {
+            for (int i = listOfBytes.count() - 1; i >= m_sbBytesCount->value(); i--)
+            {
+                restBytes.prepend(listOfBytes.takeAt(i));
+            }
+        }
+
         for (int i = 0; i < listOfBytes.count(); i++)
         {
             DisplayReadBuffer += listOfBytes[i];
@@ -310,19 +339,51 @@ void Dialog::displayReadData(QString string)
                 DisplayReadBuffer += " ";
         }
         m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
+        if (restBytes.count())
+        {
+           QString restDisplay;
+           for (int i = 0; i < restBytes.count(); i++)
+           {
+               restDisplay += restBytes[i];
+               if (i != restBytes.count()-1)
+                   restDisplay += " ";
+           }
+           m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
+           restBytes.clear();
+        }
         DisplayReadBuffer.clear();
         listOfBytes.clear();
 
         QTextCursor cursor =  m_eLogRead->textCursor();
         cursor.movePosition(QTextCursor::End);
         m_eLogRead->setTextCursor(cursor);
+        listOfBytes.clear();
     }
-    //  TODO: if bytes count != 0
+    if (logReadRowsCount >= MAXLOGROWSCOUNT)
+    {
+        m_eLogRead->clear();
+        logReadRowsCount = 0;
+    }
+}
+
+void Dialog::displayWriteData(QString string)
+{
+    logWriteRowsCount++;
+    m_eLogWrite->insertPlainText(string.replace("$", " ") + "\n");
+
+    QTextCursor cursor =  m_eLogWrite->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    m_eLogWrite->setTextCursor(cursor);
+    if (logWriteRowsCount >= MAXLOGROWSCOUNT)
+    {
+        m_eLogWrite->clear();
+        logWriteRowsCount = 0;
+    }
 }
 
 QStringList Dialog::doOffset(QStringList list)
 {
-    if (Offset)
+    if (Offset && abs(Offset) < list.count())
     {
         if (Offset > 0)
         {
@@ -335,16 +396,9 @@ QStringList Dialog::doOffset(QStringList list)
                 list.append(list.takeFirst());
         }
     }
+    else
+        Offset = 0;
     return list;
-}
-
-void Dialog::displayWriteData(QString string)
-{
-    m_eLogWrite->insertPlainText(string.replace("$", " ") + "\n");
-
-    QTextCursor cursor =  m_eLogWrite->textCursor();
-    cursor.movePosition(QTextCursor::End);
-    m_eLogWrite->setTextCursor(cursor);
 }
 
 void Dialog::clearReadLog()
@@ -371,18 +425,12 @@ void Dialog::colorTxNone()
 
 void Dialog::offsetDec()
 {
-    if (abs(Offset) == m_sbBytesCount->value())
-    {
-        Offset = 0;
-    } else Offset--;
+    Offset--;
 }
 
 void Dialog::offsetInc()
 {
-    if (Offset == m_sbBytesCount->value())
-    {
-        Offset = 0;
-    } else Offset++;
+    Offset++;
 }
 
 Dialog::~Dialog()
