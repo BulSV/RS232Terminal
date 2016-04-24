@@ -51,6 +51,9 @@ Dialog::Dialog(QString title, QWidget *parent)
     connections();
 
     Offset = 0;
+    logReadRowsCount = 0;
+    logWriteRowsCount = 0;
+
     m_cbEchoMode->setEnabled(false);
     m_cbSendPackage->setEnabled(false);
     m_eLogRead->setReadOnly(true);
@@ -267,9 +270,12 @@ void Dialog::sendSingle()
 
 void Dialog::echo()
 {
-    sendPackage(echoData);
-    echoData.clear();
-    m_tEcho->stop();
+    sendPackage(echoData.takeFirst());
+    if (echoData.isEmpty())
+    {
+        m_tEcho->stop();
+        m_sbEchoInterval->setEnabled(true);
+    }
 }
 
 void Dialog::startSending()
@@ -323,12 +329,18 @@ void Dialog::displayReadData(QString string)
     {
         string.insert(i, SEPARATOR);
     }
+
     if (m_cbEchoMode->isChecked())
     {
-        m_tEcho->setInterval(m_sbEchoInterval->value());
-        echoData = string;
-        m_tEcho->start();
+        echoData.append(string);
+        if (!m_tEcho->isActive())
+        {
+            m_tEcho->setInterval(m_sbEchoInterval->value());
+            m_sbEchoInterval->setEnabled(false);
+            m_tEcho->start();
+        }
     }
+
     if (!m_sbBytesCount->value())
     {
         QString out;

@@ -56,7 +56,7 @@ class Dialog : public QWidget
     QStringList listOfBytes;
     QStringList restBytes;
     QString DisplayReadBuffer;
-    QString echoData;
+    QStringList echoData;
 
     void view();
     void connections();
