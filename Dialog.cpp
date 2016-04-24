@@ -32,11 +32,14 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
     , m_cbSendPackage(new QCheckBox("Start", this))
+    , m_cbEchoMode(new QCheckBox("Echo mode", this))
+    , m_sbEchoInterval(new QSpinBox(this))
     , m_BlinkTimeTxNone(new QTimer(this))
     , m_BlinkTimeRxNone(new QTimer(this))
     , m_BlinkTimeTxColor(new QTimer(this))
     , m_BlinkTimeRxColor(new QTimer(this))
     , m_tSend(new QTimer(this))
+    , m_tEcho(new QTimer(this))
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
@@ -48,14 +51,15 @@ Dialog::Dialog(QString title, QWidget *parent)
     connections();
 
     Offset = 0;
-
+    m_cbEchoMode->setEnabled(false);
+    m_cbSendPackage->setEnabled(false);
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
 
-    m_cbSendPackage->setEnabled(false);
     m_bStop->setEnabled(false);
 
     m_sbRepeatSendInterval->setRange(0, 100000);
+    m_sbEchoInterval->setRange(0, 100000);
 
     m_sbBytesCount->setRange(0, 64);
     m_sbBytesCount->setValue(0);
@@ -93,10 +97,12 @@ void Dialog::view()
     configLayout->addWidget(m_bStop, 4, 1);
     configLayout->addWidget(m_lTx, 5, 0);
     configLayout->addWidget(m_lRx, 5, 1);
-    configLayout->addWidget(new QLabel("Bytes count:", this), 6, 0);
-    configLayout->addWidget(m_sbBytesCount, 6, 1);
-    configLayout->addWidget(m_bOffsetLeft, 7, 0);
-    configLayout->addWidget(m_bOffsetRight, 7, 1);
+    configLayout->addWidget(m_cbEchoMode, 6, 0);
+    configLayout->addWidget(m_sbEchoInterval, 6, 1);
+    configLayout->addWidget(new QLabel("Bytes count:", this), 7, 0);
+    configLayout->addWidget(m_sbBytesCount, 7, 1);
+    configLayout->addWidget(m_bOffsetLeft, 8, 0);
+    configLayout->addWidget(m_bOffsetRight, 8, 1);
     configLayout->setSpacing(5);
 
     QGridLayout *sendPackageLayout = new QGridLayout;
@@ -140,7 +146,8 @@ void Dialog::connections()
 
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
-    connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendPackage()));
+    connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
+    connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
 
     connect(m_BlinkTimeTxColor, SIGNAL(timeout()), this, SLOT(colorIsTx()));
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
@@ -197,6 +204,7 @@ void Dialog::start()
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
         m_cbSendPackage->setEnabled(true);
+        m_cbEchoMode->setEnabled(true);
         m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     }
@@ -222,6 +230,8 @@ void Dialog::stop()
     m_cbBaud->setEnabled(true);
     m_cbSendPackage->setEnabled(false);
     m_tSend->stop();
+    m_tEcho->stop();
+    m_cbEchoMode->setEnabled(false);
     m_cbSendPackage->setChecked(false);
     Offset = 0;
     m_Protocol->resetProtocol();
@@ -250,6 +260,18 @@ void Dialog::colorRxNone()
     m_BlinkTimeRxNone->stop();
 }
 
+void Dialog::sendSingle()
+{
+    sendPackage(m_leSendPackage->text());
+}
+
+void Dialog::echo()
+{
+    sendPackage(echoData);
+    echoData.clear();
+    m_tEcho->stop();
+}
+
 void Dialog::startSending()
 {
     if (m_cbSendPackage->isChecked())
@@ -258,7 +280,7 @@ void Dialog::startSending()
         {
             if (m_sbRepeatSendInterval->value() == 0)
             {
-                sendPackage();
+                sendPackage(m_leSendPackage->text());
                 m_cbSendPackage->setChecked(false);
             } else
             {
@@ -266,21 +288,20 @@ void Dialog::startSending()
                 m_tSend->start();
             }
         }
-    }
-    if (!m_cbSendPackage->isChecked())
+    } else
     {
         m_tSend->stop();
     }
 }
 
-void Dialog::sendPackage()
+void Dialog::sendPackage(QString string)
 {
     if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
         m_BlinkTimeTxColor->start();
         m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
     }
     QString out;
-    QStringList byteList = m_leSendPackage->text().split(SEPARATOR, QString::SkipEmptyParts);
+    QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
     foreach (QString s, byteList)
     {
         bool ok;
@@ -291,7 +312,7 @@ void Dialog::sendPackage()
             out += s;
         }
     }
-    displayWriteData(m_leSendPackage->text());
+    displayWriteData(string);
     m_tSend->setInterval(m_sbRepeatSendInterval->value());
 }
 
@@ -301,6 +322,12 @@ void Dialog::displayReadData(QString string)
     for (int i = 2; !(i >= string.length()); i += 3)
     {
         string.insert(i, SEPARATOR);
+    }
+    if (m_cbEchoMode->isChecked())
+    {
+        m_tEcho->setInterval(m_sbEchoInterval->value());
+        echoData = string;
+        m_tEcho->start();
     }
     if (!m_sbBytesCount->value())
     {
