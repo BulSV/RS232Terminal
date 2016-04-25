@@ -14,6 +14,7 @@
 #include <QSignalMapper>
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
+#include "Macro.h"
 
 class Dialog : public QWidget
 {
@@ -26,6 +27,7 @@ class Dialog : public QWidget
     QPushButton *m_bReadLogClear;
     QPushButton *m_bOffsetLeft;
     QPushButton *m_bOffsetRight;
+    QPushButton *m_bShowMacroForm;
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;
@@ -48,6 +50,7 @@ class Dialog : public QWidget
     QSerialPort *m_Port;
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
+    Macro *macroWindow;
 
     int Offset;
     int DisplayByteIndex;
@@ -65,10 +68,14 @@ class Dialog : public QWidget
     void displayReadData(QString string);
     void displayWriteData(QString string);
 
+protected:
+    virtual void closeEvent(QCloseEvent *e);
+
 private slots:
     void start();
     void stop();
     void echo();
+    void showMacroWindow();
     void offsetDec();
     void offsetInc();
     void clearReadLog();
@@ -79,7 +86,7 @@ private slots:
     void colorRxNone();
     void colorIsTx();
     void colorTxNone();
-    void startSending();
+    void startSending(bool checked);
 
 public:
     explicit Dialog(QString title, QWidget *parent = 0);

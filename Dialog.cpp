@@ -6,6 +6,7 @@
 #include <QLineEdit>
 #include <QSerialPortInfo>
 #include "rs232terminalprotocol.h"
+#include <QCloseEvent>
 
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
@@ -24,6 +25,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_bReadLogClear(new QPushButton("Clear", this))
     , m_bOffsetLeft(new QPushButton("<---", this))
     , m_bOffsetRight(new QPushButton("--->", this))
+    , m_bShowMacroForm(new QPushButton("Macro", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
@@ -43,10 +45,11 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
+    , macroWindow(new Macro(QString::fromUtf8("RS232 Terminal - Macros")))
 
 {
     setWindowTitle(title);
-    resize(800, 400);
+    resize(700, 300);
     view();
     connections();
 
@@ -92,20 +95,21 @@ void Dialog::view()
 {
     QGridLayout *configLayout = new QGridLayout;
     configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='150'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
-    configLayout->addWidget(new QLabel("Port:", this), 2, 0);
-    configLayout->addWidget(m_cbPort, 2, 1);
-    configLayout->addWidget(new QLabel("Baud:", this), 3, 0);
-    configLayout->addWidget(m_cbBaud, 3, 1);
-    configLayout->addWidget(m_bStart, 4, 0);
-    configLayout->addWidget(m_bStop, 4, 1);
-    configLayout->addWidget(m_lTx, 5, 0);
-    configLayout->addWidget(m_lRx, 5, 1);
-    configLayout->addWidget(m_cbEchoMode, 6, 0);
-    configLayout->addWidget(m_sbEchoInterval, 6, 1);
-    configLayout->addWidget(new QLabel("Bytes count:", this), 7, 0);
-    configLayout->addWidget(m_sbBytesCount, 7, 1);
-    configLayout->addWidget(m_bOffsetLeft, 8, 0);
-    configLayout->addWidget(m_bOffsetRight, 8, 1);
+    configLayout->addWidget(m_bShowMacroForm, 2, 0, 1, 2);
+    configLayout->addWidget(new QLabel("Port:", this), 3, 0);
+    configLayout->addWidget(m_cbPort, 3, 1);
+    configLayout->addWidget(new QLabel("Baud:", this), 4, 0);
+    configLayout->addWidget(m_cbBaud, 4, 1);
+    configLayout->addWidget(m_bStart, 5, 0);
+    configLayout->addWidget(m_bStop, 5, 1);
+    configLayout->addWidget(m_lTx, 6, 0);
+    configLayout->addWidget(m_lRx, 6, 1);
+    configLayout->addWidget(m_cbEchoMode, 7, 0);
+    configLayout->addWidget(m_sbEchoInterval, 7, 1);
+    configLayout->addWidget(new QLabel("Bytes count:", this), 8, 0);
+    configLayout->addWidget(m_sbBytesCount, 8, 1);
+    configLayout->addWidget(m_bOffsetLeft, 9, 0);
+    configLayout->addWidget(m_bOffsetRight, 9, 1);
     configLayout->setSpacing(5);
 
     QGridLayout *sendPackageLayout = new QGridLayout;
@@ -138,14 +142,13 @@ void Dialog::connections()
 {
     connect(m_bReadLogClear, SIGNAL(clicked()), this, SLOT(clearReadLog()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), this, SLOT(clearWriteLog()));
-
+    connect(m_bShowMacroForm, SIGNAL(clicked()), this, SLOT(showMacroWindow()));
     connect(m_bOffsetLeft, SIGNAL(clicked()), this, SLOT(offsetDec()));
     connect(m_bOffsetRight, SIGNAL(clicked()), this, SLOT(offsetInc()));
-
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
 
-    connect(m_cbSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending()));
+    connect(m_cbSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
 
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
@@ -278,9 +281,9 @@ void Dialog::echo()
     }
 }
 
-void Dialog::startSending()
+void Dialog::startSending(bool checked)
 {
-    if (m_cbSendPackage->isChecked())
+    if (checked)
     {
         if (m_Port->isOpen())
         {
@@ -470,6 +473,17 @@ void Dialog::offsetDec()
 void Dialog::offsetInc()
 {
     Offset++;
+}
+
+void Dialog::showMacroWindow()
+{
+    macroWindow->show();
+}
+
+void Dialog::closeEvent(QCloseEvent *e)
+{
+    macroWindow->close();
+    e->accept();
 }
 
 Dialog::~Dialog()
