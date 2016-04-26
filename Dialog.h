@@ -12,6 +12,7 @@
 #include <QSpinBox>
 #include <QLineEdit>
 #include <QSignalMapper>
+#include <QSettings>
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
 #include "Macro.h"
@@ -51,6 +52,7 @@ class Dialog : public QWidget
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
     Macro *macroWindow;
+    QSettings *settings;
 
     int Offset;
     int DisplayByteIndex;

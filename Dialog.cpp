@@ -46,6 +46,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
     , macroWindow(new Macro(QString::fromUtf8("RS232 Terminal - Macros")))
+    , settings(new QSettings("settings.ini", QSettings::IniFormat))
 
 {
     setWindowTitle(title);
@@ -62,6 +63,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
 
+    m_bShowMacroForm->setEnabled(false);
     m_bStop->setEnabled(false);
 
     m_sbRepeatSendInterval->setRange(0, 100000);
@@ -89,6 +91,9 @@ Dialog::Dialog(QString title, QWidget *parent)
     QStringList bauds;
     bauds << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
     m_cbBaud->addItems(bauds);
+
+    m_cbPort->setCurrentIndex(settings->value("config/port").toInt());
+    m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
 }
 
 void Dialog::view()
@@ -167,9 +172,11 @@ void Dialog::start()
 {
     m_Port->close();
     m_Port->setPortName(m_cbPort->currentText());
+    settings->setValue("config/port", m_cbPort->currentIndex());
 
     if(m_Port->open(QSerialPort::ReadWrite))
     {
+        settings->setValue("config/baud", m_cbBaud->currentIndex());
         switch (m_cbBaud->currentIndex()) {
         case 0:
             m_Port->setBaudRate(QSerialPort::Baud921600);
@@ -209,6 +216,7 @@ void Dialog::start()
 
         m_bStart->setEnabled(false);
         m_bStop->setEnabled(true);
+        m_bShowMacroForm->setEnabled(true);
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
         m_cbSendPackage->setEnabled(true);
@@ -234,11 +242,13 @@ void Dialog::stop()
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_bStop->setEnabled(false);
     m_bStart->setEnabled(true);
+    m_bShowMacroForm->setEnabled(false);
     m_cbPort->setEnabled(true);
     m_cbBaud->setEnabled(true);
     m_cbSendPackage->setEnabled(false);
     m_tSend->stop();
     m_tEcho->stop();
+    macroWindow->stop();
     m_cbEchoMode->setEnabled(false);
     m_cbSendPackage->setChecked(false);
     Offset = 0;

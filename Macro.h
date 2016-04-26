@@ -7,6 +7,7 @@
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QTimer>
+#include <QSettings>
 #include <QSignalMapper>
 
 class Macro : public QWidget
@@ -68,13 +69,16 @@ class Macro : public QWidget
     QCheckBox *cbMacroActive10;
 
     QTimer *tMacro;
+    QSettings *settings;
 
-    int CurrPackegeIndex = 1;
+    int CurrPackegeIndex = 0;
     QMap<int, QString> MacroValue;
     QMap<int, int> MacroInterval;
     QMap<int, bool> MacroChecked;
 
     void view();
+    void load();
+    void save();
     void addPackege(int index, QLineEdit *le, QSpinBox *sb);
     void delPackege(int index);
     void widgetInit();
@@ -85,10 +89,14 @@ protected:
 
 signals:
     void WriteMacros(bool);
+    void added();
+    void deleted();
 
 private slots:
+    void startSending();
     void setPackege();
     void send();
+    void checkForEmpty();
     void checked1(bool check)
     {
         if (check) addPackege(1, leMacro1, sbMacroInterval1);
@@ -141,6 +149,7 @@ private slots:
     }
 
 public:
+    void stop();
     QString MacroData;
     explicit Macro(QString title, QWidget *parent = 0);
 };

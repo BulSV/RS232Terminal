@@ -57,6 +57,7 @@ Macro::Macro(QString title, QWidget *parent)
     , cbMacroActive9(new QCheckBox(this))
     , cbMacroActive10(new QCheckBox(this))
     , tMacro(new QTimer(this))
+    , settings(new QSettings("settings.ini", QSettings::IniFormat))
 {
     setAttribute(Qt::WA_DeleteOnClose);
     resize(650, 300);
@@ -65,8 +66,18 @@ Macro::Macro(QString title, QWidget *parent)
     widgetInit();
     connections();
 
-    tMacro->setInterval(1);
-    tMacro->start();
+    settings->beginGroup("macros");
+    cbMacroActive1->setChecked(settings->value("m1").toBool());
+    cbMacroActive2->setChecked(settings->value("m2").toBool());
+    cbMacroActive3->setChecked(settings->value("m3").toBool());
+    cbMacroActive4->setChecked(settings->value("m4").toBool());
+    cbMacroActive5->setChecked(settings->value("m5").toBool());
+    cbMacroActive6->setChecked(settings->value("m6").toBool());
+    cbMacroActive7->setChecked(settings->value("m7").toBool());
+    cbMacroActive8->setChecked(settings->value("m8").toBool());
+    cbMacroActive9->setChecked(settings->value("m9").toBool());
+    cbMacroActive10->setChecked(settings->value("m10").toBool());
+    settings->endGroup();
 }
 
 void Macro::widgetInit()
@@ -172,21 +183,76 @@ void Macro::connections()
     connect(cbMacroActive9, SIGNAL(toggled(bool)), this, SLOT(checked9(bool)));
     connect(cbMacroActive10, SIGNAL(toggled(bool)), this, SLOT(checked10(bool)));
 
+    connect(bMacroLoad1, SIGNAL(clicked(bool)), this, SLOT(load));
+
+    connect(this, SIGNAL(added()), this, SLOT(startSending()));
     connect(tMacro, SIGNAL(timeout()), this, SLOT(setPackege()));
+    connect(this, SIGNAL(deleted()), this, SLOT(checkForEmpty()));
 }
 
 void Macro::addPackege(int index, QLineEdit *le, QSpinBox *sb)
 {
+    settings->setValue("macros/m"+index, true);
     MacroValue.insert(index, le->text());
     MacroInterval.insert(index, sb->value());
     MacroChecked[index] = true;
+    emit added();
 }
 
 void Macro::delPackege(int index)
 {
+    settings->setValue("macros/m"+index, false);
     MacroValue.remove(index);
     MacroInterval.remove(index);
     MacroChecked[index] = false;
+    emit deleted();
+}
+
+void Macro::stop()
+{
+    tMacro->stop();
+    CurrPackegeIndex = 0;
+    cbMacroActive1->setChecked(false);
+    cbMacroActive2->setChecked(false);
+    cbMacroActive3->setChecked(false);
+    cbMacroActive4->setChecked(false);
+    cbMacroActive5->setChecked(false);
+    cbMacroActive6->setChecked(false);
+    cbMacroActive7->setChecked(false);
+    cbMacroActive8->setChecked(false);
+    cbMacroActive9->setChecked(false);
+    cbMacroActive10->setChecked(false);
+}
+
+void Macro::checkForEmpty()
+{
+    int empty = 0;
+    foreach (bool is, MacroChecked.values())
+       if (!is)
+           empty++;
+
+    if (empty == 10)
+    {
+        tMacro->stop();
+        CurrPackegeIndex = 0;
+    }
+}
+
+void Macro::startSending()
+{
+    if (CurrPackegeIndex == 0)
+    {
+        for (int i = 1; i <= 10; i++)
+        {
+            if (MacroChecked[i])
+            {
+                CurrPackegeIndex = i;
+                tMacro->setInterval(MacroInterval[i]);
+                tMacro->start();
+                return;
+            }
+        }
+    }
 }
 
 void Macro::send()
@@ -200,12 +266,19 @@ void Macro::setPackege()
 {
     if (MacroChecked[CurrPackegeIndex])
     {
-        tMacro->singleShot(MacroInterval[CurrPackegeIndex], this, SLOT(send()));
+        MacroData = MacroValue[CurrPackegeIndex];
+        WriteMacros(true);
+        MacroData.clear();
     }
 
     if (CurrPackegeIndex == 10)
         CurrPackegeIndex = 0;
     CurrPackegeIndex++;
+
+    if (MacroChecked[CurrPackegeIndex])
+        tMacro->setInterval(MacroInterval[CurrPackegeIndex]);
+    else
+        tMacro->setInterval(1);
 }
 
 void Macro::closeEvent(QCloseEvent *e)
