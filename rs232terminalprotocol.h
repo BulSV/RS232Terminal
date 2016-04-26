@@ -13,13 +13,7 @@ public:
     explicit RS232TerminalProtocol(ComPort *comPort, QObject *parent = 0);
     virtual void setDataToWrite(const QString &data);
     virtual QString getReadedData() const;
-signals:
 
-public slots:
-    virtual void writeData();
-    virtual void resetProtocol();
-private slots:
-    void readData(bool isReaded);
 private:
     ComPort *itsComPort;
 
@@ -33,6 +27,13 @@ private:
     // преобразует word в byte
     int wordToInt(QByteArray ba);
     QByteArray intToByteArray(const int &value, const int &numBytes);
+
+public slots:
+    virtual void writeData();
+    virtual void resetProtocol();
+
+private slots:
+    void readData(bool isReaded);
 };
 
 #endif // READSENSORPROTOCOL_H
