@@ -1,5 +1,4 @@
 #include "Macro.h"
-#include "Dialog.h"
 #include <QGridLayout>
 #include <QCloseEvent>
 
@@ -57,15 +56,17 @@ Macro::Macro(QString title, QWidget *parent)
     , cbMacroActive8(new QCheckBox(this))
     , cbMacroActive9(new QCheckBox(this))
     , cbMacroActive10(new QCheckBox(this))
+    , tMacro(new QTimer(this))
 {
     setAttribute(Qt::WA_DeleteOnClose);
-    resize(650, 350);
+    resize(650, 300);
     setWindowTitle(title);
     view();
     widgetInit();
     connections();
 
-    tMacro.setInterval(1);
+    tMacro->setInterval(1);
+    tMacro->start();
 }
 
 void Macro::widgetInit()
@@ -160,13 +161,51 @@ void Macro::view()
 
 void Macro::connections()
 {
+    connect(cbMacroActive1, SIGNAL(toggled(bool)), this, SLOT(checked1(bool)));
+    connect(cbMacroActive2, SIGNAL(toggled(bool)), this, SLOT(checked2(bool)));
+    connect(cbMacroActive3, SIGNAL(toggled(bool)), this, SLOT(checked3(bool)));
+    connect(cbMacroActive4, SIGNAL(toggled(bool)), this, SLOT(checked4(bool)));
+    connect(cbMacroActive5, SIGNAL(toggled(bool)), this, SLOT(checked5(bool)));
+    connect(cbMacroActive6, SIGNAL(toggled(bool)), this, SLOT(checked6(bool)));
+    connect(cbMacroActive7, SIGNAL(toggled(bool)), this, SLOT(checked7(bool)));
+    connect(cbMacroActive8, SIGNAL(toggled(bool)), this, SLOT(checked8(bool)));
+    connect(cbMacroActive9, SIGNAL(toggled(bool)), this, SLOT(checked9(bool)));
+    connect(cbMacroActive10, SIGNAL(toggled(bool)), this, SLOT(checked10(bool)));
 
+    connect(tMacro, SIGNAL(timeout()), this, SLOT(setPackege()));
 }
 
+void Macro::addPackege(int index, QLineEdit *le, QSpinBox *sb)
+{
+    MacroValue.insert(index, le->text());
+    MacroInterval.insert(index, sb->value());
+    MacroChecked[index] = true;
+}
+
+void Macro::delPackege(int index)
+{
+    MacroValue.remove(index);
+    MacroInterval.remove(index);
+    MacroChecked[index] = false;
+}
+
+void Macro::send()
+{
+    MacroData = MacroValue[CurrPackegeIndex];
+    WriteMacros(true);
+    MacroData.clear();
+}
 
 void Macro::setPackege()
 {
+    if (MacroChecked[CurrPackegeIndex])
+    {
+        tMacro->singleShot(MacroInterval[CurrPackegeIndex], this, SLOT(send()));
+    }
 
+    if (CurrPackegeIndex == 10)
+        CurrPackegeIndex = 0;
+    CurrPackegeIndex++;
 }
 
 void Macro::closeEvent(QCloseEvent *e)

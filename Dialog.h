@@ -63,7 +63,6 @@ class Dialog : public QWidget
 
     void view();
     void connections();
-    void sendPackage(QString string);
     QStringList doOffset(QStringList list);
     void displayReadData(QString string);
     void displayWriteData(QString string);
@@ -75,6 +74,7 @@ private slots:
     void start();
     void stop();
     void echo();
+    void macrosRecieved(bool isRecieved);
     void showMacroWindow();
     void offsetDec();
     void offsetInc();
@@ -89,6 +89,7 @@ private slots:
     void startSending(bool checked);
 
 public:
+    void sendPackage(QString string);
     explicit Dialog(QString title, QWidget *parent = 0);
     ~Dialog();
 };

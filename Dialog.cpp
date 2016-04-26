@@ -155,6 +155,8 @@ void Dialog::connections()
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
     connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
 
+    connect(macroWindow, SIGNAL(WriteMacros(bool)), this, SLOT(macrosRecieved(bool)));
+
     connect(m_BlinkTimeTxColor, SIGNAL(timeout()), this, SLOT(colorIsTx()));
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
     connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
@@ -241,6 +243,14 @@ void Dialog::stop()
     m_cbSendPackage->setChecked(false);
     Offset = 0;
     m_Protocol->resetProtocol();
+}
+
+void Dialog::macrosRecieved(bool isRecieved)
+{
+   if(isRecieved)
+   {
+       sendPackage(macroWindow->MacroData);
+   }
 }
 
 void Dialog::received(bool isReceived)
