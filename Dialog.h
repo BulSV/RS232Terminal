@@ -16,6 +16,7 @@
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
 #include "Macro.h"
+#include <QAbstractButton>
 
 class Dialog : public QWidget
 {
@@ -36,7 +37,7 @@ class Dialog : public QWidget
     QTextEdit *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QLineEdit *m_leSendPackage;
-    QCheckBox *m_cbSendPackage;
+    QAbstractButton *m_abSendPackage;
     QCheckBox *m_cbEchoMode;
     QSpinBox *m_sbEchoInterval;
 

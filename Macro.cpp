@@ -1,6 +1,10 @@
 #include "Macro.h"
 #include <QGridLayout>
 #include <QCloseEvent>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QTextStream>
+#include <QDir>
 
 #define STANDARTINTERVAL 100
 
@@ -63,45 +67,49 @@ Macro::Macro(QString title, QWidget *parent)
     resize(650, 300);
     setWindowTitle(title);
     view();
-    widgetInit();
+    Init();
     connections();
+    CurrPackegeIndex = 0;
 
-    settings->beginGroup("macros");
-    cbMacroActive1->setChecked(settings->value("m1").toBool());
-    cbMacroActive2->setChecked(settings->value("m2").toBool());
-    cbMacroActive3->setChecked(settings->value("m3").toBool());
-    cbMacroActive4->setChecked(settings->value("m4").toBool());
-    cbMacroActive5->setChecked(settings->value("m5").toBool());
-    cbMacroActive6->setChecked(settings->value("m6").toBool());
-    cbMacroActive7->setChecked(settings->value("m7").toBool());
-    cbMacroActive8->setChecked(settings->value("m8").toBool());
-    cbMacroActive9->setChecked(settings->value("m9").toBool());
-    cbMacroActive10->setChecked(settings->value("m10").toBool());
-    settings->endGroup();
+    QDir dir;
+    path = dir.currentPath()+"/Macros";
+    if (!dir.exists(path))
+        dir.mkpath(path);
 }
 
-void Macro::widgetInit()
+void Macro::Init()
 {
-    sbMacroInterval1->setRange(0, 100000);
+    sbMacroInterval1->setRange(1, 100000);
     sbMacroInterval1->setValue(STANDARTINTERVAL);
-    sbMacroInterval2->setRange(0, 100000);
+    sbMacroInterval2->setRange(1, 100000);
     sbMacroInterval2->setValue(STANDARTINTERVAL);
-    sbMacroInterval3->setRange(0, 100000);
+    sbMacroInterval3->setRange(1, 100000);
     sbMacroInterval3->setValue(STANDARTINTERVAL);
-    sbMacroInterval4->setRange(0, 100000);
+    sbMacroInterval4->setRange(1, 100000);
     sbMacroInterval4->setValue(STANDARTINTERVAL);
-    sbMacroInterval5->setRange(0, 100000);
+    sbMacroInterval5->setRange(1, 100000);
     sbMacroInterval5->setValue(STANDARTINTERVAL);
-    sbMacroInterval6->setRange(0, 100000);
+    sbMacroInterval6->setRange(1, 100000);
     sbMacroInterval6->setValue(STANDARTINTERVAL);
-    sbMacroInterval7->setRange(0, 100000);
+    sbMacroInterval7->setRange(1, 100000);
     sbMacroInterval7->setValue(STANDARTINTERVAL);
-    sbMacroInterval8->setRange(0, 100000);
+    sbMacroInterval8->setRange(1, 100000);
     sbMacroInterval8->setValue(STANDARTINTERVAL);
-    sbMacroInterval9->setRange(0, 100000);
+    sbMacroInterval9->setRange(1, 100000);
     sbMacroInterval9->setValue(STANDARTINTERVAL);
-    sbMacroInterval10->setRange(0, 100000);
+    sbMacroInterval10->setRange(1, 100000);
     sbMacroInterval10->setValue(STANDARTINTERVAL);
+
+    if ( !settings->value("macros/FilePath1").toString().isEmpty() ) pathLoad(leMacro1, sbMacroInterval1, 1, settings->value("macros/FilePath1").toString());
+    if ( !settings->value("macros/FilePath2").toString().isEmpty() ) pathLoad(leMacro2, sbMacroInterval2, 2, settings->value("macros/FilePath2").toString());
+    if ( !settings->value("macros/FilePath3").toString().isEmpty() ) pathLoad(leMacro3, sbMacroInterval3, 3, settings->value("macros/FilePath3").toString());
+    if ( !settings->value("macros/FilePath4").toString().isEmpty() ) pathLoad(leMacro4, sbMacroInterval4, 4, settings->value("macros/FilePath4").toString());
+    if ( !settings->value("macros/FilePath5").toString().isEmpty() ) pathLoad(leMacro5, sbMacroInterval5, 5, settings->value("macros/FilePath5").toString());
+    if ( !settings->value("macros/FilePath6").toString().isEmpty() ) pathLoad(leMacro6, sbMacroInterval6, 6, settings->value("macros/FilePath6").toString());
+    if ( !settings->value("macros/FilePath7").toString().isEmpty() ) pathLoad(leMacro7, sbMacroInterval7, 7, settings->value("macros/FilePath7").toString());
+    if ( !settings->value("macros/FilePath8").toString().isEmpty() ) pathLoad(leMacro8, sbMacroInterval8, 8, settings->value("macros/FilePath8").toString());
+    if ( !settings->value("macros/FilePath9").toString().isEmpty() ) pathLoad(leMacro9, sbMacroInterval9, 9, settings->value("macros/FilePath9").toString());
+    if ( !settings->value("macros/FilePath10").toString().isEmpty() ) pathLoad(leMacro10, sbMacroInterval10, 10, settings->value("macros/FilePath10").toString());
 }
 
 void Macro::view()
@@ -183,25 +191,66 @@ void Macro::connections()
     connect(cbMacroActive9, SIGNAL(toggled(bool)), this, SLOT(checked9(bool)));
     connect(cbMacroActive10, SIGNAL(toggled(bool)), this, SLOT(checked10(bool)));
 
-    connect(bMacroLoad1, SIGNAL(clicked(bool)), this, SLOT(load));
+    connect(bMacroLoad1, SIGNAL(clicked(bool)), this, SLOT(load1()));
+    connect(bMacroLoad2, SIGNAL(clicked(bool)), this, SLOT(load2()));
+    connect(bMacroLoad3, SIGNAL(clicked(bool)), this, SLOT(load3()));
+    connect(bMacroLoad4, SIGNAL(clicked(bool)), this, SLOT(load4()));
+    connect(bMacroLoad5, SIGNAL(clicked(bool)), this, SLOT(load5()));
+    connect(bMacroLoad6, SIGNAL(clicked(bool)), this, SLOT(load6()));
+    connect(bMacroLoad7, SIGNAL(clicked(bool)), this, SLOT(load7()));
+    connect(bMacroLoad8, SIGNAL(clicked(bool)), this, SLOT(load8()));
+    connect(bMacroLoad9, SIGNAL(clicked(bool)), this, SLOT(load9()));
+    connect(bMacroLoad10, SIGNAL(clicked(bool)), this, SLOT(load10()));
+
+    connect(bMacroSave1, SIGNAL(clicked(bool)), this, SLOT(save1()));
+    connect(bMacroSave2, SIGNAL(clicked(bool)), this, SLOT(save2()));
+    connect(bMacroSave3, SIGNAL(clicked(bool)), this, SLOT(save3()));
+    connect(bMacroSave4, SIGNAL(clicked(bool)), this, SLOT(save4()));
+    connect(bMacroSave5, SIGNAL(clicked(bool)), this, SLOT(save5()));
+    connect(bMacroSave6, SIGNAL(clicked(bool)), this, SLOT(save6()));
+    connect(bMacroSave7, SIGNAL(clicked(bool)), this, SLOT(save7()));
+    connect(bMacroSave8, SIGNAL(clicked(bool)), this, SLOT(save8()));
+    connect(bMacroSave9, SIGNAL(clicked(bool)), this, SLOT(save9()));
+    connect(bMacroSave10, SIGNAL(clicked(bool)), this, SLOT(save10()));
+
+    connect(sbMacroInterval1, SIGNAL(valueChanged(int)), this, SLOT(setInt1()));
+    connect(sbMacroInterval2, SIGNAL(valueChanged(int)), this, SLOT(setInt2()));
+    connect(sbMacroInterval3, SIGNAL(valueChanged(int)), this, SLOT(setInt3()));
+    connect(sbMacroInterval4, SIGNAL(valueChanged(int)), this, SLOT(setInt4()));
+    connect(sbMacroInterval5, SIGNAL(valueChanged(int)), this, SLOT(setInt5()));
+    connect(sbMacroInterval6, SIGNAL(valueChanged(int)), this, SLOT(setInt6()));
+    connect(sbMacroInterval7, SIGNAL(valueChanged(int)), this, SLOT(setInt7()));
+    connect(sbMacroInterval8, SIGNAL(valueChanged(int)), this, SLOT(setInt8()));
+    connect(sbMacroInterval9, SIGNAL(valueChanged(int)), this, SLOT(setInt9()));
+    connect(sbMacroInterval10, SIGNAL(valueChanged(int)), this, SLOT(setInt10()));
 
     connect(this, SIGNAL(added()), this, SLOT(startSending()));
     connect(tMacro, SIGNAL(timeout()), this, SLOT(setPackege()));
     connect(this, SIGNAL(deleted()), this, SLOT(checkForEmpty()));
 }
 
-void Macro::addPackege(int index, QLineEdit *le, QSpinBox *sb)
+void Macro::setInterval(QSpinBox *sb, int i)
 {
-    settings->setValue("macros/m"+index, true);
-    MacroValue.insert(index, le->text());
-    MacroInterval.insert(index, sb->value());
-    MacroChecked[index] = true;
-    emit added();
+    MacroInterval[i] = sb->value();
+}
+
+void Macro::addPackege(int index, QLineEdit *le, QSpinBox *sb, QCheckBox *cb)
+{
+    if (!le->text().isEmpty())
+    {
+        if (!MacroPaths[index].isEmpty())
+            settings->setValue("macros/FilePath" + QString::number(index), MacroPaths[index]);
+
+        MacroValue.insert(index, le->text());
+        MacroInterval.insert(index, sb->value());
+        MacroChecked[index] = true;
+        emit added();
+    } else
+        cb->setChecked(false);
 }
 
 void Macro::delPackege(int index)
 {
-    settings->setValue("macros/m"+index, false);
     MacroValue.remove(index);
     MacroInterval.remove(index);
     MacroChecked[index] = false;
@@ -279,6 +328,59 @@ void Macro::setPackege()
         tMacro->setInterval(MacroInterval[CurrPackegeIndex]);
     else
         tMacro->setInterval(1);
+}
+
+void Macro::openLoad(QLineEdit *le, QSpinBox *sb, int i)
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), path, tr("Macro Files (*.rsmc)"));
+        if (fileName != "") {
+            QFile file(fileName);
+            if (!file.open(QIODevice::ReadOnly)) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+                return;
+            }
+            QTextStream stream(&file);
+            le->setText(stream.readLine(0));
+            sb->setValue(stream.readLine(6).toInt());
+            file.close();
+            MacroPaths.insert(i, fileName);
+        }
+}
+
+void Macro::pathLoad(QLineEdit *le, QSpinBox *sb, int i, QString fileName)
+{
+        if (fileName != "") {
+            QFile file(fileName);
+            if (!file.open(QIODevice::ReadOnly)) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+                return;
+            }
+            QTextStream stream(&file);
+            le->setText(stream.readLine(0));
+            sb->setValue(stream.readLine(6).toInt());
+            file.close();
+            MacroPaths.insert(i, fileName);
+        }
+}
+
+void Macro::save(QLineEdit *le, QSpinBox *sb)
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), path, tr("Macro Files (*.rsmc)"));
+
+        if (fileName != "") {
+            QFile file(fileName);
+            if (!file.open(QIODevice::WriteOnly)) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+                return;
+            } else {
+                QTextStream stream(&file);
+                stream << le->text()+"\n";
+                stream.flush();
+                stream << sb->value();
+                stream.flush();
+                file.close();
+            }
+        }
 }
 
 void Macro::closeEvent(QCloseEvent *e)

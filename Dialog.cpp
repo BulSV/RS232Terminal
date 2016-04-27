@@ -1,3 +1,7 @@
+/*  TODO:
+ * очищать буффер эхо
+ * лейбл загруженного файла макроса
+ */
 #include <QDebug>
 #include "Dialog.h"
 #include <QGridLayout>
@@ -33,7 +37,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_eLogWrite(new QTextEdit(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , m_cbSendPackage(new QCheckBox("Start", this))
+    , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
     , m_sbEchoInterval(new QSpinBox(this))
     , m_BlinkTimeTxNone(new QTimer(this))
@@ -50,7 +54,7 @@ Dialog::Dialog(QString title, QWidget *parent)
 
 {
     setWindowTitle(title);
-    resize(700, 300);
+    resize(730, 300);
     view();
     connections();
 
@@ -58,8 +62,9 @@ Dialog::Dialog(QString title, QWidget *parent)
     logReadRowsCount = 0;
     logWriteRowsCount = 0;
 
+    m_abSendPackage->setCheckable(true);
     m_cbEchoMode->setEnabled(false);
-    m_cbSendPackage->setEnabled(false);
+    m_abSendPackage->setEnabled(false);
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
 
@@ -120,7 +125,7 @@ void Dialog::view()
     QGridLayout *sendPackageLayout = new QGridLayout;
     sendPackageLayout->addWidget(m_leSendPackage, 0, 0);
     sendPackageLayout->addWidget(m_sbRepeatSendInterval, 0, 1);
-    sendPackageLayout->addWidget(m_cbSendPackage, 0, 2);
+    sendPackageLayout->addWidget(m_abSendPackage, 0, 2);
 
     QGridLayout *labelWriteLayout = new QGridLayout;
     labelWriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
@@ -153,7 +158,7 @@ void Dialog::connections()
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
 
-    connect(m_cbSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
+    connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
 
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
@@ -219,7 +224,7 @@ void Dialog::start()
         m_bShowMacroForm->setEnabled(true);
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
-        m_cbSendPackage->setEnabled(true);
+        m_abSendPackage->setEnabled(true);
         m_cbEchoMode->setEnabled(true);
         m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
@@ -245,12 +250,12 @@ void Dialog::stop()
     m_bShowMacroForm->setEnabled(false);
     m_cbPort->setEnabled(true);
     m_cbBaud->setEnabled(true);
-    m_cbSendPackage->setEnabled(false);
+    m_abSendPackage->setEnabled(false);
+    m_abSendPackage->setChecked(false);
     m_tSend->stop();
     m_tEcho->stop();
     macroWindow->stop();
     m_cbEchoMode->setEnabled(false);
-    m_cbSendPackage->setChecked(false);
     Offset = 0;
     m_Protocol->resetProtocol();
 }
@@ -297,30 +302,29 @@ void Dialog::echo()
     if (echoData.isEmpty())
     {
         m_tEcho->stop();
-        m_sbEchoInterval->setEnabled(true);
     }
 }
 
 void Dialog::startSending(bool checked)
 {
     if (checked)
-    {
-        if (m_Port->isOpen())
         {
-            if (m_sbRepeatSendInterval->value() == 0)
+            if (m_Port->isOpen())
             {
-                sendPackage(m_leSendPackage->text());
-                m_cbSendPackage->setChecked(false);
-            } else
-            {
-                m_tSend->setInterval(m_sbRepeatSendInterval->value());
-                m_tSend->start();
+                if (m_sbRepeatSendInterval->value() == 0)
+                {
+                    sendPackage(m_leSendPackage->text());
+                    m_abSendPackage->setChecked(false);
+                } else
+                {
+                    m_tSend->setInterval(m_sbRepeatSendInterval->value());
+                    m_tSend->start();
+                }
             }
+        } else
+        {
+            m_tSend->stop();
         }
-    } else
-    {
-        m_tSend->stop();
-    }
 }
 
 void Dialog::sendPackage(QString string)
@@ -331,18 +335,21 @@ void Dialog::sendPackage(QString string)
     }
     QString out;
     QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
-    foreach (QString s, byteList)
+    if (!byteList.isEmpty())
     {
-        bool ok;
-        m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
-        if (ok)
+        foreach (QString s, byteList)
         {
-            m_Protocol->writeData();
-            out += s;
+            bool ok;
+            m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+            if (ok)
+            {
+                m_Protocol->writeData();
+                out += s;
+            }
         }
+        displayWriteData(string);
+        m_tSend->setInterval(m_sbRepeatSendInterval->value());
     }
-    displayWriteData(string);
-    m_tSend->setInterval(m_sbRepeatSendInterval->value());
 }
 
 void Dialog::displayReadData(QString string)
@@ -355,11 +362,10 @@ void Dialog::displayReadData(QString string)
 
     if (m_cbEchoMode->isChecked())
     {
-        echoData.append(string);
+        echoData.append(" " + string);
         if (!m_tEcho->isActive())
         {
             m_tEcho->setInterval(m_sbEchoInterval->value());
-            m_sbEchoInterval->setEnabled(false);
             m_tEcho->start();
         }
     }
@@ -431,7 +437,7 @@ void Dialog::displayReadData(QString string)
 void Dialog::displayWriteData(QString string)
 {
     logWriteRowsCount++;
-    m_eLogWrite->insertPlainText(string.replace("$", " ") + "\n");
+    m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
 
     QTextCursor cursor =  m_eLogWrite->textCursor();
     cursor.movePosition(QTextCursor::End);
