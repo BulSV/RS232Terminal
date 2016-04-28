@@ -9,6 +9,8 @@
 #include <QTimer>
 #include <QSettings>
 #include <QSignalMapper>
+#include <QLabel>
+#include <QGridLayout>
 
 class Macro : public QWidget
 {
@@ -68,6 +70,17 @@ class Macro : public QWidget
     QCheckBox *cbMacroActive9;
     QCheckBox *cbMacroActive10;
 
+    QLabel *lMacro1;
+    QLabel *lMacro2;
+    QLabel *lMacro3;
+    QLabel *lMacro4;
+    QLabel *lMacro5;
+    QLabel *lMacro6;
+    QLabel *lMacro7;
+    QLabel *lMacro8;
+    QLabel *lMacro9;
+    QLabel *lMacro10;
+
     QTimer *tMacro;
     QSettings *settings;
     QString path;
@@ -79,8 +92,8 @@ class Macro : public QWidget
     QMap<int, QString> MacroPaths;
 
     void view();
-    void openLoad(QLineEdit *le, QSpinBox *sb, int i);
-    void pathLoad(QLineEdit *le, QSpinBox *sb, int i, QString fileName);
+    void openLoad(QLineEdit *le, QSpinBox *sb, QLabel *l, int i);
+    void pathLoad(QLineEdit *le, QSpinBox *sb, QLabel *l, int i, QString fileName);
     void save(QLineEdit *le, QSpinBox *sb);
     void addPackege(int index, QLineEdit *le, QSpinBox *sb, QCheckBox *cb);
     void delPackege(int index);
@@ -152,16 +165,16 @@ private slots:
         else delPackege(10);
     }
 
-    void load1(){openLoad(leMacro1, sbMacroInterval1, 1);}
-    void load2(){openLoad(leMacro2, sbMacroInterval2, 2);}
-    void load3(){openLoad(leMacro3, sbMacroInterval3, 3);}
-    void load4(){openLoad(leMacro4, sbMacroInterval4, 4);}
-    void load5(){openLoad(leMacro5, sbMacroInterval5, 5);}
-    void load6(){openLoad(leMacro6, sbMacroInterval6, 6);}
-    void load7(){openLoad(leMacro7, sbMacroInterval7, 7);}
-    void load8(){openLoad(leMacro8, sbMacroInterval8, 8);}
-    void load9(){openLoad(leMacro9, sbMacroInterval9, 9);}
-    void load10(){openLoad(leMacro10, sbMacroInterval10, 10);}
+    void load1(){openLoad(leMacro1, sbMacroInterval1, lMacro1, 1);}
+    void load2(){openLoad(leMacro2, sbMacroInterval2, lMacro2, 2);}
+    void load3(){openLoad(leMacro3, sbMacroInterval3, lMacro3, 3);}
+    void load4(){openLoad(leMacro4, sbMacroInterval4, lMacro4, 4);}
+    void load5(){openLoad(leMacro5, sbMacroInterval5, lMacro5, 5);}
+    void load6(){openLoad(leMacro6, sbMacroInterval6, lMacro6, 6);}
+    void load7(){openLoad(leMacro7, sbMacroInterval7, lMacro7, 7);}
+    void load8(){openLoad(leMacro8, sbMacroInterval8, lMacro8, 8);}
+    void load9(){openLoad(leMacro9, sbMacroInterval9, lMacro9, 9);}
+    void load10(){openLoad(leMacro10, sbMacroInterval10, lMacro10, 10);}
 
     void save1(){save(leMacro1, sbMacroInterval1);}
     void save2(){save(leMacro2, sbMacroInterval2);}

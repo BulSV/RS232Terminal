@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QDir>
+#include <QFileInfo>
 
 #define STANDARTINTERVAL 100
 
@@ -60,11 +61,21 @@ Macro::Macro(QString title, QWidget *parent)
     , cbMacroActive8(new QCheckBox(this))
     , cbMacroActive9(new QCheckBox(this))
     , cbMacroActive10(new QCheckBox(this))
+    , lMacro1(new QLabel(this))
+    , lMacro2(new QLabel(this))
+    , lMacro3(new QLabel(this))
+    , lMacro4(new QLabel(this))
+    , lMacro5(new QLabel(this))
+    , lMacro6(new QLabel(this))
+    , lMacro7(new QLabel(this))
+    , lMacro8(new QLabel(this))
+    , lMacro9(new QLabel(this))
+    , lMacro10(new QLabel(this))
     , tMacro(new QTimer(this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
 {
     setAttribute(Qt::WA_DeleteOnClose);
-    resize(650, 300);
+    resize(800, 300);
     setWindowTitle(title);
     view();
     Init();
@@ -79,6 +90,17 @@ Macro::Macro(QString title, QWidget *parent)
 
 void Macro::Init()
 {
+    lMacro1->setStyleSheet("font-weight: bold");
+    lMacro2->setStyleSheet("font-weight: bold");
+    lMacro3->setStyleSheet("font-weight: bold");
+    lMacro4->setStyleSheet("font-weight: bold");
+    lMacro5->setStyleSheet("font-weight: bold");
+    lMacro6->setStyleSheet("font-weight: bold");
+    lMacro7->setStyleSheet("font-weight: bold");
+    lMacro8->setStyleSheet("font-weight: bold");
+    lMacro9->setStyleSheet("font-weight: bold");
+    lMacro10->setStyleSheet("font-weight: bold");
+
     sbMacroInterval1->setRange(1, 100000);
     sbMacroInterval1->setValue(STANDARTINTERVAL);
     sbMacroInterval2->setRange(1, 100000);
@@ -100,80 +122,90 @@ void Macro::Init()
     sbMacroInterval10->setRange(1, 100000);
     sbMacroInterval10->setValue(STANDARTINTERVAL);
 
-    if ( !settings->value("macros/FilePath1").toString().isEmpty() ) pathLoad(leMacro1, sbMacroInterval1, 1, settings->value("macros/FilePath1").toString());
-    if ( !settings->value("macros/FilePath2").toString().isEmpty() ) pathLoad(leMacro2, sbMacroInterval2, 2, settings->value("macros/FilePath2").toString());
-    if ( !settings->value("macros/FilePath3").toString().isEmpty() ) pathLoad(leMacro3, sbMacroInterval3, 3, settings->value("macros/FilePath3").toString());
-    if ( !settings->value("macros/FilePath4").toString().isEmpty() ) pathLoad(leMacro4, sbMacroInterval4, 4, settings->value("macros/FilePath4").toString());
-    if ( !settings->value("macros/FilePath5").toString().isEmpty() ) pathLoad(leMacro5, sbMacroInterval5, 5, settings->value("macros/FilePath5").toString());
-    if ( !settings->value("macros/FilePath6").toString().isEmpty() ) pathLoad(leMacro6, sbMacroInterval6, 6, settings->value("macros/FilePath6").toString());
-    if ( !settings->value("macros/FilePath7").toString().isEmpty() ) pathLoad(leMacro7, sbMacroInterval7, 7, settings->value("macros/FilePath7").toString());
-    if ( !settings->value("macros/FilePath8").toString().isEmpty() ) pathLoad(leMacro8, sbMacroInterval8, 8, settings->value("macros/FilePath8").toString());
-    if ( !settings->value("macros/FilePath9").toString().isEmpty() ) pathLoad(leMacro9, sbMacroInterval9, 9, settings->value("macros/FilePath9").toString());
-    if ( !settings->value("macros/FilePath10").toString().isEmpty() ) pathLoad(leMacro10, sbMacroInterval10, 10, settings->value("macros/FilePath10").toString());
+    if ( !settings->value("macros/FilePath1").toString().isEmpty() ) pathLoad(leMacro1, sbMacroInterval1, lMacro1, 1, settings->value("macros/FilePath1").toString());
+    if ( !settings->value("macros/FilePath2").toString().isEmpty() ) pathLoad(leMacro2, sbMacroInterval2, lMacro2, 2, settings->value("macros/FilePath2").toString());
+    if ( !settings->value("macros/FilePath3").toString().isEmpty() ) pathLoad(leMacro3, sbMacroInterval3, lMacro3, 3, settings->value("macros/FilePath3").toString());
+    if ( !settings->value("macros/FilePath4").toString().isEmpty() ) pathLoad(leMacro4, sbMacroInterval4, lMacro4, 4, settings->value("macros/FilePath4").toString());
+    if ( !settings->value("macros/FilePath5").toString().isEmpty() ) pathLoad(leMacro5, sbMacroInterval5, lMacro5, 5, settings->value("macros/FilePath5").toString());
+    if ( !settings->value("macros/FilePath6").toString().isEmpty() ) pathLoad(leMacro6, sbMacroInterval6, lMacro6, 6, settings->value("macros/FilePath6").toString());
+    if ( !settings->value("macros/FilePath7").toString().isEmpty() ) pathLoad(leMacro7, sbMacroInterval7, lMacro7, 7, settings->value("macros/FilePath7").toString());
+    if ( !settings->value("macros/FilePath8").toString().isEmpty() ) pathLoad(leMacro8, sbMacroInterval8, lMacro8, 8, settings->value("macros/FilePath8").toString());
+    if ( !settings->value("macros/FilePath9").toString().isEmpty() ) pathLoad(leMacro9, sbMacroInterval9, lMacro9, 9, settings->value("macros/FilePath9").toString());
+    if ( !settings->value("macros/FilePath10").toString().isEmpty() ) pathLoad(leMacro10, sbMacroInterval10, lMacro10, 10, settings->value("macros/FilePath10").toString());
 }
 
 void Macro::view()
 {
     QGridLayout *mainLayout = new QGridLayout;
-    mainLayout->addWidget(bMacroLoad1, 0, 0);
-    mainLayout->addWidget(bMacroSave1, 0, 1);
-    mainLayout->addWidget(leMacro1, 0, 2);
-    mainLayout->addWidget(sbMacroInterval1, 0, 3);
-    mainLayout->addWidget(cbMacroActive1, 0, 4);
+    mainLayout->addWidget(lMacro1, 0, 6);
+    mainLayout->addWidget(bMacroLoad1, 0, 1);
+    mainLayout->addWidget(bMacroSave1, 0, 2);
+    mainLayout->addWidget(leMacro1, 0, 3);
+    mainLayout->addWidget(sbMacroInterval1, 0, 4);
+    mainLayout->addWidget(cbMacroActive1, 0, 5);
 
-    mainLayout->addWidget(bMacroLoad2, 1, 0);
-    mainLayout->addWidget(bMacroSave2, 1, 1);
-    mainLayout->addWidget(leMacro2, 1, 2);
-    mainLayout->addWidget(sbMacroInterval2, 1, 3);
-    mainLayout->addWidget(cbMacroActive2, 1, 4);
+    mainLayout->addWidget(lMacro2, 1, 6);
+    mainLayout->addWidget(bMacroLoad2, 1, 1);
+    mainLayout->addWidget(bMacroSave2, 1, 2);
+    mainLayout->addWidget(leMacro2, 1, 3);
+    mainLayout->addWidget(sbMacroInterval2, 1, 4);
+    mainLayout->addWidget(cbMacroActive2, 1, 5);
 
-    mainLayout->addWidget(bMacroLoad3, 2, 0);
-    mainLayout->addWidget(bMacroSave3, 2, 1);
-    mainLayout->addWidget(leMacro3, 2, 2);
-    mainLayout->addWidget(sbMacroInterval3, 2, 3);
-    mainLayout->addWidget(cbMacroActive3, 2, 4);
+    mainLayout->addWidget(lMacro3, 2, 6);
+    mainLayout->addWidget(bMacroLoad3, 2, 1);
+    mainLayout->addWidget(bMacroSave3, 2, 2);
+    mainLayout->addWidget(leMacro3, 2, 3);
+    mainLayout->addWidget(sbMacroInterval3, 2, 4);
+    mainLayout->addWidget(cbMacroActive3, 2, 5);
 
-    mainLayout->addWidget(bMacroLoad4, 3, 0);
-    mainLayout->addWidget(bMacroSave4, 3, 1);
-    mainLayout->addWidget(leMacro4, 3, 2);
-    mainLayout->addWidget(sbMacroInterval4, 3, 3);
-    mainLayout->addWidget(cbMacroActive4, 3, 4);
+    mainLayout->addWidget(lMacro4, 3, 6);
+    mainLayout->addWidget(bMacroLoad4, 3, 1);
+    mainLayout->addWidget(bMacroSave4, 3, 2);
+    mainLayout->addWidget(leMacro4, 3, 3);
+    mainLayout->addWidget(sbMacroInterval4, 3, 4);
+    mainLayout->addWidget(cbMacroActive4, 3, 5);
 
-    mainLayout->addWidget(bMacroLoad5, 4, 0);
-    mainLayout->addWidget(bMacroSave5, 4, 1);
-    mainLayout->addWidget(leMacro5, 4, 2);
-    mainLayout->addWidget(sbMacroInterval5, 4, 3);
-    mainLayout->addWidget(cbMacroActive5, 4, 4);
+    mainLayout->addWidget(lMacro5, 4, 6);
+    mainLayout->addWidget(bMacroLoad5, 4, 1);
+    mainLayout->addWidget(bMacroSave5, 4, 2);
+    mainLayout->addWidget(leMacro5, 4, 3);
+    mainLayout->addWidget(sbMacroInterval5, 4, 4);
+    mainLayout->addWidget(cbMacroActive5, 4, 5);
 
-    mainLayout->addWidget(bMacroLoad6, 5, 0);
-    mainLayout->addWidget(bMacroSave6, 5, 1);
-    mainLayout->addWidget(leMacro6, 5, 2);
-    mainLayout->addWidget(sbMacroInterval6, 5, 3);
-    mainLayout->addWidget(cbMacroActive6, 5, 4);
+    mainLayout->addWidget(lMacro6, 5, 6);
+    mainLayout->addWidget(bMacroLoad6, 5, 1);
+    mainLayout->addWidget(bMacroSave6, 5, 2);
+    mainLayout->addWidget(leMacro6, 5, 3);
+    mainLayout->addWidget(sbMacroInterval6, 5, 4);
+    mainLayout->addWidget(cbMacroActive6, 5, 5);
 
-    mainLayout->addWidget(bMacroLoad7, 6, 0);
-    mainLayout->addWidget(bMacroSave7, 6, 1);
-    mainLayout->addWidget(leMacro7, 6, 2);
-    mainLayout->addWidget(sbMacroInterval7, 6, 3);
-    mainLayout->addWidget(cbMacroActive7, 6, 4);
+    mainLayout->addWidget(lMacro7, 6, 6);
+    mainLayout->addWidget(bMacroLoad7, 6, 1);
+    mainLayout->addWidget(bMacroSave7, 6, 2);
+    mainLayout->addWidget(leMacro7, 6, 3);
+    mainLayout->addWidget(sbMacroInterval7, 6, 4);
+    mainLayout->addWidget(cbMacroActive7, 6, 5);
 
-    mainLayout->addWidget(bMacroLoad8, 7, 0);
-    mainLayout->addWidget(bMacroSave8, 7, 1);
-    mainLayout->addWidget(leMacro8, 7, 2);
-    mainLayout->addWidget(sbMacroInterval8, 7, 3);
-    mainLayout->addWidget(cbMacroActive8, 7, 4);
+    mainLayout->addWidget(lMacro8, 7, 6);
+    mainLayout->addWidget(bMacroLoad8, 7, 1);
+    mainLayout->addWidget(bMacroSave8, 7, 2);
+    mainLayout->addWidget(leMacro8, 7, 3);
+    mainLayout->addWidget(sbMacroInterval8, 7, 4);
+    mainLayout->addWidget(cbMacroActive8, 7, 5);
 
-    mainLayout->addWidget(bMacroLoad9, 8, 0);
-    mainLayout->addWidget(bMacroSave9, 8, 1);
-    mainLayout->addWidget(leMacro9, 8, 2);
-    mainLayout->addWidget(sbMacroInterval9, 8, 3);
-    mainLayout->addWidget(cbMacroActive9, 8, 4);
+    mainLayout->addWidget(lMacro9, 8, 6);
+    mainLayout->addWidget(bMacroLoad9, 8, 1);
+    mainLayout->addWidget(bMacroSave9, 8, 2);
+    mainLayout->addWidget(leMacro9, 8, 3);
+    mainLayout->addWidget(sbMacroInterval9, 8, 4);
+    mainLayout->addWidget(cbMacroActive9, 8, 5);
 
-    mainLayout->addWidget(bMacroLoad10, 9, 0);
-    mainLayout->addWidget(bMacroSave10, 9, 1);
-    mainLayout->addWidget(leMacro10, 9, 2);
-    mainLayout->addWidget(sbMacroInterval10, 9, 3);
-    mainLayout->addWidget(cbMacroActive10, 9, 4);
+    mainLayout->addWidget(lMacro10, 9, 6);
+    mainLayout->addWidget(bMacroLoad10, 9, 1);
+    mainLayout->addWidget(bMacroSave10, 9, 2);
+    mainLayout->addWidget(leMacro10, 9, 3);
+    mainLayout->addWidget(sbMacroInterval10, 9, 4);
+    mainLayout->addWidget(cbMacroActive10, 9, 5);
 
     setLayout(mainLayout);
 }
@@ -330,7 +362,7 @@ void Macro::setPackege()
         tMacro->setInterval(1);
 }
 
-void Macro::openLoad(QLineEdit *le, QSpinBox *sb, int i)
+void Macro::openLoad(QLineEdit *le, QSpinBox *sb, QLabel *l, int i)
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), path, tr("Macro Files (*.rsmc)"));
         if (fileName != "") {
@@ -344,10 +376,12 @@ void Macro::openLoad(QLineEdit *le, QSpinBox *sb, int i)
             sb->setValue(stream.readLine(6).toInt());
             file.close();
             MacroPaths.insert(i, fileName);
+            QFileInfo fileInfo(file.fileName());
+            l->setText(fileInfo.baseName());
         }
 }
 
-void Macro::pathLoad(QLineEdit *le, QSpinBox *sb, int i, QString fileName)
+void Macro::pathLoad(QLineEdit *le, QSpinBox *sb, QLabel *l, int i, QString fileName)
 {
         if (fileName != "") {
             QFile file(fileName);
@@ -360,6 +394,8 @@ void Macro::pathLoad(QLineEdit *le, QSpinBox *sb, int i, QString fileName)
             sb->setValue(stream.readLine(6).toInt());
             file.close();
             MacroPaths.insert(i, fileName);
+            QFileInfo fileInfo(file.fileName());
+            l->setText(fileInfo.baseName());
         }
 }
 
