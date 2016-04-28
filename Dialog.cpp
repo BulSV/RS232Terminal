@@ -1,7 +1,3 @@
-/*  TODO:
- * очищать буффер эхо
- * лейбл загруженного файла макроса
- */
 #include <QDebug>
 #include "Dialog.h"
 #include <QGridLayout>
@@ -159,6 +155,7 @@ void Dialog::connections()
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
+    connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
 
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
@@ -171,6 +168,12 @@ void Dialog::connections()
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
     connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
+}
+
+void Dialog::cleanEchoBuffer(bool check)
+{
+    if (!check)
+        echoData.clear();
 }
 
 void Dialog::start()

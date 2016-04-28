@@ -77,6 +77,7 @@ private slots:
     void start();
     void stop();
     void echo();
+    void cleanEchoBuffer(bool check);
     void macrosRecieved(bool isRecieved);
     void showMacroWindow();
     void offsetDec();
