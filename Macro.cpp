@@ -75,7 +75,7 @@ Macro::Macro(QString title, QWidget *parent)
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
 {
     setAttribute(Qt::WA_DeleteOnClose);
-    resize(800, 300);
+    resize(750, 300);
     setWindowTitle(title);
     view();
     Init();
