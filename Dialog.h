@@ -15,7 +15,7 @@
 #include <QSettings>
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
-#include "Macro.h"
+#include "MacroWindow.h"
 #include <QAbstractButton>
 
 class Dialog : public QWidget
@@ -52,7 +52,7 @@ class Dialog : public QWidget
     QSerialPort *m_Port;
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
-    Macro *macroWindow;
+    MacroWindow *macroWindow;
     QSettings *settings;
 
     int Offset;
@@ -78,7 +78,7 @@ private slots:
     void stop();
     void echo();
     void cleanEchoBuffer(bool check);
-    void macrosRecieved(bool isRecieved);
+    void macrosRecieved(const QString &str);
     void showMacroWindow();
     void offsetDec();
     void offsetInc();

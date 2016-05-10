@@ -11,13 +11,15 @@ SOURCES += main.cpp\
         Dialog.cpp \
     rs232terminalprotocol.cpp \
     ComPort.cpp \
-    Macro.cpp
+    Macros.cpp \
+    MacroWindow.cpp
 
 HEADERS  += Dialog.h \
     rs232terminalprotocol.h \
     ComPort.h \
     IProtocol.h \
-    Macro.h
+    Macros.h \
+    MacroWindow.h
 
 RESOURCES += \
     RS232Terminal.qrc

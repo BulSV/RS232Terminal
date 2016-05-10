@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>Resources/elisat.png</file>
+		<file>Resources/del.png</file>
 		<file>Resources/terminal.ico</file>
     </qresource>
 </RCC>

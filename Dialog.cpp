@@ -45,7 +45,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
-    , macroWindow(new Macro(QString::fromUtf8("RS232 Terminal - Macros")))
+    , macroWindow(new MacroWindow(QString::fromUtf8("RS232 Terminal - Macros")))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
 
 {
@@ -64,7 +64,6 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
 
-    m_bShowMacroForm->setEnabled(false);
     m_bStop->setEnabled(false);
 
     m_sbRepeatSendInterval->setRange(0, 100000);
@@ -162,7 +161,7 @@ void Dialog::connections()
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
     connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
 
-    connect(macroWindow, SIGNAL(WriteMacros(bool)), this, SLOT(macrosRecieved(bool)));
+    connect(macroWindow, SIGNAL(WriteMacros(const QString)), this, SLOT(macrosRecieved(const QString)));
 
     connect(m_BlinkTimeTxColor, SIGNAL(timeout()), this, SLOT(colorIsTx()));
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
@@ -172,6 +171,7 @@ void Dialog::connections()
 
 void Dialog::cleanEchoBuffer(bool check)
 {
+    m_tEcho->stop();
     if (!check)
         echoData.clear();
 }
@@ -224,7 +224,6 @@ void Dialog::start()
 
         m_bStart->setEnabled(false);
         m_bStop->setEnabled(true);
-        m_bShowMacroForm->setEnabled(true);
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
         m_abSendPackage->setEnabled(true);
@@ -250,25 +249,21 @@ void Dialog::stop()
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_bStop->setEnabled(false);
     m_bStart->setEnabled(true);
-    m_bShowMacroForm->setEnabled(false);
     m_cbPort->setEnabled(true);
     m_cbBaud->setEnabled(true);
     m_abSendPackage->setEnabled(false);
     m_abSendPackage->setChecked(false);
     m_tSend->stop();
     m_tEcho->stop();
-    macroWindow->stop();
+    //macroWindow->stop();
     m_cbEchoMode->setEnabled(false);
     Offset = 0;
     m_Protocol->resetProtocol();
 }
 
-void Dialog::macrosRecieved(bool isRecieved)
+void Dialog::macrosRecieved(const QString &str)
 {
-   if(isRecieved)
-   {
-       sendPackage(macroWindow->MacroData);
-   }
+    sendPackage(str);
 }
 
 void Dialog::received(bool isReceived)
@@ -332,26 +327,29 @@ void Dialog::startSending(bool checked)
 
 void Dialog::sendPackage(QString string)
 {
-    if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
-        m_BlinkTimeTxColor->start();
-        m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
-    }
-    QString out;
-    QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
-    if (!byteList.isEmpty())
+    if (m_Port->isOpen())
     {
-        foreach (QString s, byteList)
+        QString out;
+        QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
+        if (!byteList.isEmpty())
         {
-            bool ok;
-            m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
-            if (ok)
-            {
-                m_Protocol->writeData();
-                out += s;
+            if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
+                m_BlinkTimeTxColor->start();
+                m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
             }
+            foreach (QString s, byteList)
+            {
+                bool ok;
+                m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+                if (ok)
+                {
+                    m_Protocol->writeData();
+                    out += s;
+                }
+            }
+            displayWriteData(string);
+            m_tSend->setInterval(m_sbRepeatSendInterval->value());
         }
-        displayWriteData(string);
-        m_tSend->setInterval(m_sbRepeatSendInterval->value());
     }
 }
 
@@ -449,7 +447,7 @@ void Dialog::displayWriteData(QString string)
     {
         m_eLogWrite->clear();
         logWriteRowsCount = 0;
-    }
+}
 }
 
 QStringList Dialog::doOffset(QStringList list)
@@ -511,6 +509,7 @@ void Dialog::showMacroWindow()
 
 void Dialog::closeEvent(QCloseEvent *e)
 {
+
     macroWindow->close();
     e->accept();
 }
