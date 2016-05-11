@@ -7,14 +7,14 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QTimer>
+#include <QSettings>
 
 class MacroWindow : public QWidget
 {
     Q_OBJECT
     QPushButton *bAddMacros;
     QVBoxLayout *mainLayout;
-
-    QMap<int, Macros *> MacrosList;
+    QSettings *settings;
     int id;
 
     void connections();
@@ -32,8 +32,16 @@ signals:
         WriteMacros(const QString &str);
 public:
     QTimer *tMacro;
-    QTimer *tSend;
     QString path;
+    int macrosCount;
+    bool portOpen;
+    QMap<int, Macros *> MacrosList;
+    int sendingIndex;
+
+    void start();
+    void stop();
+    void loadPrevSession();
+    void saveSession();
     MacroWindow(QString title, QWidget *parent = 0);
 };
 

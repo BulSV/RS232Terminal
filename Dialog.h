@@ -52,8 +52,8 @@ class Dialog : public QWidget
     QSerialPort *m_Port;
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
-    MacroWindow *macroWindow;
     QSettings *settings;
+    MacroWindow *macroWindow;
 
     int Offset;
     int DisplayByteIndex;
@@ -95,7 +95,6 @@ private slots:
 public:
     void sendPackage(QString string);
     explicit Dialog(QString title, QWidget *parent = 0);
-    ~Dialog();
 };
 
 #endif // DIALOG_H

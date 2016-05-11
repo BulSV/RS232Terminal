@@ -18,13 +18,15 @@ class Macros : public QWidget
 private slots:
     void singleSend();
     void Delete();
-    void openLoad();
     void save();
     void stateChange(bool check);
+    void textEdited(QString text);
+    void openLoad();
 
 signals:
     DeleteMacros(int);
     WriteMacros(const QString &str);
+    AddSending(Macros *);
 
 public:
     QLineEdit *leMacros;
@@ -40,7 +42,8 @@ public:
 
     bool checked;
 
-    explicit Macros(int id, QString p, QWidget *parent = 0);
+    bool openPath(QString);
+    explicit Macros(int id, QString p, bool buttonActive, QWidget *parent = 0);
 };
 
 #endif // MACROS_H

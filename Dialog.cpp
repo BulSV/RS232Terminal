@@ -45,12 +45,12 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
-    , macroWindow(new MacroWindow(QString::fromUtf8("RS232 Terminal - Macros")))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
+    , macroWindow(new MacroWindow(QString::fromUtf8("RS232 Terminal - Macro")))
 
 {
     setWindowTitle(title);
-    resize(730, 300);
+    resize(settings->value("config/width", 750).toInt(), settings->value("config/height", 300).toInt());
     view();
     connections();
 
@@ -230,6 +230,7 @@ void Dialog::start()
         m_cbEchoMode->setEnabled(true);
         m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+        macroWindow->start();
     }
     else
     {
@@ -241,6 +242,7 @@ void Dialog::start()
 void Dialog::stop()
 {
     m_Port->close();
+    macroWindow->stop();
     m_BlinkTimeTxNone->stop();
     m_BlinkTimeTxColor->stop();
     m_BlinkTimeRxNone->stop();
@@ -255,7 +257,6 @@ void Dialog::stop()
     m_abSendPackage->setChecked(false);
     m_tSend->stop();
     m_tEcho->stop();
-    //macroWindow->stop();
     m_cbEchoMode->setEnabled(false);
     Offset = 0;
     m_Protocol->resetProtocol();
@@ -509,12 +510,9 @@ void Dialog::showMacroWindow()
 
 void Dialog::closeEvent(QCloseEvent *e)
 {
-
+    settings->setValue("config/height", this->height());
+    settings->setValue("config/width", this->width());
+    macroWindow->saveSession();
     macroWindow->close();
     e->accept();
-}
-
-Dialog::~Dialog()
-{
-
 }

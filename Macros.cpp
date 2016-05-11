@@ -3,7 +3,7 @@
 #include <QTextStream>
 #include <QMessageBox>
 
-Macros::Macros(int id, QString p, QWidget *parent)
+Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     : QWidget(parent)
     , leMacros(new QLineEdit(this))
     , bMacrosLoad(new QPushButton("Load", this))
@@ -17,10 +17,12 @@ Macros::Macros(int id, QString p, QWidget *parent)
     index = id;
     path = p;
     bMacros->setStyleSheet("font-weight: bold");
+    bMacros->setEnabled(buttonActive);
     bMacrosDel->resize(5, 5);
     bMacrosDel->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
     sbMacrosInterval->setRange(1, 1000000);
     sbMacrosInterval->setValue(500);
+    cbMacrosActive->setEnabled(false);
 
     QGridLayout *mainLayout = new QGridLayout;
     mainLayout->addWidget(bMacrosDel, 0, 0);
@@ -35,12 +37,22 @@ Macros::Macros(int id, QString p, QWidget *parent)
 
 void Macros::connections()
 {
+    connect(leMacros, SIGNAL(textEdited(QString)), this, SLOT(textEdited(QString)));
     connect(bMacros, SIGNAL(clicked(bool)), this, SLOT(singleSend()));
     connect(bMacrosDel, SIGNAL(clicked(bool)), this, SLOT(Delete()));
     connect(bMacrosLoad, SIGNAL(clicked(bool)), this, SLOT(openLoad()));
     connect(bMacrosSave, SIGNAL(clicked(bool)), this, SLOT(save()));
     connect(cbMacrosActive, SIGNAL(toggled(bool)), this, SLOT(stateChange(bool)));
 }
+
+void Macros::textEdited(QString text)
+{
+    if (text.isEmpty())
+        cbMacrosActive->setEnabled(false);
+    else
+        cbMacrosActive->setEnabled(true);
+}
+
 void Macros::singleSend()
 {
     emit WriteMacros(leMacros->text());
@@ -53,7 +65,7 @@ void Macros::stateChange(bool check)
     {
         bMacros->setStyleSheet("font-weight: bold; color: red;");
     } else {
-        bMacros->setStyleSheet("font-weight: bold; color: black;");
+        bMacros->setStyleSheet("font-weight: bold;");
     }
 }
 
@@ -73,12 +85,31 @@ void Macros::openLoad()
             }
             QTextStream stream(&file);
             leMacros->setText(stream.readLine(0));
-            sbMacrosInterval->setValue(stream.readLine(6).toInt());
+            sbMacrosInterval->setValue(stream.readLine(0).toInt());
             path = fileName;
             QFileInfo fileInfo(file.fileName());
             bMacros->setText(fileInfo.baseName());
             file.close();
+            cbMacrosActive->setEnabled(true);
         }
+}
+
+bool Macros::openPath(QString fileName)
+{
+    if (fileName != "") {
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly)) return false;
+        QTextStream stream(&file);
+        leMacros->setText(stream.readLine(0));
+        sbMacrosInterval->setValue(stream.readLine(0).toInt());
+        path = fileName;
+        QFileInfo fileInfo(file.fileName());
+        bMacros->setText(fileInfo.baseName());
+        file.close();
+        cbMacrosActive->setEnabled(true);
+        return true;
+    } else
+        return false;
 }
 
 void Macros::save()
