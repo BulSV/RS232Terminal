@@ -24,6 +24,9 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     sbMacrosInterval->setValue(500);
     cbMacrosActive->setEnabled(false);
 
+    bMacrosDel->setFixedSize(15, 13);
+    bMacrosLoad->setFixedSize(37,22);
+    bMacrosSave->setFixedSize(37,22);
     QGridLayout *mainLayout = new QGridLayout;
     mainLayout->addWidget(bMacrosDel, 0, 0);
     mainLayout->addWidget(bMacrosLoad, 0, 1);
