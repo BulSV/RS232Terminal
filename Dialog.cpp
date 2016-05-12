@@ -512,6 +512,9 @@ void Dialog::closeEvent(QCloseEvent *e)
 {
     settings->setValue("config/height", this->height());
     settings->setValue("config/width", this->width());
+    settings->setValue("config/m_height", macroWindow->height());
+    settings->setValue("config/m_width", macroWindow->width());
+
     macroWindow->saveSession();
     macroWindow->close();
     e->accept();
