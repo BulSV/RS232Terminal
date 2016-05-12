@@ -2,23 +2,27 @@
 #include "Macros.h"
 #include <QDir>
 #include <QCloseEvent>
+#include <QMapIterator>
+#include <QScrollBar>
 
 MacroWindow::MacroWindow(QString title, QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
-    , bAddMacros(new QPushButton("Add Macros", this))
     , mainLayout(new QVBoxLayout(this))
+    , bAddMacros(new QPushButton("Add Macros", this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , tMacro(new QTimer(this))
 {
     setWindowTitle(title);
     connections();
-    id = 0;
+    tMacro->setInterval(10);
     setMinimumWidth(750);
     mainLayout->setSpacing(0);
     mainLayout->setMargin(0);
+    mainLayout->addWidget(bAddMacros);
     setLayout(mainLayout);
-    mainLayout->addWidget(bAddMacros);   
-    tMacro->setInterval(10);
+
+    id = 0;
+    activeMacrosCount = 0;
     sendingIndex = -1;
 
     QDir dir;
@@ -32,6 +36,11 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
 void MacroWindow::loadPrevSession()
 {
     int size = settings->beginReadArray("macros");
+    if (!size)
+    {
+        addMacros();
+        return;
+    }
     for (int i = 0; i < size; ++i) {
         settings->setArrayIndex(i);
         addMacros();
@@ -65,9 +74,24 @@ void MacroWindow::addMacros()
     MacrosList.insert(id, new Macros(id, path, portOpen, this));
     id++;
     mainLayout->addWidget(MacrosList.last());
-    connect(MacrosList.last(), SIGNAL(AddSending(int)), this, SLOT(addSending(Macros)));
+    connect(MacrosList.last(), SIGNAL(Sending(bool)), this, SLOT(addDelSending(bool)));
     connect(MacrosList.last(), SIGNAL(DeleteMacros(int)), this, SLOT(delMacros(int)));
     connect(MacrosList.last(), SIGNAL(WriteMacros(const QString)), this, SLOT(macrosRecieved(const QString)));
+}
+
+void MacroWindow::addDelSending(bool check)
+{
+    if (check)
+        activeMacrosCount++;
+    else
+    {
+        activeMacrosCount--;
+        if (!activeMacrosCount)
+        {
+            sendingIndex = -1;
+            tMacro->setInterval(10);
+        }
+    }
 }
 
 void MacroWindow::delMacros(int index)
@@ -91,19 +115,7 @@ void MacroWindow::start()
         portOpen = true;
     }
 
-    foreach (Macros *m, MacrosList.values()) {
-        if (m->checked)
-        {
-            sendingIndex = m->index;
-            break;
-        }
-    }
-    if (sendingIndex != -1)
-    {
-        tMacro->setInterval(MacrosList.value(sendingIndex)->sbMacrosInterval->value());
-        tMacro->start();
-    } else
-        tMacro->start();
+    tMacro->start();
 }
 
 void MacroWindow::stop()
@@ -118,20 +130,34 @@ void MacroWindow::stop()
 
 void MacroWindow::tick()
 {
-    if (sendingIndex != -1)
+    if (activeMacrosCount)
     {
-        emit WriteMacros(MacrosList.value(sendingIndex)->leMacros->text());
-        sendingIndex++;
+        if (sendingIndex != -1 && tMacro->interval() == MacrosList.value(sendingIndex)->sbMacrosInterval->value())
+            emit WriteMacros(MacrosList.value(sendingIndex)->leMacros->text());
+
+        setSendingIndex();
+        tMacro->setInterval(MacrosList.value(sendingIndex)->sbMacrosInterval->value());
     }
-    for (int i = sendingIndex; i <= MacrosList.last()->index; i++)
-    {
-        if (MacrosList.value(i)->checked)
+}
+
+void MacroWindow::setSendingIndex()
+{
+    int startIndex = sendingIndex;
+    foreach (Macros *m, MacrosList.values()){
+        if (m->cbMacrosActive->checkState() && m->index > sendingIndex)
         {
-            sendingIndex = i;
-            tMacro->setInterval(MacrosList.value(i)->sbMacrosInterval->value());
-            break;
+            sendingIndex = m->index;
+            return;
         }
     }
+    if (startIndex == sendingIndex)
+        foreach (Macros *m, MacrosList.values()) {
+            if (m->cbMacrosActive->checkState())
+            {
+                sendingIndex = m->index;
+                return;
+            }
+        }
 }
 
 void MacroWindow::closeEvent(QCloseEvent *e)

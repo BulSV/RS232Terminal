@@ -60,11 +60,12 @@ void Macros::singleSend()
 
 void Macros::stateChange(bool check)
 {
-    checked = check;
     if (check)
     {
+        emit Sending(true);
         bMacros->setStyleSheet("font-weight: bold; color: red;");
     } else {
+        emit Sending(false);
         bMacros->setStyleSheet("font-weight: bold;");
     }
 }

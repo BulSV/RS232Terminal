@@ -26,7 +26,7 @@ private slots:
 signals:
     DeleteMacros(int);
     WriteMacros(const QString &str);
-    AddSending(Macros *);
+    Sending(bool);
 
 public:
     QLineEdit *leMacros;
@@ -39,8 +39,6 @@ public:
 
     int index;
     QString path;
-
-    bool checked;
 
     bool openPath(QString);
     explicit Macros(int id, QString p, bool buttonActive, QWidget *parent = 0);

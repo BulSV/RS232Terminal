@@ -12,12 +12,13 @@
 class MacroWindow : public QWidget
 {
     Q_OBJECT
-    QPushButton *bAddMacros;
     QVBoxLayout *mainLayout;
+    QPushButton *bAddMacros;
     QSettings *settings;
     int id;
 
     void connections();
+    void setSendingIndex();
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
@@ -27,6 +28,7 @@ public slots:
     void delMacros(int index);
     void macrosRecieved(const QString &str){ emit WriteMacros(str); }
     void tick();
+    void addDelSending(bool check);
 
 signals:
         WriteMacros(const QString &str);
@@ -34,6 +36,7 @@ public:
     QTimer *tMacro;
     QString path;
     int macrosCount;
+    int activeMacrosCount;
     bool portOpen;
     QMap<int, Macros *> MacrosList;
     int sendingIndex;
