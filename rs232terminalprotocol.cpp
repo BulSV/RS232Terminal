@@ -2,16 +2,10 @@
 
 RS232TerminalProtocol::RS232TerminalProtocol(ComPort *comPort, QObject *parent) :
     IProtocol(parent),
-    itsComPort(comPort),
-    m_resend(new QTimer(this)),
-    m_numResends(3),
-    m_currentResend(0)
+    itsComPort(comPort)
 {
-    m_resend->setInterval(100);
-
     connect(itsComPort, SIGNAL(DataIsReaded(bool)), this, SLOT(readData(bool)));
     connect(itsComPort, SIGNAL(DataIsWrited(bool)), this, SIGNAL(DataIsWrited(bool)));
-    connect(m_resend, SIGNAL(timeout()), this, SLOT(writeData()));
 }
 
 void RS232TerminalProtocol::setDataToWrite(const QString &data)

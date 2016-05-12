@@ -20,10 +20,6 @@ private:
     QString itsWriteData;
     QString itsReadData;
 
-    QTimer *m_resend;
-    int m_numResends;
-    int m_currentResend;
-
     // преобразует word в byte
     int wordToInt(QByteArray ba);
     QByteArray intToByteArray(const int &value, const int &numBytes);
