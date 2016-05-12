@@ -8,10 +8,14 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QSettings>
+#include <QScrollArea>
 
 class MacroWindow : public QWidget
 {
     Q_OBJECT
+    QVBoxLayout *scrollAreaLayout;
+    QScrollArea *scrollArea;
+    QWidget *widget;
     QVBoxLayout *mainLayout;
     QPushButton *bAddMacros;
     QSettings *settings;

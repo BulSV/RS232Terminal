@@ -3,11 +3,11 @@
 #include <QDir>
 #include <QCloseEvent>
 #include <QMapIterator>
+#include <QScrollArea>
 #include <QScrollBar>
 
 MacroWindow::MacroWindow(QString title, QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
-    , mainLayout(new QVBoxLayout(this))
     , bAddMacros(new QPushButton("Add Macros", this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , tMacro(new QTimer(this))
@@ -16,11 +16,24 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
     connections();
     tMacro->setInterval(10);
     setMinimumWidth(750);
+    setMinimumHeight(100);
+    resize(settings->value("config/m_width", 750).toInt(), settings->value("config/m_height", 100).toInt());
+    QScrollArea *scrollArea = new QScrollArea(this);
+    widget = new QWidget(scrollArea);
+    mainLayout = new QVBoxLayout(widget);
+    mainLayout->addWidget(bAddMacros);
     mainLayout->setSpacing(0);
     mainLayout->setMargin(0);
-    mainLayout->addWidget(bAddMacros);
-    setLayout(mainLayout);
-
+    scrollArea->setWidget(widget);
+    scrollArea->show();
+    scrollArea->setVisible(true);
+    scrollArea->setVerticalScrollBar(new QScrollBar(Qt::Vertical, scrollArea));
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setWidgetResizable(true);
+    QVBoxLayout *scrollAreaLayout = new QVBoxLayout;
+    scrollAreaLayout->addWidget(scrollArea);
+    setLayout(scrollAreaLayout);
     id = 0;
     activeMacrosCount = 0;
     sendingIndex = -1;
@@ -28,8 +41,9 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
     QDir dir;
     path = dir.currentPath()+"/Macros";
     if (!dir.exists(path))
+    {
         dir.mkpath(path);
-
+    }
     loadPrevSession();
 }
 
@@ -99,7 +113,6 @@ void MacroWindow::delMacros(int index)
     macrosCount--;
     delete MacrosList[index];
     MacrosList.remove(index);
-    adjustSize();
 }
 
 void MacroWindow::connections()
