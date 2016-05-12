@@ -9,6 +9,7 @@
 MacroWindow::MacroWindow(QString title, QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
     , bAddMacros(new QPushButton("Add Macros", this))
+    , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , tMacro(new QTimer(this))
 {
@@ -17,13 +18,14 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
     tMacro->setInterval(10);
     setMinimumWidth(750);
     setMinimumHeight(100);
-    resize(settings->value("config/m_width", 750).toInt(), settings->value("config/m_height", 100).toInt());
+    resize(settings->value("config/m_width", 750).toInt(), settings->value("config/m_height", 300).toInt());
     QScrollArea *scrollArea = new QScrollArea(this);
     widget = new QWidget(scrollArea);
     mainLayout = new QVBoxLayout(widget);
     mainLayout->addWidget(bAddMacros);
     mainLayout->setSpacing(0);
     mainLayout->setMargin(0);
+    mainLayout->addSpacerItem(spacer);
     scrollArea->setWidget(widget);
     scrollArea->show();
     scrollArea->setVisible(true);
@@ -87,7 +89,9 @@ void MacroWindow::addMacros()
     macrosCount++;
     MacrosList.insert(id, new Macros(id, path, portOpen, this));
     id++;
+    mainLayout->removeItem(spacer);
     mainLayout->addWidget(MacrosList.last());
+    mainLayout->addSpacerItem(spacer);
     connect(MacrosList.last(), SIGNAL(Sending(bool)), this, SLOT(addDelSending(bool)));
     connect(MacrosList.last(), SIGNAL(DeleteMacros(int)), this, SLOT(delMacros(int)));
     connect(MacrosList.last(), SIGNAL(WriteMacros(const QString)), this, SLOT(macrosRecieved(const QString)));

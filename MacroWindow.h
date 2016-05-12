@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QSettings>
 #include <QScrollArea>
+#include <QSpacerItem>
 
 class MacroWindow : public QWidget
 {
@@ -18,6 +19,7 @@ class MacroWindow : public QWidget
     QWidget *widget;
     QVBoxLayout *mainLayout;
     QPushButton *bAddMacros;
+    QSpacerItem *spacer;
     QSettings *settings;
     int id;
 
