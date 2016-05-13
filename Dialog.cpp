@@ -129,13 +129,13 @@ void Dialog::view()
 
     QGridLayout *labelWriteLayout = new QGridLayout;
     labelWriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
-    labelWriteLayout->addWidget(m_bWriteLogClear, 0, 1);
-    labelWriteLayout->addWidget(m_cbWriteScroll, 0, 2);
+    labelWriteLayout->addWidget(m_cbWriteScroll, 0, 1);
+    labelWriteLayout->addWidget(m_bWriteLogClear, 0, 2);
 
     QGridLayout *labelReadLayout = new QGridLayout;
     labelReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
-    labelReadLayout->addWidget(m_bReadLogClear, 0, 1);
-    labelReadLayout->addWidget(m_cbReadScroll, 0, 2);
+    labelReadLayout->addWidget(m_cbReadScroll, 0, 1);
+    labelReadLayout->addWidget(m_bReadLogClear, 0, 2);
 
     QGridLayout *dataLayout = new QGridLayout;
     dataLayout->addLayout(labelWriteLayout, 0, 0);
