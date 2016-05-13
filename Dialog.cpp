@@ -7,6 +7,7 @@
 #include <QSerialPortInfo>
 #include "rs232terminalprotocol.h"
 #include <QCloseEvent>
+#include <QMouseEvent>
 
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
@@ -29,13 +30,15 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
-    , m_eLogRead(new QTextEdit(this))
-    , m_eLogWrite(new QTextEdit(this))
+    , m_eLogRead(new MyPlainTextEdit())
+    , m_eLogWrite(new MyPlainTextEdit())
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
     , m_sbEchoInterval(new QSpinBox(this))
+    , m_cbReadScroll(new QCheckBox("Auto scrolling", this))
+    , m_cbWriteScroll(new QCheckBox("Auto scrolling", this))
     , m_BlinkTimeTxNone(new QTimer(this))
     , m_BlinkTimeRxNone(new QTimer(this))
     , m_BlinkTimeTxColor(new QTimer(this))
@@ -93,6 +96,9 @@ Dialog::Dialog(QString title, QWidget *parent)
 
     m_cbPort->setCurrentIndex(settings->value("config/port").toInt());
     m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
+
+    m_eLogRead->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
+    m_eLogWrite->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
 }
 
 void Dialog::view()
@@ -124,10 +130,12 @@ void Dialog::view()
     QGridLayout *labelWriteLayout = new QGridLayout;
     labelWriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
     labelWriteLayout->addWidget(m_bWriteLogClear, 0, 1);
+    labelWriteLayout->addWidget(m_cbWriteScroll, 0, 2);
 
     QGridLayout *labelReadLayout = new QGridLayout;
     labelReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
     labelReadLayout->addWidget(m_bReadLogClear, 0, 1);
+    labelReadLayout->addWidget(m_cbReadScroll, 0, 2);
 
     QGridLayout *dataLayout = new QGridLayout;
     dataLayout->addLayout(labelWriteLayout, 0, 0);
@@ -423,9 +431,12 @@ void Dialog::displayReadData(QString string)
             listOfBytes.clear();
         }
     }
-    QTextCursor cursor =  m_eLogRead->textCursor();
-    cursor.movePosition(QTextCursor::End);
-    m_eLogRead->setTextCursor(cursor);
+    if (m_cbReadScroll->checkState())
+    {
+        QTextCursor cursor =  m_eLogRead->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        m_eLogRead->setTextCursor(cursor);
+    }
     if (logReadRowsCount >= MAXLOGROWSCOUNT)
     {
         m_eLogRead->clear();
@@ -438,9 +449,12 @@ void Dialog::displayWriteData(QString string)
     logWriteRowsCount++;
     m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
 
-    QTextCursor cursor =  m_eLogWrite->textCursor();
-    cursor.movePosition(QTextCursor::End);
-    m_eLogWrite->setTextCursor(cursor);
+    if (m_cbWriteScroll->checkState())
+    {
+        QTextCursor cursor =  m_eLogWrite->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        m_eLogWrite->setTextCursor(cursor);
+    }
     if (logWriteRowsCount >= MAXLOGROWSCOUNT)
     {
         m_eLogWrite->clear();

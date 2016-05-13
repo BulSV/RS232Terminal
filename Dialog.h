@@ -5,7 +5,7 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QPushButton>
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QTimer>
 #include <QSerialPort>
 #include <QCheckBox>
@@ -17,6 +17,14 @@
 #include "ComPort.h"
 #include "MacroWindow.h"
 #include <QAbstractButton>
+
+class MyPlainTextEdit : public QPlainTextEdit {
+protected:
+   void mousePressEvent(QMouseEvent *e)
+   {
+       e->ignore();
+   }
+};
 
 class Dialog : public QWidget
 {
@@ -33,13 +41,15 @@ class Dialog : public QWidget
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;
-    QTextEdit *m_eLogRead;
-    QTextEdit *m_eLogWrite;
+    MyPlainTextEdit *m_eLogRead;
+    MyPlainTextEdit *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
     QCheckBox *m_cbEchoMode;
     QSpinBox *m_sbEchoInterval;
+    QCheckBox *m_cbReadScroll;
+    QCheckBox *m_cbWriteScroll;
 
     QTimer *m_BlinkTimeTxNone;
     QTimer *m_BlinkTimeRxNone;
