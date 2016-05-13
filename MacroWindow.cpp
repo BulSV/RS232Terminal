@@ -8,6 +8,10 @@
 
 MacroWindow::MacroWindow(QString title, QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
+    , scrollAreaLayout  (new QVBoxLayout)
+    , scrollArea (new QScrollArea(this))
+    , widget (new QWidget(scrollArea))
+    , mainLayout (new QVBoxLayout(widget))
     , bAddMacros(new QPushButton("Add Macros", this))
     , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
@@ -15,13 +19,19 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
 {
     setWindowTitle(title);
     connections();
+
+    QDir dir;
+    path = dir.currentPath()+"/Macros";
+    if (!dir.exists(path))
+    {
+        dir.mkpath(path);
+    }
+
     tMacro->setInterval(10);
     setMinimumWidth(750);
     setMinimumHeight(100);
     resize(settings->value("config/m_width", 750).toInt(), settings->value("config/m_height", 300).toInt());
-    QScrollArea *scrollArea = new QScrollArea(this);
-    widget = new QWidget(scrollArea);
-    mainLayout = new QVBoxLayout(widget);
+
     mainLayout->addWidget(bAddMacros);
     mainLayout->setSpacing(0);
     mainLayout->setMargin(0);
@@ -33,55 +43,43 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setWidgetResizable(true);
-    QVBoxLayout *scrollAreaLayout = new QVBoxLayout;
     scrollAreaLayout->addWidget(scrollArea);
     setLayout(scrollAreaLayout);
     id = 0;
     activeMacrosCount = 0;
     sendingIndex = -1;
-
-    QDir dir;
-    path = dir.currentPath()+"/Macros";
-    if (!dir.exists(path))
-    {
-        dir.mkpath(path);
-    }
     loadPrevSession();
 }
 
 void MacroWindow::loadPrevSession()
 {
-    int size = settings->beginReadArray("macros");
+    int size = settings->value("macros/size", 0).toInt();
     if (!size)
     {
         addMacros();
         return;
     }
-    for (int i = 0; i < size; ++i) {
-        settings->setArrayIndex(i);
+    for (int i = 1; i <= size; ++i) {
         addMacros();
-        if (!MacrosList.last()->openPath(settings->value("path").toString()))
+        if (!MacrosList.last()->openPath(settings->value("macros/"+QString::number(i)+"/path").toString()))
         {
-            MacrosList.last()->leMacros->setText(settings->value("packege").toString());
-            MacrosList.last()->sbMacrosInterval->setValue(settings->value("interval").toInt());
+            MacrosList.last()->leMacros->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
+            MacrosList.last()->sbMacrosInterval->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
         }
     }
-    settings->endArray();
 }
 
 void MacroWindow::saveSession()
 {
     settings->remove("macros");
-    settings->beginWriteArray("macros");
-    int i = 0;
+    int i = 1;
     foreach (Macros *m, MacrosList.values()) {
-        settings->setArrayIndex(i);
-        settings->setValue("packege", m->leMacros->text());
-        settings->setValue("interval", m->sbMacrosInterval->value());
-        settings->setValue("path", m->path);
+        settings->setValue("macros/"+QString::number(i)+"/packege", m->leMacros->text());
+        settings->setValue("macros/"+QString::number(i)+"/interval", m->sbMacrosInterval->value());
+        settings->setValue("macros/"+QString::number(i)+"/path", m->path);
         i++;
     }
-    settings->endArray();
+    settings->setValue("macros/size", i-1);
 }
 
 void MacroWindow::addMacros()
