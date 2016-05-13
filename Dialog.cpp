@@ -71,7 +71,6 @@ Dialog::Dialog(QString title, QWidget *parent)
 
     m_sbBytesCount->setRange(0, 64);
     m_sbBytesCount->setValue(0);
-    DisplayByteIndex = 0;
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
@@ -384,51 +383,49 @@ void Dialog::displayReadData(QString string)
         }
         m_eLogRead->insertPlainText(out.toUpper() + "\n");
         listOfBytes.clear();
-
-        QTextCursor cursor =  m_eLogRead->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        m_eLogRead->setTextCursor(cursor);
     }
     else
-    {
-        listOfBytes = string.split(SEPARATOR);
-        listOfBytes = doOffset(listOfBytes);
+    {        
+        listOfBytes += string.split(SEPARATOR);
 
-        if (listOfBytes.count() > m_sbBytesCount->value())
+        if (listOfBytes.count() < m_sbBytesCount->value())
+            return;
+        else
         {
-            for (int i = listOfBytes.count() - 1; i >= m_sbBytesCount->value(); i--)
+            listOfBytes = doOffset(listOfBytes);
+            if (listOfBytes.count() > m_sbBytesCount->value())
             {
-                restBytes.prepend(listOfBytes.takeAt(i));
+                for (int i = listOfBytes.count() - 1; i >= m_sbBytesCount->value(); i--)
+                {
+                    restBytes.prepend(listOfBytes.takeAt(i));
+                }
             }
+            for (int i = 0; i < listOfBytes.count(); i++)
+            {
+                DisplayReadBuffer += listOfBytes[i];
+                if (i != listOfBytes.count()-1)
+                    DisplayReadBuffer += " ";
+            }
+            m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
+            if (restBytes.count())
+            {
+               QString restDisplay;
+               for (int i = 0; i < restBytes.count(); i++)
+               {
+                   restDisplay += restBytes[i];
+                   if (i != restBytes.count()-1)
+                       restDisplay += " ";
+               }
+               m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
+               restBytes.clear();
+            }
+            DisplayReadBuffer.clear();
+            listOfBytes.clear();
         }
-
-        for (int i = 0; i < listOfBytes.count(); i++)
-        {
-            DisplayReadBuffer += listOfBytes[i];
-            if (i != listOfBytes.count()-1)
-                DisplayReadBuffer += " ";
-        }
-        m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
-        if (restBytes.count())
-        {
-           QString restDisplay;
-           for (int i = 0; i < restBytes.count(); i++)
-           {
-               restDisplay += restBytes[i];
-               if (i != restBytes.count()-1)
-                   restDisplay += " ";
-           }
-           m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
-           restBytes.clear();
-        }
-        DisplayReadBuffer.clear();
-        listOfBytes.clear();
-
-        QTextCursor cursor =  m_eLogRead->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        m_eLogRead->setTextCursor(cursor);
-        listOfBytes.clear();
     }
+    QTextCursor cursor =  m_eLogRead->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    m_eLogRead->setTextCursor(cursor);
     if (logReadRowsCount >= MAXLOGROWSCOUNT)
     {
         m_eLogRead->clear();

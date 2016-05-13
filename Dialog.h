@@ -56,7 +56,6 @@ class Dialog : public QWidget
     MacroWindow *macroWindow;
 
     int Offset;
-    int DisplayByteIndex;
     int logReadRowsCount;
     int logWriteRowsCount;
     QStringList listOfBytes;
