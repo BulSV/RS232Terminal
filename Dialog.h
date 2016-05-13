@@ -75,9 +75,8 @@ class Dialog : public QWidget
 
     void view();
     void connections();
+    void scrollToBot(QCheckBox *cb, MyPlainTextEdit *te);
     QStringList doOffset(QStringList list);
-    void displayReadData(QString string);
-    void displayWriteData(QString string);
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
@@ -102,6 +101,8 @@ private slots:
     void startSending(bool checked);
 
 public:
+    void displayReadData(QString string);
+    void displayWriteData(QString string);
     void sendPackage(QString string);
     explicit Dialog(QString title, QWidget *parent = 0);
 };

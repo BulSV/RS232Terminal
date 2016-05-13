@@ -66,6 +66,8 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_abSendPackage->setEnabled(false);
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
+    m_cbReadScroll->setCheckState(Qt::Checked);
+    m_cbWriteScroll->setCheckState(Qt::Checked);
 
     m_bStop->setEnabled(false);
 
@@ -82,8 +84,10 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_BlinkTimeTxColor->setInterval(BLINKTIMETX);
     m_BlinkTimeRxColor->setInterval(BLINKTIMERX);
 
-    QStringList portsNames;
+    m_eLogRead->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
+    m_eLogWrite->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
 
+    QStringList portsNames;
     foreach(QSerialPortInfo portsAvailable, QSerialPortInfo::availablePorts())
     {
         portsNames << portsAvailable.portName();
@@ -93,12 +97,8 @@ Dialog::Dialog(QString title, QWidget *parent)
     QStringList bauds;
     bauds << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
     m_cbBaud->addItems(bauds);
-
     m_cbPort->setCurrentIndex(settings->value("config/port").toInt());
-    m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
-
-    m_eLogRead->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
-    m_eLogWrite->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
+    m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());    
 }
 
 void Dialog::view()
@@ -361,6 +361,16 @@ void Dialog::sendPackage(QString string)
     }
 }
 
+void Dialog::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
+{
+    if (cb->checkState())
+    {
+        QTextCursor cursor =  te->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        te->setTextCursor(cursor);
+    }
+}
+
 void Dialog::displayReadData(QString string)
 {
     logReadRowsCount++;
@@ -413,6 +423,7 @@ void Dialog::displayReadData(QString string)
                 DisplayReadBuffer += listOfBytes[i];
                 if (i != listOfBytes.count()-1)
                     DisplayReadBuffer += " ";
+                qApp->processEvents();
             }
             m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
             if (restBytes.count())
@@ -431,12 +442,7 @@ void Dialog::displayReadData(QString string)
             listOfBytes.clear();
         }
     }
-    if (m_cbReadScroll->checkState())
-    {
-        QTextCursor cursor =  m_eLogRead->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        m_eLogRead->setTextCursor(cursor);
-    }
+    scrollToBot(m_cbReadScroll, m_eLogRead);
     if (logReadRowsCount >= MAXLOGROWSCOUNT)
     {
         m_eLogRead->clear();
@@ -449,12 +455,7 @@ void Dialog::displayWriteData(QString string)
     logWriteRowsCount++;
     m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
 
-    if (m_cbWriteScroll->checkState())
-    {
-        QTextCursor cursor =  m_eLogWrite->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        m_eLogWrite->setTextCursor(cursor);
-    }
+    scrollToBot(m_cbWriteScroll, m_eLogWrite);
     if (logWriteRowsCount >= MAXLOGROWSCOUNT)
     {
         m_eLogWrite->clear();
