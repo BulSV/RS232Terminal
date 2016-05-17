@@ -52,7 +52,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     , macroWindow(new MacroWindow(QString::fromUtf8("RS232 Terminal - Macro")))
 
 {
-    setWindowTitle(title);
+    setWindowTitle(title);    
     resize(settings->value("config/width", 750).toInt(), settings->value("config/height", 300).toInt());
     view();
     connections();
@@ -66,16 +66,10 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_abSendPackage->setEnabled(false);
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
-    m_cbReadScroll->setCheckState(Qt::Checked);
-    m_cbWriteScroll->setCheckState(Qt::Checked);
-
     m_bStop->setEnabled(false);
-
     m_sbRepeatSendInterval->setRange(0, 100000);
     m_sbEchoInterval->setRange(0, 100000);
-
     m_sbBytesCount->setRange(0, 64);
-    m_sbBytesCount->setValue(0);
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
@@ -97,8 +91,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     QStringList bauds;
     bauds << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
     m_cbBaud->addItems(bauds);
-    m_cbPort->setCurrentIndex(settings->value("config/port").toInt());
-    m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());    
+    loadSession();
 }
 
 void Dialog::view()
@@ -187,11 +180,9 @@ void Dialog::start()
 {
     m_Port->close();
     m_Port->setPortName(m_cbPort->currentText());
-    settings->setValue("config/port", m_cbPort->currentIndex());
 
     if(m_Port->open(QSerialPort::ReadWrite))
-    {
-        settings->setValue("config/baud", m_cbBaud->currentIndex());
+    {       
         switch (m_cbBaud->currentIndex()) {
         case 0:
             m_Port->setBaudRate(QSerialPort::Baud921600);
@@ -520,13 +511,36 @@ void Dialog::showMacroWindow()
     macroWindow->show();
 }
 
-void Dialog::closeEvent(QCloseEvent *e)
+void Dialog::saveSession()
 {
     settings->setValue("config/height", this->height());
     settings->setValue("config/width", this->width());
-    settings->setValue("config/m_height", macroWindow->height());
-    settings->setValue("config/m_width", macroWindow->width());
 
+    settings->setValue("config/port", m_cbPort->currentIndex());
+    settings->setValue("config/baud", m_cbBaud->currentIndex());
+    settings->setValue("config/bytes_count", m_sbBytesCount->value());
+    settings->setValue("config/echo", m_cbEchoMode->checkState());
+    settings->setValue("config/echo_interval", m_sbEchoInterval->value());
+    settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
+    settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
+    settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
+}
+
+void Dialog::loadSession()
+{
+    m_cbPort->setCurrentIndex(settings->value("config/port").toInt());
+    m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
+    m_sbBytesCount->setValue(settings->value("config/bytes_count").toInt());
+    m_cbEchoMode->setChecked(settings->value("config/echo").toBool());
+    m_sbEchoInterval->setValue(settings->value("config/echo_interval").toInt());
+    m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
+    m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
+    m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
+}
+
+void Dialog::closeEvent(QCloseEvent *e)
+{
+    saveSession();
     macroWindow->saveSession();
     macroWindow->close();
     e->accept();

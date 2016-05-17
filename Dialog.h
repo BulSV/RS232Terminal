@@ -74,6 +74,8 @@ class Dialog : public QWidget
     QStringList echoData;
 
     void view();
+    void saveSession();
+    void loadSession();
     void connections();
     void scrollToBot(QCheckBox *cb, MyPlainTextEdit *te);
     QStringList doOffset(QStringList list);

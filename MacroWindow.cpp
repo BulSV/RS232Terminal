@@ -64,18 +64,26 @@ void MacroWindow::loadPrevSession()
         if (!MacrosList.last()->openPath(settings->value("macros/"+QString::number(i)+"/path").toString()))
         {
             MacrosList.last()->leMacros->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
-            MacrosList.last()->sbMacrosInterval->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
+            MacrosList.last()->sbMacrosInterval->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());           
         }
+         MacrosList.last()->cbMacrosActive->setChecked(settings->value("macros/"+QString::number(i)+"/checked").toBool());
     }
 }
 
 void MacroWindow::saveSession()
 {
+    settings->setValue("config/m_height", height());
+    settings->setValue("config/m_width", width());
+
     settings->remove("macros");
     int i = 1;
     foreach (Macros *m, MacrosList.values()) {
+        if (m->path.isEmpty())
+        {
         settings->setValue("macros/"+QString::number(i)+"/packege", m->leMacros->text());
         settings->setValue("macros/"+QString::number(i)+"/interval", m->sbMacrosInterval->value());
+        }
+        settings->setValue("macros/"+QString::number(i)+"/checked", m->cbMacrosActive->isChecked());
         settings->setValue("macros/"+QString::number(i)+"/path", m->path);
         i++;
     }
