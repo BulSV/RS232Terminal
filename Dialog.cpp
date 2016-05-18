@@ -69,6 +69,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
     m_bStop->setEnabled(false);
+    m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
     m_sbEchoInterval->setRange(0, 100000);
     m_sbBytesCount->setRange(0, 64);
