@@ -16,6 +16,7 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     connections();
     index = id;
     path = p;
+    isFromFile = false;
     bMacros->setStyleSheet("font-weight: bold");
     bMacros->setEnabled(buttonActive);
     bMacrosDel->resize(5, 5);
@@ -95,6 +96,7 @@ void Macros::openLoad()
             bMacros->setText(fileInfo.baseName());
             file.close();
             cbMacrosActive->setEnabled(true);
+            isFromFile = true;
         }
 }
 
@@ -111,6 +113,7 @@ bool Macros::openPath(QString fileName)
         bMacros->setText(fileInfo.baseName());
         file.close();
         cbMacrosActive->setEnabled(true);
+        isFromFile = true;
         return true;
     } else
         return false;

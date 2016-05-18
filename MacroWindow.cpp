@@ -40,7 +40,7 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
     scrollArea->show();
     scrollArea->setVisible(true);
     scrollArea->setVerticalScrollBar(new QScrollBar(Qt::Vertical, scrollArea));
-    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setWidgetResizable(true);
     scrollAreaLayout->addWidget(scrollArea);
@@ -64,7 +64,8 @@ void MacroWindow::loadPrevSession()
         if (!MacrosList.last()->openPath(settings->value("macros/"+QString::number(i)+"/path").toString()))
         {
             MacrosList.last()->leMacros->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
-            MacrosList.last()->sbMacrosInterval->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());           
+            MacrosList.last()->sbMacrosInterval->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
+            MacrosList.last()->cbMacrosActive->setEnabled(true);
         }
          MacrosList.last()->cbMacrosActive->setChecked(settings->value("macros/"+QString::number(i)+"/checked").toBool());
     }
@@ -78,7 +79,7 @@ void MacroWindow::saveSession()
     settings->remove("macros");
     int i = 1;
     foreach (Macros *m, MacrosList.values()) {
-        if (m->path.isEmpty())
+        if (m->isFromFile)
         {
         settings->setValue("macros/"+QString::number(i)+"/packege", m->leMacros->text());
         settings->setValue("macros/"+QString::number(i)+"/interval", m->sbMacrosInterval->value());

@@ -39,6 +39,7 @@ public:
 
     int index;
     QString path;
+    bool isFromFile;
 
     bool openPath(QString);
     explicit Macros(int id, QString p, bool buttonActive, QWidget *parent = 0);
