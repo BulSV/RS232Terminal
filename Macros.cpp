@@ -25,6 +25,8 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     sbMacrosInterval->setRange(1, 1000000);
     sbMacrosInterval->setValue(500);
     cbMacrosActive->setEnabled(false);
+    bMacros->setEnabled(false);
+    sbMacrosInterval->setEnabled(false);
 
     bMacrosDel->setFixedSize(15, 13);
     bMacrosLoad->setFixedSize(37,22);
@@ -42,7 +44,7 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
 
 void Macros::connections()
 {
-    connect(leMacros, SIGNAL(textEdited(QString)), this, SLOT(textEdited(QString)));
+    connect(leMacros, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(bMacros, SIGNAL(clicked(bool)), this, SLOT(singleSend()));
     connect(bMacrosDel, SIGNAL(clicked(bool)), this, SLOT(Delete()));
     connect(bMacrosLoad, SIGNAL(clicked(bool)), this, SLOT(openLoad()));
@@ -50,12 +52,20 @@ void Macros::connections()
     connect(cbMacrosActive, SIGNAL(toggled(bool)), this, SLOT(stateChange(bool)));
 }
 
-void Macros::textEdited(QString text)
+void Macros::textChanged(QString text)
 {
     if (text.isEmpty())
+    {
+        sbMacrosInterval->setEnabled(false);
         cbMacrosActive->setEnabled(false);
+        bMacros->setEnabled(false);
+    }
     else
+    {
+        sbMacrosInterval->setEnabled(true);
         cbMacrosActive->setEnabled(true);
+        bMacros->setEnabled(true);
+    }
 }
 
 void Macros::singleSend()

@@ -83,6 +83,7 @@ private slots:
     void start();
     void stop();
     void echo();
+    void textChanged(QString text);
     void cleanEchoBuffer(bool check);
     void macrosRecieved(const QString &str);
     void showMacroWindow();

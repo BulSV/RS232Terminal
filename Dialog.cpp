@@ -12,7 +12,7 @@
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
 
-#define MAXLOGROWSCOUNT 10000
+#define MAXLOGROWSCOUNT 100000
 
 #define SEPARATOR "$"
 
@@ -67,6 +67,7 @@ Dialog::Dialog(QString title, QWidget *parent)
 
     m_abSendPackage->setCheckable(true);
     m_abSendPackage->setEnabled(false);
+    m_sbRepeatSendInterval->setEnabled(false);
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
     m_bStop->setEnabled(false);
@@ -175,7 +176,7 @@ void Dialog::connections()
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
-
+    connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
@@ -187,6 +188,22 @@ void Dialog::connections()
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
     connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
+}
+
+void Dialog::textChanged(QString text)
+{
+    if (!text.isEmpty() && m_bStop->isEnabled())
+    {
+        m_sbRepeatSendInterval->setEnabled(true);
+        m_abSendPackage->setEnabled(true);
+        m_abSendPackage->setCheckable(true);
+    }
+    else
+    {
+        m_sbRepeatSendInterval->setEnabled(false);
+        m_abSendPackage->setEnabled(false);
+        m_abSendPackage->setCheckable(false);
+    }
 }
 
 void Dialog::cleanEchoBuffer(bool check)
@@ -290,7 +307,6 @@ void Dialog::start()
         m_cbBits->setEnabled(false);
         m_cbParity->setEnabled(false);
         m_cbStopBits->setEnabled(false);
-        m_abSendPackage->setEnabled(true);
         m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         macroWindow->start();

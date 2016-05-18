@@ -69,7 +69,6 @@ void MacroWindow::loadPrevSession()
         {
             MacrosList.last()->leMacros->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
             MacrosList.last()->sbMacrosInterval->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
-            MacrosList.last()->cbMacrosActive->setEnabled(true);
         }
          MacrosList.last()->cbMacrosActive->setChecked(settings->value("macros/"+QString::number(i)+"/checked").toBool());
     }

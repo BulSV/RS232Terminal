@@ -20,7 +20,7 @@ private slots:
     void Delete();
     void save();
     void stateChange(bool check);
-    void textEdited(QString text);
+    void textChanged(QString text);
     void openLoad();
 
 signals:
