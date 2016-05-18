@@ -62,7 +62,6 @@ Dialog::Dialog(QString title, QWidget *parent)
     logWriteRowsCount = 0;
 
     m_abSendPackage->setCheckable(true);
-    m_cbEchoMode->setEnabled(false);
     m_abSendPackage->setEnabled(false);
     m_eLogRead->setReadOnly(true);
     m_eLogWrite->setReadOnly(true);
@@ -225,7 +224,6 @@ void Dialog::start()
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
         m_abSendPackage->setEnabled(true);
-        m_cbEchoMode->setEnabled(true);
         m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         macroWindow->start();
@@ -255,7 +253,6 @@ void Dialog::stop()
     m_abSendPackage->setChecked(false);
     m_tSend->stop();
     m_tEcho->stop();
-    m_cbEchoMode->setEnabled(false);
     Offset = 0;
     m_Protocol->resetProtocol();
 }
