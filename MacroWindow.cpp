@@ -84,7 +84,7 @@ void MacroWindow::saveSession()
     settings->remove("macros");
     int i = 1;
     foreach (Macros *m, MacrosList.values()) {
-        if (m->isFromFile)
+        if (!m->isFromFile)
         {
         settings->setValue("macros/"+QString::number(i)+"/packege", m->leMacros->text());
         settings->setValue("macros/"+QString::number(i)+"/interval", m->sbMacrosInterval->value());
