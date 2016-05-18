@@ -53,6 +53,10 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
 
 void MacroWindow::loadPrevSession()
 {
+    const QPoint pos = settings->value ("config/macro_position").toPoint();
+        if (!pos.isNull())
+            move (pos);
+
     int size = settings->value("macros/size", 0).toInt();
     if (!size)
     {
@@ -75,6 +79,7 @@ void MacroWindow::saveSession()
 {
     settings->setValue("config/m_height", height());
     settings->setValue("config/m_width", width());
+    settings->setValue("config/macro_position", pos());
 
     settings->remove("macros");
     int i = 1;
