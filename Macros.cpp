@@ -21,6 +21,7 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     bMacros->setEnabled(buttonActive);
     bMacrosDel->resize(5, 5);
     bMacrosDel->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
+    leMacros->setStyleSheet("font-family: \"Lucida Console\"; font-size: 9pt");
     sbMacrosInterval->setRange(1, 1000000);
     sbMacrosInterval->setValue(500);
     cbMacrosActive->setEnabled(false);
