@@ -18,14 +18,6 @@
 #include "MacroWindow.h"
 #include <QAbstractButton>
 
-class MyPlainTextEdit : public QPlainTextEdit {
-protected:
-   void mousePressEvent(QMouseEvent *e)
-   {
-       e->ignore();
-   }
-};
-
 class Dialog : public QMainWindow
 {
     Q_OBJECT
@@ -45,8 +37,8 @@ class Dialog : public QMainWindow
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;
-    MyPlainTextEdit *m_eLogRead;
-    MyPlainTextEdit *m_eLogWrite;
+    QPlainTextEdit *m_eLogRead;
+    QPlainTextEdit *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
@@ -81,7 +73,7 @@ class Dialog : public QMainWindow
     void saveSession();
     void loadSession();
     void connections();
-    void scrollToBot(QCheckBox *cb, MyPlainTextEdit *te);
+    void scrollToBot(QCheckBox *cb, QPlainTextEdit *te);
     QStringList doOffset(QStringList list);
 
 protected:

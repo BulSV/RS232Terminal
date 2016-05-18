@@ -34,8 +34,8 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
-    , m_eLogRead(new MyPlainTextEdit())
-    , m_eLogWrite(new MyPlainTextEdit())
+    , m_eLogRead(new QPlainTextEdit())
+    , m_eLogWrite(new QPlainTextEdit())
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
@@ -419,7 +419,7 @@ void Dialog::sendPackage(QString string)
     }
 }
 
-void Dialog::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
+void Dialog::scrollToBot(QCheckBox *cb, QPlainTextEdit *te)
 {
     if (cb->checkState())
     {
