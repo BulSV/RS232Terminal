@@ -18,6 +18,17 @@
 #include "MacroWindow.h"
 #include <QAbstractButton>
 
+class MyPlainTextEdit : public QPlainTextEdit {
+public:
+    void delLine(int lineNumber)
+    {
+        QStringList list = this->toPlainText().split("\n");
+        list.removeAt(lineNumber);
+        this->clear();
+        this->insertPlainText(list.join("\n"));
+    }
+};
+
 class Dialog : public QMainWindow
 {
     Q_OBJECT
@@ -37,8 +48,8 @@ class Dialog : public QMainWindow
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;
-    QPlainTextEdit *m_eLogRead;
-    QPlainTextEdit *m_eLogWrite;
+    MyPlainTextEdit *m_eLogRead;
+    MyPlainTextEdit *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
@@ -73,7 +84,7 @@ class Dialog : public QMainWindow
     void saveSession();
     void loadSession();
     void connections();
-    void scrollToBot(QCheckBox *cb, QPlainTextEdit *te);
+    void scrollToBot(QCheckBox *cb, MyPlainTextEdit *te);
     QStringList doOffset(QStringList list);
 
 protected:

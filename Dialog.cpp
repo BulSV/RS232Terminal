@@ -12,7 +12,7 @@
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
 
-#define MAXLOGROWSCOUNT 100000
+#define MAXLOGROWSCOUNT 1000
 
 #define SEPARATOR "$"
 
@@ -34,8 +34,8 @@ Dialog::Dialog(QString title, QWidget *parent)
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
-    , m_eLogRead(new QPlainTextEdit())
-    , m_eLogWrite(new QPlainTextEdit())
+    , m_eLogRead(new MyPlainTextEdit())
+    , m_eLogWrite(new MyPlainTextEdit())
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
@@ -435,7 +435,7 @@ void Dialog::sendPackage(QString string)
     }
 }
 
-void Dialog::scrollToBot(QCheckBox *cb, QPlainTextEdit *te)
+void Dialog::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 {
     if (cb->checkState())
     {
@@ -525,25 +525,22 @@ void Dialog::displayReadData(QString string)
             listOfBytes.clear();
         }
     }
-    scrollToBot(m_cbReadScroll, m_eLogRead);
     if (logReadRowsCount >= MAXLOGROWSCOUNT)
     {
-        m_eLogRead->clear();
-        logReadRowsCount = 0;
+        m_eLogRead->delLine(0);
     }
+    scrollToBot(m_cbReadScroll, m_eLogRead);
 }
 
 void Dialog::displayWriteData(QString string)
 {
     logWriteRowsCount++;
     m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
-
-    scrollToBot(m_cbWriteScroll, m_eLogWrite);
     if (logWriteRowsCount >= MAXLOGROWSCOUNT)
     {
-        m_eLogWrite->clear();
-        logWriteRowsCount = 0;
-}
+        m_eLogWrite->delLine(0);
+    }
+    scrollToBot(m_cbWriteScroll, m_eLogWrite);
 }
 
 QStringList Dialog::doOffset(QStringList list)
