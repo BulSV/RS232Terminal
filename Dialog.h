@@ -1,7 +1,7 @@
 #ifndef DIALOG_H
 #define DIALOG_H
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QLabel>
 #include <QComboBox>
 #include <QPushButton>
@@ -26,9 +26,10 @@ protected:
    }
 };
 
-class Dialog : public QWidget
+class Dialog : public QMainWindow
 {
     Q_OBJECT
+    QWidget *widget;
     QComboBox *m_cbPort;
     QComboBox *m_cbBaud;
     QComboBox *m_cbBits;

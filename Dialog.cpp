@@ -17,7 +17,8 @@
 #define SEPARATOR "$"
 
 Dialog::Dialog(QString title, QWidget *parent)
-    : QWidget(parent, Qt::WindowCloseButtonHint)
+    : QMainWindow(parent, Qt::WindowCloseButtonHint)
+    , widget(new QWidget(this))
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
     , m_cbBits(new QComboBox(this))
@@ -158,7 +159,8 @@ void Dialog::view()
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->addLayout(configLayout, 0, 0);
     allLayouts->addLayout(dataLayout, 0, 1);
-    setLayout(allLayouts);
+    widget->setLayout(allLayouts);
+    setCentralWidget(widget);
 }
 
 void Dialog::connections()
@@ -587,11 +589,15 @@ void Dialog::showMacroWindow()
 
 void Dialog::saveSession()
 {
-    settings->setValue("config/height", this->height());
-    settings->setValue("config/width", this->width());
+    settings->setValue("config/height", height());
+    settings->setValue("config/width", width());
+    settings->setValue("config/position", pos());
 
-    settings->setValue("config/port", m_cbPort->currentIndex());
+    settings->setValue("config/port", m_cbPort->currentText());
     settings->setValue("config/baud", m_cbBaud->currentIndex());
+    settings->setValue("config/data_bits", m_cbBits->currentIndex());
+    settings->setValue("config/parity", m_cbParity->currentIndex());
+    settings->setValue("config/stop_bits", m_cbStopBits->currentIndex());
     settings->setValue("config/bytes_count", m_sbBytesCount->value());
     settings->setValue("config/echo", m_cbEchoMode->checkState());
     settings->setValue("config/echo_interval", m_sbEchoInterval->value());
@@ -602,8 +608,15 @@ void Dialog::saveSession()
 
 void Dialog::loadSession()
 {
-    m_cbPort->setCurrentIndex(settings->value("config/port").toInt());
+    const QPoint pos = settings->value ("config/position").toPoint();
+        if (!pos.isNull())
+            move (pos);
+
+    m_cbPort->setCurrentText(settings->value("config/port").toString());
     m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
+    m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
+    m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
+    m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
     m_sbBytesCount->setValue(settings->value("config/bytes_count").toInt());
     m_cbEchoMode->setChecked(settings->value("config/echo").toBool());
     m_sbEchoInterval->setValue(settings->value("config/echo_interval").toInt());
