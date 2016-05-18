@@ -20,6 +20,9 @@ Dialog::Dialog(QString title, QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
+    , m_cbBits(new QComboBox(this))
+    , m_cbParity(new QComboBox(this))
+    , m_cbStopBits(new QComboBox(this))
     , m_bStart(new QPushButton("Start", this))
     , m_bStop(new QPushButton("Stop", this))
     , m_bWriteLogClear(new QPushButton("Clear", this))
@@ -87,9 +90,18 @@ Dialog::Dialog(QString title, QWidget *parent)
     }
     m_cbPort->addItems(portsNames);
 
-    QStringList bauds;
-    bauds << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
-    m_cbBaud->addItems(bauds);
+    QStringList buffer;
+    buffer << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
+    m_cbBaud->addItems(buffer);
+    buffer.clear();
+    buffer << "5" << "6" << "7" << "8";
+    m_cbBits->addItems(buffer);
+    buffer.clear();
+    buffer << "None" << "Odd" << "Even" << "Mark" << "Space";
+    m_cbParity->addItems(buffer);
+    buffer.clear();
+    buffer << "1" << "1.5" << "2";
+    m_cbStopBits->addItems(buffer);
     loadSession();
 }
 
@@ -102,16 +114,22 @@ void Dialog::view()
     configLayout->addWidget(m_cbPort, 3, 1);
     configLayout->addWidget(new QLabel("Baud:", this), 4, 0);
     configLayout->addWidget(m_cbBaud, 4, 1);
-    configLayout->addWidget(m_bStart, 5, 0);
-    configLayout->addWidget(m_bStop, 5, 1);
-    configLayout->addWidget(m_lTx, 6, 0);
-    configLayout->addWidget(m_lRx, 6, 1);
-    configLayout->addWidget(m_cbEchoMode, 7, 0);
-    configLayout->addWidget(m_sbEchoInterval, 7, 1);
-    configLayout->addWidget(new QLabel("Bytes count:", this), 8, 0);
-    configLayout->addWidget(m_sbBytesCount, 8, 1);
-    configLayout->addWidget(m_bOffsetLeft, 9, 0);
-    configLayout->addWidget(m_bOffsetRight, 9, 1);
+    configLayout->addWidget(new QLabel("Data bits:", this), 5, 0);
+    configLayout->addWidget(m_cbBits, 5, 1);
+    configLayout->addWidget(new QLabel("Paruty:", this), 6, 0);
+    configLayout->addWidget(m_cbParity, 6, 1);
+    configLayout->addWidget(new QLabel("Stop bits:", this), 7, 0);
+    configLayout->addWidget(m_cbStopBits, 7, 1);
+    configLayout->addWidget(m_bStart, 8, 0);
+    configLayout->addWidget(m_bStop, 8, 1);
+    configLayout->addWidget(m_lTx, 9, 0);
+    configLayout->addWidget(m_lRx, 9, 1);
+    configLayout->addWidget(m_cbEchoMode, 10, 0);
+    configLayout->addWidget(m_sbEchoInterval, 10, 1);
+    configLayout->addWidget(new QLabel("Bytes count:", this), 11, 0);
+    configLayout->addWidget(m_sbBytesCount, 11, 1);
+    configLayout->addWidget(m_bOffsetLeft, 12, 0);
+    configLayout->addWidget(m_bOffsetRight, 12, 1);
     configLayout->setSpacing(5);
 
     QGridLayout *sendPackageLayout = new QGridLayout;
@@ -210,10 +228,53 @@ void Dialog::start()
         case 8:
             m_Port->setBaudRate(QSerialPort::Baud1200);
             break;
-        default:
-            m_Port->setBaudRate(QSerialPort::Baud921600);
+        }
+
+        switch (m_cbBits->currentIndex()) {
+        case 0:
+            m_Port->setDataBits(QSerialPort::Data5);
+            break;
+        case 1:
+            m_Port->setDataBits(QSerialPort::Data6);
+            break;
+        case 2:
+            m_Port->setDataBits(QSerialPort::Data7);
+            break;
+        case 3:
+            m_Port->setDataBits(QSerialPort::Data8);
             break;
         }
+
+        switch (m_cbParity->currentIndex()) {
+        case 0:
+            m_Port->setParity(QSerialPort::NoParity);
+            break;
+        case 1:
+            m_Port->setParity(QSerialPort::OddParity);
+            break;
+        case 2:
+            m_Port->setParity(QSerialPort::EvenParity);
+            break;
+        case 3:
+            m_Port->setParity(QSerialPort::MarkParity);
+            break;
+        case 4:
+            m_Port->setParity(QSerialPort::SpaceParity);
+            break;
+        }
+
+        switch (m_cbStopBits->currentIndex()) {
+        case 0:
+            m_Port->setStopBits(QSerialPort::OneStop);
+            break;
+        case 1:
+            m_Port->setStopBits(QSerialPort::OneAndHalfStop);
+            break;
+        case 2:
+            m_Port->setStopBits(QSerialPort::TwoStop);
+            break;
+        }
+
 
         m_Port->setDataBits(QSerialPort::Data8);
         m_Port->setParity(QSerialPort::NoParity);
@@ -223,6 +284,9 @@ void Dialog::start()
         m_bStop->setEnabled(true);
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
+        m_cbBits->setEnabled(false);
+        m_cbParity->setEnabled(false);
+        m_cbStopBits->setEnabled(false);
         m_abSendPackage->setEnabled(true);
         m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
@@ -249,6 +313,9 @@ void Dialog::stop()
     m_bStart->setEnabled(true);
     m_cbPort->setEnabled(true);
     m_cbBaud->setEnabled(true);
+    m_cbBits->setEnabled(true);
+    m_cbParity->setEnabled(true);
+    m_cbStopBits->setEnabled(true);
     m_abSendPackage->setEnabled(false);
     m_abSendPackage->setChecked(false);
     m_tSend->stop();

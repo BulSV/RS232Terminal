@@ -31,6 +31,9 @@ class Dialog : public QWidget
     Q_OBJECT
     QComboBox *m_cbPort;
     QComboBox *m_cbBaud;
+    QComboBox *m_cbBits;
+    QComboBox *m_cbParity;
+    QComboBox *m_cbStopBits;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
     QPushButton *m_bWriteLogClear;
