@@ -401,7 +401,7 @@ void Dialog::sendPackage(QString string)
         {
             if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
                 m_BlinkTimeTxColor->start();
-                m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
+                m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
             }
             foreach (QString s, byteList)
             {
