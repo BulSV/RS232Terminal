@@ -370,16 +370,6 @@ void Dialog::displayReadData(QString string)
         string.insert(i, SEPARATOR);
     }
 
-    if (m_cbEchoMode->isChecked())
-    {
-        echoData.append(" " + string);
-        if (!m_tEcho->isActive())
-        {
-            m_tEcho->setInterval(m_sbEchoInterval->value());
-            m_tEcho->start();
-        }
-    }
-
     if (!m_sbBytesCount->value())
     {
         QString out;
@@ -392,6 +382,16 @@ void Dialog::displayReadData(QString string)
         }
         m_eLogRead->insertPlainText(out.toUpper() + "\n");
         listOfBytes.clear();
+
+        if (m_cbEchoMode->isChecked())
+        {
+            echoData.append(" " + string);
+            if (!m_tEcho->isActive())
+            {
+                m_tEcho->setInterval(m_sbEchoInterval->value());
+                m_tEcho->start();
+            }
+        }
     }
     else
     {        
@@ -426,9 +426,18 @@ void Dialog::displayReadData(QString string)
                    if (i != restBytes.count()-1)
                        restDisplay += " ";
                }
-               m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
-               restBytes.clear();
+               m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");               
             }
+            if (m_cbEchoMode->isChecked())
+            {
+                echoData.append(" " +listOfBytes.join(SEPARATOR)+SEPARATOR+restBytes.join(SEPARATOR));
+                if (!m_tEcho->isActive())
+                {
+                    m_tEcho->setInterval(m_sbEchoInterval->value());
+                    m_tEcho->start();
+                }
+            }
+            restBytes.clear();
             DisplayReadBuffer.clear();
             listOfBytes.clear();
         }
