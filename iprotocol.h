@@ -15,7 +15,6 @@ public:
     virtual QString getReadedData() const = 0;
 public slots:
     virtual void writeData() = 0;
-    virtual void resetProtocol() = 0;
 signals:
     void DataIsReaded(bool);
     void DataIsWrited(bool);
