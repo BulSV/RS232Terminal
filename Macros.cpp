@@ -27,6 +27,7 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     cbMacrosActive->setEnabled(false);
     bMacros->setEnabled(false);
     sbMacrosInterval->setEnabled(false);
+    bMacrosSave->setEnabled(false);
 
     bMacrosDel->setFixedSize(15, 13);
     bMacrosLoad->setFixedSize(37,22);
@@ -59,12 +60,14 @@ void Macros::textChanged(QString text)
         sbMacrosInterval->setEnabled(false);
         cbMacrosActive->setEnabled(false);
         bMacros->setEnabled(false);
+        bMacrosSave->setEnabled(false);
     }
     else
     {
         sbMacrosInterval->setEnabled(true);
         cbMacrosActive->setEnabled(true);
         bMacros->setEnabled(true);
+        bMacrosSave->setEnabled(true);
     }
 }
 
