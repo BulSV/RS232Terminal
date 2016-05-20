@@ -45,30 +45,26 @@ void RS232TerminalProtocol::writeData()
     itsComPort->writeData();
 }
 
-void RS232TerminalProtocol::resetProtocol()
-{
-}
 
-// преобразует word в byte
 int RS232TerminalProtocol::wordToInt(QByteArray ba)
 {
     int temp = ba[0];
     if(temp < 0)
     {
-        temp += 0x100; // 256;
+        temp += 0x100;
         temp *= 0x100;
     }
     else
-        temp = ba[0]*0x100; // старший байт
+        temp = ba[0]*0x100;
 
     int i = ba[1];
     if(i < 0)
     {
-        i += 0x100; // 256;
+        i += 0x100;
         temp += i;
     }
     else
-        temp += ba[1]; // младший байт
+        temp += ba[1];
 
     return temp;
 }

@@ -26,7 +26,6 @@ private:
 
 public slots:
     virtual void writeData();
-    virtual void resetProtocol();
 
 private slots:
     void readData(bool isReaded);
