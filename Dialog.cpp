@@ -12,8 +12,6 @@
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
 
-#define MAXLOGROWSCOUNT 1000
-
 #define SEPARATOR "$"
 
 Dialog::Dialog(QString title, QWidget *parent)
@@ -344,7 +342,6 @@ void Dialog::stop()
     m_tSend->stop();
     m_tEcho->stop();
     Offset = 0;
-    m_Protocol->resetProtocol();
 }
 
 void Dialog::macrosRecieved(const QString &str)
@@ -533,7 +530,7 @@ void Dialog::displayReadData(QString string)
             listOfBytes.clear();
         }
     }
-    if (logReadRowsCount >= MAXLOGROWSCOUNT)
+    if (logReadRowsCount >= maxReadLogRows)
     {
         m_eLogRead->delLine(0);
     }
@@ -547,7 +544,7 @@ void Dialog::displayWriteData(QString string)
         logWriteRowsCount++;
         m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
     }
-    if (logWriteRowsCount >= MAXLOGROWSCOUNT)
+    if (logWriteRowsCount >= maxWriteLogRows)
     {
         m_eLogWrite->delLine(0);
     }
@@ -619,6 +616,8 @@ void Dialog::saveSession()
     settings->setValue("config/width", width());
     settings->setValue("config/position", pos());
 
+    settings->setValue("config/max_write_log_rows", maxWriteLogRows);
+    settings->setValue("config/max_read_log_rows", maxReadLogRows);
     settings->setValue("config/port", m_cbPort->currentText());
     settings->setValue("config/baud", m_cbBaud->currentIndex());
     settings->setValue("config/data_bits", m_cbBits->currentIndex());
@@ -640,6 +639,8 @@ void Dialog::loadSession()
         if (!pos.isNull())
             move (pos);
 
+    maxWriteLogRows = settings->value("config/max_write_log_rows", 1000).toInt();
+    maxReadLogRows = settings->value("config/max_read_log_rows", 1000).toInt();
     m_cbPort->setCurrentText(settings->value("config/port").toString());
     m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());

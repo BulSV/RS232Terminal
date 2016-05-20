@@ -29,6 +29,30 @@ public:
     }
 };
 
+//class DispString : public QString {
+//public:
+//    QStringList bytes;
+//    QStringList rest;
+//
+//    void appendBytes(QStringList slist)
+//    {
+//        foreach (QString, slist)
+//            bytes += slist.takeFirst();
+//    }
+//
+//    QString getBytes(int count)
+//    {
+//        if (bytes.isEmpty())
+//            return "";
+//
+//        QString out;
+//        for (int i = 0; i < count; i++)
+//        {
+//            out += bytes.takeFirst() + " ";
+//        }
+//    }
+//};
+
 class Dialog : public QMainWindow
 {
     Q_OBJECT
@@ -74,6 +98,8 @@ class Dialog : public QMainWindow
     QSettings *settings;
     MacroWindow *macroWindow;
 
+    int maxWriteLogRows;
+    int maxReadLogRows;
     int Offset;
     int logReadRowsCount;
     int logWriteRowsCount;
