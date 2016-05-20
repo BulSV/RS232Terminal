@@ -566,11 +566,13 @@ QStringList Dialog::doOffset(QStringList list)
 void Dialog::clearReadLog()
 {
     m_eLogRead->clear();
+    logReadRowsCount = 0;
 }
 
 void Dialog::clearWriteLog()
 {
     m_eLogWrite->clear();
+    logWriteRowsCount = 0;
 }
 
 void Dialog::colorIsTx()
