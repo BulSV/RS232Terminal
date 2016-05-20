@@ -19,6 +19,8 @@
 Dialog::Dialog(QString title, QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
     , widget(new QWidget(this))
+    , m_cbReadDisp(new QCheckBox("Display log", this))
+    , m_cbWriteDisp(new QCheckBox("Display log", this))
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
     , m_cbBits(new QComboBox(this))
@@ -142,13 +144,15 @@ void Dialog::view()
 
     QGridLayout *labelWriteLayout = new QGridLayout;
     labelWriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
-    labelWriteLayout->addWidget(m_cbWriteScroll, 0, 1);
-    labelWriteLayout->addWidget(m_bWriteLogClear, 0, 2);
+    labelWriteLayout->addWidget(m_cbWriteDisp, 0, 1);
+    labelWriteLayout->addWidget(m_cbWriteScroll, 0, 2);
+    labelWriteLayout->addWidget(m_bWriteLogClear, 0, 3);
 
     QGridLayout *labelReadLayout = new QGridLayout;
     labelReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
-    labelReadLayout->addWidget(m_cbReadScroll, 0, 1);
-    labelReadLayout->addWidget(m_bReadLogClear, 0, 2);
+    labelReadLayout->addWidget(m_cbReadDisp, 0, 1);
+    labelReadLayout->addWidget(m_cbReadScroll, 0, 2);
+    labelReadLayout->addWidget(m_bReadLogClear, 0, 3);
 
     QGridLayout *dataLayout = new QGridLayout;
     dataLayout->addLayout(labelWriteLayout, 0, 0);
@@ -447,7 +451,8 @@ void Dialog::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 
 void Dialog::displayReadData(QString string)
 {
-    logReadRowsCount++;
+    if (m_cbReadDisp->isChecked())
+        logReadRowsCount++;
     for (int i = 2; !(i >= string.length()); i += 3)
     {
         string.insert(i, SEPARATOR);
@@ -463,7 +468,8 @@ void Dialog::displayReadData(QString string)
             if (i != listOfBytes.count()-1)
                 out += " ";
         }
-        m_eLogRead->insertPlainText(out.toUpper() + "\n");
+        if (m_cbReadDisp->isChecked())
+            m_eLogRead->insertPlainText(out.toUpper() + "\n");
         listOfBytes.clear();
 
         if (m_cbEchoMode->isChecked())
@@ -499,7 +505,8 @@ void Dialog::displayReadData(QString string)
                     DisplayReadBuffer += " ";
                 qApp->processEvents();
             }
-            m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
+            if (m_cbReadDisp->isChecked())
+                m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
             if (restBytes.count())
             {
                QString restDisplay;
@@ -509,7 +516,8 @@ void Dialog::displayReadData(QString string)
                    if (i != restBytes.count()-1)
                        restDisplay += " ";
                }
-               m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");               
+               if (m_cbReadDisp->isChecked())
+                m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
             }
             if (m_cbEchoMode->isChecked())
             {
@@ -533,9 +541,12 @@ void Dialog::displayReadData(QString string)
 }
 
 void Dialog::displayWriteData(QString string)
-{
-    logWriteRowsCount++;
-    m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
+{   
+    if (m_cbWriteDisp->isChecked())
+    {
+        logWriteRowsCount++;
+        m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
+    }
     if (logWriteRowsCount >= MAXLOGROWSCOUNT)
     {
         m_eLogWrite->delLine(0);
@@ -619,6 +630,8 @@ void Dialog::saveSession()
     settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
     settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
     settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
+    settings->setValue("config/write_disp", m_cbWriteDisp->isChecked());
+    settings->setValue("config/read_disp", m_cbReadDisp->isChecked());
 }
 
 void Dialog::loadSession()
@@ -638,6 +651,8 @@ void Dialog::loadSession()
     m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
     m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
+    m_cbWriteDisp->setChecked(settings->value("config/write_disp", true).toBool());
+    m_cbReadDisp->setChecked(settings->value("config/read_disp", true).toBool());
 }
 
 void Dialog::closeEvent(QCloseEvent *e)

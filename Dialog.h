@@ -33,6 +33,8 @@ class Dialog : public QMainWindow
 {
     Q_OBJECT
     QWidget *widget;
+    QCheckBox *m_cbReadDisp;
+    QCheckBox *m_cbWriteDisp;
     QComboBox *m_cbPort;
     QComboBox *m_cbBaud;
     QComboBox *m_cbBits;
