@@ -8,6 +8,8 @@
 #include "rs232terminalprotocol.h"
 #include <QCloseEvent>
 #include <QMouseEvent>
+#include <QSplitter>
+#include <QSpacerItem>
 
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
@@ -17,8 +19,6 @@
 Dialog::Dialog(QString title, QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
     , widget(new QWidget(this))
-    , m_cbReadDisp(new QCheckBox("Display log", this))
-    , m_cbWriteDisp(new QCheckBox("Display log", this))
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
     , m_cbBits(new QComboBox(this))
@@ -110,29 +110,31 @@ Dialog::Dialog(QString title, QWidget *parent)
 
 void Dialog::view()
 {
+    QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding);
     QGridLayout *configLayout = new QGridLayout;
-    configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='150'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
+    configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='50' width='180'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
     configLayout->addWidget(m_bShowMacroForm, 2, 0, 1, 2);
-    configLayout->addWidget(new QLabel("Port:", this), 3, 0);
-    configLayout->addWidget(m_cbPort, 3, 1);
-    configLayout->addWidget(new QLabel("Baud:", this), 4, 0);
-    configLayout->addWidget(m_cbBaud, 4, 1);
-    configLayout->addWidget(new QLabel("Data bits:", this), 5, 0);
-    configLayout->addWidget(m_cbBits, 5, 1);
-    configLayout->addWidget(new QLabel("Paruty:", this), 6, 0);
-    configLayout->addWidget(m_cbParity, 6, 1);
-    configLayout->addWidget(new QLabel("Stop bits:", this), 7, 0);
-    configLayout->addWidget(m_cbStopBits, 7, 1);
-    configLayout->addWidget(m_bStart, 8, 0);
-    configLayout->addWidget(m_bStop, 8, 1);
-    configLayout->addWidget(m_lTx, 9, 0);
-    configLayout->addWidget(m_lRx, 9, 1);
+    configLayout->addWidget(m_lTx, 3, 0);
+    configLayout->addWidget(m_lRx, 3, 1);
+    configLayout->addWidget(new QLabel("Port:", this), 4, 0);
+    configLayout->addWidget(m_cbPort, 4, 1);
+    configLayout->addWidget(new QLabel("Baud:", this), 5, 0);
+    configLayout->addWidget(m_cbBaud, 5, 1);
+    configLayout->addWidget(new QLabel("Data bits:", this), 6, 0);
+    configLayout->addWidget(m_cbBits, 6, 1);
+    configLayout->addWidget(new QLabel("Paruty:", this), 7, 0);
+    configLayout->addWidget(m_cbParity, 7, 1);
+    configLayout->addWidget(new QLabel("Stop bits:", this), 8, 0);
+    configLayout->addWidget(m_cbStopBits, 8, 1);
+    configLayout->addWidget(m_bStart, 9, 0);
+    configLayout->addWidget(m_bStop, 9, 1);
     configLayout->addWidget(m_cbEchoMode, 10, 0);
     configLayout->addWidget(m_sbEchoInterval, 10, 1);
     configLayout->addWidget(new QLabel("Bytes count:", this), 11, 0);
     configLayout->addWidget(m_sbBytesCount, 11, 1);
     configLayout->addWidget(m_bOffsetLeft, 12, 0);
     configLayout->addWidget(m_bOffsetRight, 12, 1);
+    configLayout->addItem(spacer, 13, 0, -1, -1);
     configLayout->setSpacing(5);
 
     QGridLayout *sendPackageLayout = new QGridLayout;
@@ -140,24 +142,37 @@ void Dialog::view()
     sendPackageLayout->addWidget(m_sbRepeatSendInterval, 0, 1);
     sendPackageLayout->addWidget(m_abSendPackage, 0, 2);
 
-    QGridLayout *labelWriteLayout = new QGridLayout;
-    labelWriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
-    labelWriteLayout->addWidget(m_cbWriteDisp, 0, 1);
-    labelWriteLayout->addWidget(m_cbWriteScroll, 0, 2);
-    labelWriteLayout->addWidget(m_bWriteLogClear, 0, 3);
+    QGridLayout *WriteLayout = new QGridLayout;
+    WriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
+    WriteLayout->addWidget(m_cbWriteScroll, 0, 1);
+    WriteLayout->addWidget(m_bWriteLogClear, 0, 2);
+    WriteLayout->addWidget(m_eLogWrite, 1, 0, -1, -1);
+    WriteLayout->setSpacing(5);
+    WriteLayout->setMargin(5);
 
-    QGridLayout *labelReadLayout = new QGridLayout;
-    labelReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
-    labelReadLayout->addWidget(m_cbReadDisp, 0, 1);
-    labelReadLayout->addWidget(m_cbReadScroll, 0, 2);
-    labelReadLayout->addWidget(m_bReadLogClear, 0, 3);
+    QGridLayout *ReadLayout = new QGridLayout;
+    ReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
+    ReadLayout->addWidget(m_cbReadScroll, 0, 1);
+    ReadLayout->addWidget(m_bReadLogClear, 0, 2);
+    ReadLayout->addWidget(m_eLogRead, 1, 0, -1, -1);
+    ReadLayout->setSpacing(5);
+    ReadLayout->setMargin(5);
+
+    QWidget *wWrite = new QWidget;
+    wWrite->setLayout(WriteLayout);
+    QWidget *wRead = new QWidget;
+    wRead->setLayout(ReadLayout);
+
+    QSplitter *splitter = new QSplitter;
+    splitter->addWidget(wWrite);
+    splitter->addWidget(wRead);
+    splitter->setHandleWidth(1);
 
     QGridLayout *dataLayout = new QGridLayout;
-    dataLayout->addLayout(labelWriteLayout, 0, 0);
-    dataLayout->addLayout(labelReadLayout, 0, 1);
-    dataLayout->addWidget(m_eLogRead, 1, 1);
-    dataLayout->addWidget(m_eLogWrite, 1, 0);
-    dataLayout->addLayout(sendPackageLayout, 2, 0, 2, 0);
+    dataLayout->addWidget(splitter, 0, 0);
+    dataLayout->addLayout(sendPackageLayout, 1, 0, -1, -1);
+    dataLayout->setSpacing(0);
+    dataLayout->setMargin(0);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->addLayout(configLayout, 0, 0);
@@ -448,8 +463,7 @@ void Dialog::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 
 void Dialog::displayReadData(QString string)
 {
-    if (m_cbReadDisp->isChecked())
-        logReadRowsCount++;
+    logReadRowsCount++;
     for (int i = 2; !(i >= string.length()); i += 3)
     {
         string.insert(i, SEPARATOR);
@@ -465,8 +479,7 @@ void Dialog::displayReadData(QString string)
             if (i != listOfBytes.count()-1)
                 out += " ";
         }
-        if (m_cbReadDisp->isChecked())
-            m_eLogRead->insertPlainText(out.toUpper() + "\n");
+        m_eLogRead->insertPlainText(out.toUpper() + "\n");
         listOfBytes.clear();
 
         if (m_cbEchoMode->isChecked())
@@ -502,8 +515,7 @@ void Dialog::displayReadData(QString string)
                     DisplayReadBuffer += " ";
                 qApp->processEvents();
             }
-            if (m_cbReadDisp->isChecked())
-                m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
+            m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
             if (restBytes.count())
             {
                QString restDisplay;
@@ -513,8 +525,7 @@ void Dialog::displayReadData(QString string)
                    if (i != restBytes.count()-1)
                        restDisplay += " ";
                }
-               if (m_cbReadDisp->isChecked())
-                m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
+               m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
             }
             if (m_cbEchoMode->isChecked())
             {
@@ -539,11 +550,9 @@ void Dialog::displayReadData(QString string)
 
 void Dialog::displayWriteData(QString string)
 {   
-    if (m_cbWriteDisp->isChecked())
-    {
-        logWriteRowsCount++;
-        m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
-    }
+
+    logWriteRowsCount++;
+    m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
     if (logWriteRowsCount >= maxWriteLogRows)
     {
         m_eLogWrite->delLine(0);
@@ -629,8 +638,6 @@ void Dialog::saveSession()
     settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
     settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
     settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
-    settings->setValue("config/write_disp", m_cbWriteDisp->isChecked());
-    settings->setValue("config/read_disp", m_cbReadDisp->isChecked());
 }
 
 void Dialog::loadSession()
@@ -652,8 +659,6 @@ void Dialog::loadSession()
     m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
     m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
-    m_cbWriteDisp->setChecked(settings->value("config/write_disp", true).toBool());
-    m_cbReadDisp->setChecked(settings->value("config/read_disp", true).toBool());
 }
 
 void Dialog::closeEvent(QCloseEvent *e)

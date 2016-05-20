@@ -29,36 +29,11 @@ public:
     }
 };
 
-//class DispString : public QString {
-//public:
-//    QStringList bytes;
-//    QStringList rest;
-//
-//    void appendBytes(QStringList slist)
-//    {
-//        foreach (QString, slist)
-//            bytes += slist.takeFirst();
-//    }
-//
-//    QString getBytes(int count)
-//    {
-//        if (bytes.isEmpty())
-//            return "";
-//
-//        QString out;
-//        for (int i = 0; i < count; i++)
-//        {
-//            out += bytes.takeFirst() + " ";
-//        }
-//    }
-//};
 
 class Dialog : public QMainWindow
 {
     Q_OBJECT
     QWidget *widget;
-    QCheckBox *m_cbReadDisp;
-    QCheckBox *m_cbWriteDisp;
     QComboBox *m_cbPort;
     QComboBox *m_cbBaud;
     QComboBox *m_cbBits;
