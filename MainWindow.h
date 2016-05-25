@@ -30,7 +30,7 @@ public:
 };
 
 
-class Dialog : public QMainWindow
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
     QWidget *widget;
@@ -117,7 +117,7 @@ public:
     void displayReadData(QString string);
     void displayWriteData(QString string);
     void sendPackage(QString string);
-    explicit Dialog(QString title, QWidget *parent = 0);
+    explicit MainWindow(QString title, QWidget *parent = 0);
 };
 
 #endif // DIALOG_H

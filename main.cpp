@@ -1,4 +1,4 @@
-#include "Dialog.h"
+#include "MainWindow.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 #if defined (Q_OS_UNIX)
     app.setWindowIcon(QIcon(":/Resources/terminal.png"));
 #endif
-    Dialog window(QString::fromUtf8("RS232 Terminal"));
+    MainWindow window(QString::fromUtf8("RS232 Terminal"));
     window.show();
 
     return app.exec();

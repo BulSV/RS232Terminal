@@ -8,18 +8,19 @@ TEMPLATE = app
 win32:RC_FILE = RS232Terminal.rc
 
 SOURCES += main.cpp\
-        Dialog.cpp \
     rs232terminalprotocol.cpp \
     ComPort.cpp \
     Macros.cpp \
-    MacroWindow.cpp
+    MacroWindow.cpp \
+    MainWindow.cpp
 
-HEADERS  += Dialog.h \
+HEADERS  += \
     rs232terminalprotocol.h \
     ComPort.h \
     IProtocol.h \
     Macros.h \
-    MacroWindow.h
+    MacroWindow.h \
+    MainWindow.h
 
 RESOURCES += \
     RS232Terminal.qrc

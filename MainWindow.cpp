@@ -1,5 +1,5 @@
 #include <QDebug>
-#include "Dialog.h"
+#include "MainWindow.h"
 #include <QGridLayout>
 #include <QString>
 #include <QApplication>
@@ -16,7 +16,7 @@
 
 #define SEPARATOR "$"
 
-Dialog::Dialog(QString title, QWidget *parent)
+MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
     , widget(new QWidget(this))
     , m_cbPort(new QComboBox(this))
@@ -108,7 +108,7 @@ Dialog::Dialog(QString title, QWidget *parent)
     loadSession();
 }
 
-void Dialog::view()
+void MainWindow::view()
 {
     QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding);
     QGridLayout *configLayout = new QGridLayout;
@@ -181,7 +181,7 @@ void Dialog::view()
     setCentralWidget(widget);
 }
 
-void Dialog::connections()
+void MainWindow::connections()
 {
     connect(m_bReadLogClear, SIGNAL(clicked()), this, SLOT(clearReadLog()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), this, SLOT(clearWriteLog()));
@@ -207,7 +207,7 @@ void Dialog::connections()
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
 }
 
-void Dialog::textChanged(QString text)
+void MainWindow::textChanged(QString text)
 {
     if (!text.isEmpty() && m_bStop->isEnabled())
     {
@@ -223,14 +223,14 @@ void Dialog::textChanged(QString text)
     }
 }
 
-void Dialog::cleanEchoBuffer(bool check)
+void MainWindow::cleanEchoBuffer(bool check)
 {
     m_tEcho->stop();
     if (!check)
         echoData.clear();
 }
 
-void Dialog::start()
+void MainWindow::start()
 {
     m_Port->close();
     m_Port->setPortName(m_cbPort->currentText());
@@ -335,7 +335,7 @@ void Dialog::start()
     }
 }
 
-void Dialog::stop()
+void MainWindow::stop()
 {
     m_Port->close();
     macroWindow->stop();
@@ -359,12 +359,12 @@ void Dialog::stop()
     Offset = 0;
 }
 
-void Dialog::macrosRecieved(const QString &str)
+void MainWindow::macrosRecieved(const QString &str)
 {
     sendPackage(str);
 }
 
-void Dialog::received(bool isReceived)
+void MainWindow::received(bool isReceived)
 {
     if(isReceived) {
         if(!m_BlinkTimeRxColor->isActive() && !m_BlinkTimeRxNone->isActive()) {
@@ -375,24 +375,24 @@ void Dialog::received(bool isReceived)
     }
 }
 
-void Dialog::colorIsRx()
+void MainWindow::colorIsRx()
 {
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_BlinkTimeRxColor->stop();
     m_BlinkTimeRxNone->start();
 }
 
-void Dialog::colorRxNone()
+void MainWindow::colorRxNone()
 {
     m_BlinkTimeRxNone->stop();
 }
 
-void Dialog::sendSingle()
+void MainWindow::sendSingle()
 {
     sendPackage(m_leSendPackage->text());
 }
 
-void Dialog::echo()
+void MainWindow::echo()
 {
     sendPackage(echoData.takeFirst());
     if (echoData.isEmpty())
@@ -401,7 +401,7 @@ void Dialog::echo()
     }
 }
 
-void Dialog::startSending(bool checked)
+void MainWindow::startSending(bool checked)
 {
     if (checked)
         {
@@ -423,7 +423,7 @@ void Dialog::startSending(bool checked)
         }
 }
 
-void Dialog::sendPackage(QString string)
+void MainWindow::sendPackage(QString string)
 {
     if (m_Port->isOpen())
     {
@@ -451,7 +451,7 @@ void Dialog::sendPackage(QString string)
     }
 }
 
-void Dialog::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
+void MainWindow::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 {
     if (cb->checkState())
     {
@@ -461,7 +461,7 @@ void Dialog::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
     }
 }
 
-void Dialog::displayReadData(QString string)
+void MainWindow::displayReadData(QString string)
 {
     logReadRowsCount++;
     for (int i = 2; !(i >= string.length()); i += 3)
@@ -548,7 +548,7 @@ void Dialog::displayReadData(QString string)
     scrollToBot(m_cbReadScroll, m_eLogRead);
 }
 
-void Dialog::displayWriteData(QString string)
+void MainWindow::displayWriteData(QString string)
 {   
 
     logWriteRowsCount++;
@@ -560,7 +560,7 @@ void Dialog::displayWriteData(QString string)
     scrollToBot(m_cbWriteScroll, m_eLogWrite);
 }
 
-QStringList Dialog::doOffset(QStringList list)
+QStringList MainWindow::doOffset(QStringList list)
 {
     if (Offset && abs(Offset) < list.count())
     {
@@ -580,46 +580,46 @@ QStringList Dialog::doOffset(QStringList list)
     return list;
 }
 
-void Dialog::clearReadLog()
+void MainWindow::clearReadLog()
 {
     m_eLogRead->clear();
     logReadRowsCount = 0;
 }
 
-void Dialog::clearWriteLog()
+void MainWindow::clearWriteLog()
 {
     m_eLogWrite->clear();
     logWriteRowsCount = 0;
 }
 
-void Dialog::colorIsTx()
+void MainWindow::colorIsTx()
 {
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_BlinkTimeTxColor->stop();
     m_BlinkTimeTxNone->start();
 }
 
-void Dialog::colorTxNone()
+void MainWindow::colorTxNone()
 {
     m_BlinkTimeTxNone->stop();
 }
 
-void Dialog::offsetDec()
+void MainWindow::offsetDec()
 {
     Offset--;
 }
 
-void Dialog::offsetInc()
+void MainWindow::offsetInc()
 {
     Offset++;
 }
 
-void Dialog::showMacroWindow()
+void MainWindow::showMacroWindow()
 {
     macroWindow->show();
 }
 
-void Dialog::saveSession()
+void MainWindow::saveSession()
 {
     settings->setValue("config/height", height());
     settings->setValue("config/width", width());
@@ -640,7 +640,7 @@ void Dialog::saveSession()
     settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
 }
 
-void Dialog::loadSession()
+void MainWindow::loadSession()
 {
     const QPoint pos = settings->value ("config/position").toPoint();
         if (!pos.isNull())
@@ -661,7 +661,7 @@ void Dialog::loadSession()
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
 }
 
-void Dialog::closeEvent(QCloseEvent *e)
+void MainWindow::closeEvent(QCloseEvent *e)
 {
     saveSession();
     macroWindow->saveSession();
