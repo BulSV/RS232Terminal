@@ -28,8 +28,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_bStop(new QPushButton("Stop", this))
     , m_bWriteLogClear(new QPushButton("Clear", this))
     , m_bReadLogClear(new QPushButton("Clear", this))
-    , m_bOffsetLeft(new QPushButton("<---", this))
-    , m_bOffsetRight(new QPushButton("--->", this))
+    , m_bOffsetLeft(new QPushButton("<-------", this))
     , m_bShowMacroForm(new QPushButton("Macro", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
@@ -61,7 +60,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     view();
     connections();
 
-    Offset = 0;
     logReadRowsCount = 0;
     logWriteRowsCount = 0;
 
@@ -132,8 +130,7 @@ void MainWindow::view()
     configLayout->addWidget(m_sbEchoInterval, 10, 1);
     configLayout->addWidget(new QLabel("Bytes count:", this), 11, 0);
     configLayout->addWidget(m_sbBytesCount, 11, 1);
-    configLayout->addWidget(m_bOffsetLeft, 12, 0);
-    configLayout->addWidget(m_bOffsetRight, 12, 1);
+    configLayout->addWidget(m_bOffsetLeft, 12, 0, 1, 2);
     configLayout->addItem(spacer, 13, 0, -1, -1);
     configLayout->setSpacing(5);
 
@@ -190,8 +187,7 @@ void MainWindow::connections()
     connect(m_bReadLogClear, SIGNAL(clicked()), this, SLOT(clearReadLog()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), this, SLOT(clearWriteLog()));
     connect(m_bShowMacroForm, SIGNAL(clicked()), this, SLOT(showMacroWindow()));
-    connect(m_bOffsetLeft, SIGNAL(clicked()), this, SLOT(offsetDec()));
-    connect(m_bOffsetRight, SIGNAL(clicked()), this, SLOT(offsetInc()));
+    connect(m_bOffsetLeft, SIGNAL(clicked()), this, SLOT(doOffset()));
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
 
@@ -360,7 +356,6 @@ void MainWindow::stop()
     m_abSendPackage->setChecked(false);
     m_tSend->stop();
     m_tEcho->stop();
-    Offset = 0;
 }
 
 void MainWindow::macrosRecieved(const QString &str)
@@ -431,10 +426,17 @@ void MainWindow::sendPackage(QString string)
 {
     if (m_Port->isOpen())
     {
+        for (int i = 2; !(i >= string.length()); i += 3)
+        {
+            string.insert(i, SEPARATOR);
+        }
         QString out;
         QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
         if (!byteList.isEmpty())
         {
+
+            if (byteList.last().length() == 1)
+                string.insert(string.length()-1, "0");
             if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
                 m_BlinkTimeTxColor->start();
                 m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
@@ -467,37 +469,39 @@ void MainWindow::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 
 void MainWindow::displayReadData(QString string)
 {
-    logReadRowsCount++;
     for (int i = 2; !(i >= string.length()); i += 3)
     {
         string.insert(i, SEPARATOR);
     }
 
+    if (m_cbEchoMode->isChecked())
+    {
+        echoData.append(" " + string);
+        if (!m_tEcho->isActive())
+        {
+            m_tEcho->setInterval(m_sbEchoInterval->value());
+            m_tEcho->start();
+        }
+    }
+
     if (!m_sbBytesCount->value())
     {
-        QString out = string;
-        m_eLogRead->insertPlainText(out.replace(SEPARATOR, " ").toUpper() + "\n");
-
-        if (m_cbEchoMode->isChecked())
-        {
-            echoData.append(" " + string);
-            if (!m_tEcho->isActive())
-            {
-                m_tEcho->setInterval(m_sbEchoInterval->value());
-                m_tEcho->start();
-            }
-        }
+        m_eLogRead->insertPlainText(string.replace(SEPARATOR, " ").toUpper() + "\n");
+        logReadRowsCount++;
     }
     else
     {        
         listOfBytes += string.split(SEPARATOR);
 
-        foreach (QString s, listOfBytes) {
+        foreach (QString s, listOfBytes)
+        {
             if (readBytesDisplayed >= m_sbBytesCount->value())
             {
                 readBytesDisplayed = 0;
                 m_eLogRead->insertPlainText("\n");
+                logReadRowsCount++;
             }
+
             m_eLogRead->insertPlainText(s.toUpper() + " ");
             readBytesDisplayed++;
         }
@@ -506,6 +510,7 @@ void MainWindow::displayReadData(QString string)
     if (logReadRowsCount >= maxReadLogRows)
     {
         m_eLogRead->delLine(0);
+        logReadRowsCount--;
     }
     scrollToBot(m_cbReadScroll, m_eLogRead);
 }
@@ -518,34 +523,24 @@ void MainWindow::displayWriteData(QString string)
     if (logWriteRowsCount >= maxWriteLogRows)
     {
         m_eLogWrite->delLine(0);
+        logWriteRowsCount--;
     }
     scrollToBot(m_cbWriteScroll, m_eLogWrite);
 }
 
-QStringList MainWindow::doOffset(QStringList list)
+void MainWindow::doOffset()
 {
-    if (Offset && abs(Offset) < list.count())
-    {
-        if (Offset > 0)
-        {
-            for (int i = 0; i < abs(Offset); i++)
-                list.insert(0, list.takeLast());
-        }
-        if (Offset < 0)
-        {
-            for (int i = 0; i < abs(Offset); i++)
-                list.append(list.takeFirst());
-        }
-    }
-    else
-        Offset = 0;
-    return list;
+    m_eLogRead->textCursor().deletePreviousChar();
+    m_eLogRead->textCursor().deletePreviousChar();
+    m_eLogRead->textCursor().deletePreviousChar();
+    readBytesDisplayed--;
 }
 
 void MainWindow::clearReadLog()
 {
     m_eLogRead->clear();
     logReadRowsCount = 0;
+    readBytesDisplayed = 0;
 }
 
 void MainWindow::clearWriteLog()
@@ -564,16 +559,6 @@ void MainWindow::colorIsTx()
 void MainWindow::colorTxNone()
 {
     m_BlinkTimeTxNone->stop();
-}
-
-void MainWindow::offsetDec()
-{
-    Offset--;
-}
-
-void MainWindow::offsetInc()
-{
-    Offset++;
 }
 
 void MainWindow::showMacroWindow()

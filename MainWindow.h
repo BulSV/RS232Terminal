@@ -43,7 +43,6 @@ class MainWindow : public QMainWindow
     QPushButton *m_bWriteLogClear;
     QPushButton *m_bReadLogClear;
     QPushButton *m_bOffsetLeft;
-    QPushButton *m_bOffsetRight;
     QPushButton *m_bShowMacroForm;
     QLabel *m_lTx;
     QLabel *m_lRx;
@@ -74,7 +73,6 @@ class MainWindow : public QMainWindow
 
     int maxWriteLogRows;
     int maxReadLogRows;
-    int Offset;
     int logReadRowsCount;
     int logWriteRowsCount;
     QStringList listOfBytes;
@@ -86,7 +84,6 @@ class MainWindow : public QMainWindow
     void loadSession();
     void connections();
     void scrollToBot(QCheckBox *cb, MyPlainTextEdit *te);
-    QStringList doOffset(QStringList list);
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
@@ -95,12 +92,11 @@ private slots:
     void start();
     void stop();
     void echo();
+    void doOffset();
     void textChanged(QString text);
     void cleanEchoBuffer(bool check);
     void macrosRecieved(const QString &str);
     void showMacroWindow();
-    void offsetDec();
-    void offsetInc();
     void clearReadLog();
     void clearWriteLog();
     void received(bool isReceived);
