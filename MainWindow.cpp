@@ -475,16 +475,8 @@ void MainWindow::displayReadData(QString string)
 
     if (!m_sbBytesCount->value())
     {
-        QString out;
-        listOfBytes = string.split(SEPARATOR);
-        for (int i = 0; i < listOfBytes.count(); i++)
-        {
-            out += listOfBytes[i];
-            if (i != listOfBytes.count()-1)
-                out += " ";
-        }
-        m_eLogRead->insertPlainText(out.toUpper() + "\n");
-        listOfBytes.clear();
+        QString out = string;
+        m_eLogRead->insertPlainText(out.replace(SEPARATOR, " ").toUpper() + "\n");
 
         if (m_cbEchoMode->isChecked())
         {
@@ -500,50 +492,16 @@ void MainWindow::displayReadData(QString string)
     {        
         listOfBytes += string.split(SEPARATOR);
 
-        if (listOfBytes.count() < m_sbBytesCount->value())
-            return;
-        else
-        {
-            listOfBytes = doOffset(listOfBytes);
-            if (listOfBytes.count() > m_sbBytesCount->value())
+        foreach (QString s, listOfBytes) {
+            if (readBytesDisplayed >= m_sbBytesCount->value())
             {
-                for (int i = listOfBytes.count() - 1; i >= m_sbBytesCount->value(); i--)
-                {
-                    restBytes.prepend(listOfBytes.takeAt(i));
-                }
+                readBytesDisplayed = 0;
+                m_eLogRead->insertPlainText("\n");
             }
-            for (int i = 0; i < listOfBytes.count(); i++)
-            {
-                DisplayReadBuffer += listOfBytes[i];
-                if (i != listOfBytes.count()-1)
-                    DisplayReadBuffer += " ";
-                qApp->processEvents();
-            }
-            m_eLogRead->insertPlainText(DisplayReadBuffer.toUpper() + "\n");
-            if (restBytes.count())
-            {
-               QString restDisplay;
-               for (int i = 0; i < restBytes.count(); i++)
-               {
-                   restDisplay += restBytes[i];
-                   if (i != restBytes.count()-1)
-                       restDisplay += " ";
-               }
-               m_eLogRead->insertPlainText(restDisplay.toUpper() + "\n");
-            }
-            if (m_cbEchoMode->isChecked())
-            {
-                echoData.append(" " +listOfBytes.join(SEPARATOR)+SEPARATOR+restBytes.join(SEPARATOR));
-                if (!m_tEcho->isActive())
-                {
-                    m_tEcho->setInterval(m_sbEchoInterval->value());
-                    m_tEcho->start();
-                }
-            }
-            restBytes.clear();
-            DisplayReadBuffer.clear();
-            listOfBytes.clear();
+            m_eLogRead->insertPlainText(s.toUpper() + " ");
+            readBytesDisplayed++;
         }
+        listOfBytes.clear();
     }
     if (logReadRowsCount >= maxReadLogRows)
     {

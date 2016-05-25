@@ -29,7 +29,6 @@ public:
     }
 };
 
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -79,8 +78,7 @@ class MainWindow : public QMainWindow
     int logReadRowsCount;
     int logWriteRowsCount;
     QStringList listOfBytes;
-    QStringList restBytes;
-    QString DisplayReadBuffer;
+    int readBytesDisplayed;
     QStringList echoData;
 
     void view();
