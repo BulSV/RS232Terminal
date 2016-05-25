@@ -144,7 +144,9 @@ void MainWindow::view()
 
     QGridLayout *WriteLayout = new QGridLayout;
     WriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
+    m_cbWriteScroll->setFixedWidth(85);
     WriteLayout->addWidget(m_cbWriteScroll, 0, 1);
+    m_bWriteLogClear->setFixedWidth(50);
     WriteLayout->addWidget(m_bWriteLogClear, 0, 2);
     WriteLayout->addWidget(m_eLogWrite, 1, 0, -1, -1);
     WriteLayout->setSpacing(5);
@@ -152,7 +154,9 @@ void MainWindow::view()
 
     QGridLayout *ReadLayout = new QGridLayout;
     ReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
+    m_cbReadScroll->setFixedWidth(85);
     ReadLayout->addWidget(m_cbReadScroll, 0, 1);
+    m_bReadLogClear->setFixedWidth(50);
     ReadLayout->addWidget(m_bReadLogClear, 0, 2);
     ReadLayout->addWidget(m_eLogRead, 1, 0, -1, -1);
     ReadLayout->setSpacing(5);

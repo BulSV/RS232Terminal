@@ -1,5 +1,5 @@
-#ifndef DIALOG_H
-#define DIALOG_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QMainWindow>
 #include <QLabel>
@@ -120,4 +120,4 @@ public:
     explicit MainWindow(QString title, QWidget *parent = 0);
 };
 
-#endif // DIALOG_H
+#endif
