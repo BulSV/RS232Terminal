@@ -469,19 +469,19 @@ void MainWindow::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 
 void MainWindow::displayReadData(QString string)
 {
-    for (int i = 2; !(i >= string.length()); i += 3)
-    {
-        string.insert(i, SEPARATOR);
-    }
-
     if (m_cbEchoMode->isChecked())
     {
-        echoData.append(" " + string);
+        echoData.append(string);
         if (!m_tEcho->isActive())
         {
             m_tEcho->setInterval(m_sbEchoInterval->value());
             m_tEcho->start();
         }
+    }
+
+    for (int i = 2; !(i >= string.length()); i += 3)
+    {
+        string.insert(i, SEPARATOR);
     }
 
     if (!m_sbBytesCount->value())
