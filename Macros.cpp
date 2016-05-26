@@ -9,9 +9,11 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     , bMacrosLoad(new QPushButton("Load", this))
     , bMacrosSave(new QPushButton("Save", this))
     , sbMacrosInterval(new QSpinBox(this))
-    , cbMacrosActive(new QCheckBox(this))
+    , cbMacrosActive(new QCheckBox("Interval", this))
+    , cbPeriodSending(new QCheckBox("Period", this))
     , bMacros(new QPushButton("Not saved", this))
     , bMacrosDel(new QPushButton(this))
+    , tPeriodSending(new QTimer(this))
 {
     connections();
     index = id;
@@ -25,6 +27,7 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     sbMacrosInterval->setRange(1, 1000000);
     sbMacrosInterval->setValue(500);
     cbMacrosActive->setEnabled(false);
+    cbPeriodSending->setEnabled(false);
     bMacros->setEnabled(false);
     sbMacrosInterval->setEnabled(false);
     bMacrosSave->setEnabled(false);
@@ -40,7 +43,8 @@ Macros::Macros(int id, QString p, bool buttonActive, QWidget *parent)
     mainLayout->addWidget(leMacros, 0, 3);
     mainLayout->addWidget(sbMacrosInterval, 0, 4);
     mainLayout->addWidget(cbMacrosActive, 0, 5);
-    mainLayout->addWidget(bMacros, 0, 6);
+    mainLayout->addWidget(cbPeriodSending, 0, 6);
+    mainLayout->addWidget(bMacros, 0, 7);
     setLayout(mainLayout);
 }
 
@@ -52,6 +56,31 @@ void Macros::connections()
     connect(bMacrosLoad, SIGNAL(clicked(bool)), this, SLOT(openLoad()));
     connect(bMacrosSave, SIGNAL(clicked(bool)), this, SLOT(save()));
     connect(cbMacrosActive, SIGNAL(toggled(bool)), this, SLOT(stateChange(bool)));
+    connect(cbPeriodSending, SIGNAL(toggled(bool)), this, SLOT(startStopPeriodSending(bool)));
+    connect(tPeriodSending, SIGNAL(timeout()), this, SLOT(tick()));
+}
+
+void Macros::tick()
+{
+    singleSend();
+    tPeriodSending->setInterval(sbMacrosInterval->value());
+}
+
+void Macros::startStopPeriodSending(bool check)
+{
+    if (check)
+    {
+        cbMacrosActive->setEnabled(false);
+        tPeriodSending->setInterval(sbMacrosInterval->value());
+        tPeriodSending->start();
+        bMacros->setStyleSheet("font-weight: bold; color: green;");
+    }
+    else
+    {
+        tPeriodSending->stop();
+        cbMacrosActive->setEnabled(true);
+        bMacros->setStyleSheet("font-weight: bold;");
+    }
 }
 
 void Macros::textChanged(QString text)
@@ -60,6 +89,7 @@ void Macros::textChanged(QString text)
     {
         sbMacrosInterval->setEnabled(false);
         cbMacrosActive->setEnabled(false);
+        cbPeriodSending->setEnabled(false);
         bMacros->setEnabled(false);
         bMacrosSave->setEnabled(false);
     }
@@ -67,6 +97,7 @@ void Macros::textChanged(QString text)
     {
         sbMacrosInterval->setEnabled(true);
         cbMacrosActive->setEnabled(true);
+        cbPeriodSending->setEnabled(true);
         bMacros->setEnabled(true);
         bMacrosSave->setEnabled(true);
     }
@@ -111,6 +142,7 @@ void Macros::openLoad()
             bMacros->setText(fileInfo.baseName());
             file.close();
             cbMacrosActive->setEnabled(true);
+            cbPeriodSending->setEnabled(true);
             isFromFile = true;
         }
 }
@@ -128,6 +160,7 @@ bool Macros::openPath(QString fileName)
         bMacros->setText(fileInfo.baseName());
         file.close();
         cbMacrosActive->setEnabled(true);
+        cbPeriodSending->setEnabled(true);
         isFromFile = true;
         return true;
     } else

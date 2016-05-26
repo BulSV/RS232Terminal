@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <QGridLayout>
+#include <QTimer>
 
 class Macros : public QWidget
 {
@@ -22,11 +23,14 @@ private slots:
     void stateChange(bool check);
     void textChanged(QString text);
     void openLoad();
+    void startStopPeriodSending(bool check);
+    void tick();
 
 signals:
     DeleteMacros(int);
     WriteMacros(const QString &str);
     Sending(bool);
+    PeriodSending(const QString &str);
 
 public:
     QLineEdit *leMacros;
@@ -34,8 +38,10 @@ public:
     QPushButton *bMacrosSave;
     QSpinBox *sbMacrosInterval;
     QCheckBox *cbMacrosActive;
+    QCheckBox *cbPeriodSending;
     QPushButton *bMacros;
     QPushButton *bMacrosDel;
+    QTimer *tPeriodSending;
 
     int index;
     QString path;
