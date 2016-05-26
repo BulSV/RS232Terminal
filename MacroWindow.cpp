@@ -70,7 +70,8 @@ void MacroWindow::loadPrevSession()
             MacrosList.last()->leMacros->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
             MacrosList.last()->sbMacrosInterval->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
         }
-         MacrosList.last()->cbMacrosActive->setChecked(settings->value("macros/"+QString::number(i)+"/checked").toBool());
+         MacrosList.last()->cbMacrosActive->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
+         MacrosList.last()->cbPeriodSending->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
     }
 }
 
@@ -88,7 +89,8 @@ void MacroWindow::saveSession()
         settings->setValue("macros/"+QString::number(i)+"/packege", m->leMacros->text());
         settings->setValue("macros/"+QString::number(i)+"/interval", m->sbMacrosInterval->value());
         }
-        settings->setValue("macros/"+QString::number(i)+"/checked", m->cbMacrosActive->isChecked());
+        settings->setValue("macros/"+QString::number(i)+"/checked_interval", m->cbMacrosActive->isChecked());
+        settings->setValue("macros/"+QString::number(i)+"/checked_period", m->cbPeriodSending->isChecked());
         settings->setValue("macros/"+QString::number(i)+"/path", m->path);
         i++;
     }
