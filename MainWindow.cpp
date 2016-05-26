@@ -14,7 +14,7 @@
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
 
-#define SEPARATOR "$"
+#define SEPARATOR " "
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
@@ -426,10 +426,6 @@ void MainWindow::sendPackage(QString string)
 {
     if (m_Port->isOpen())
     {
-        for (int i = 2; !(i >= string.length()); i += 3)
-        {
-            string.insert(i, SEPARATOR);
-        }
         QString out;
         QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
         if (!byteList.isEmpty())
@@ -469,6 +465,11 @@ void MainWindow::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 
 void MainWindow::displayReadData(QString string)
 {
+    for (int i = 2; !(i >= string.length()); i += 3)
+    {
+        string.insert(i, SEPARATOR);
+    }
+
     if (m_cbEchoMode->isChecked())
     {
         echoData.append(string);
@@ -479,14 +480,9 @@ void MainWindow::displayReadData(QString string)
         }
     }
 
-    for (int i = 2; !(i >= string.length()); i += 3)
-    {
-        string.insert(i, SEPARATOR);
-    }
-
     if (!m_sbBytesCount->value())
     {
-        m_eLogRead->insertPlainText(string.replace(SEPARATOR, " ").toUpper() + "\n");
+        m_eLogRead->insertPlainText(string.toUpper() + "\n");
         logReadRowsCount++;
     }
     else
@@ -517,9 +513,8 @@ void MainWindow::displayReadData(QString string)
 
 void MainWindow::displayWriteData(QString string)
 {   
-
     logWriteRowsCount++;
-    m_eLogWrite->insertPlainText(string.replace("$", " ").toUpper() + "\n");
+    m_eLogWrite->insertPlainText(string.toUpper() + "\n");
     if (logWriteRowsCount >= maxWriteLogRows)
     {
         m_eLogWrite->delLine(0);
