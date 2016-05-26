@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QScrollArea>
 #include <QSpacerItem>
+#include <QFileDialog>
 
 class MacroWindow : public QWidget
 {
@@ -19,8 +20,10 @@ class MacroWindow : public QWidget
     QWidget *widget;
     QVBoxLayout *mainLayout;
     QPushButton *bAddMacros;
+    QPushButton *bLoadMacroses;
     QSpacerItem *spacer;
     QSettings *settings;
+    QFileDialog *fileDialog;
     int id;
 
     void connections();
@@ -35,6 +38,7 @@ public slots:
     void macrosRecieved(const QString &str){ emit WriteMacros(str); }
     void tick();
     void addDelSending(bool check);
+    void loadMacroses();
 
 signals:
         WriteMacros(const QString &str);

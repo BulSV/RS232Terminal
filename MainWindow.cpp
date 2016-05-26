@@ -433,10 +433,12 @@ void MainWindow::sendPackage(QString string)
 
             if (byteList.last().length() == 1)
                 string.insert(string.length()-1, "0");
+
             if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
                 m_BlinkTimeTxColor->start();
                 m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
             }
+
             foreach (QString s, byteList)
             {
                 bool ok;

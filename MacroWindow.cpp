@@ -13,8 +13,10 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
     , widget (new QWidget(scrollArea))
     , mainLayout (new QVBoxLayout(widget))
     , bAddMacros(new QPushButton("Add Macros", this))
+    , bLoadMacroses(new QPushButton("Load Macroses", this))
     , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
+    , fileDialog(new QFileDialog(this))
     , tMacro(new QTimer(this))
 {
     setWindowTitle(title);
@@ -27,12 +29,19 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
         dir.mkpath(path);
     }
 
+    fileDialog->setDirectory(path);
+    fileDialog->setFileMode(QFileDialog::ExistingFiles);
+    fileDialog->setNameFilter(trUtf8("Macro Files (*.rsmc)"));
+
     tMacro->setInterval(10);
     setMinimumWidth(750);
     setMinimumHeight(100);
     resize(settings->value("config/m_width", 750).toInt(), settings->value("config/m_height", 300).toInt());
 
-    mainLayout->addWidget(bAddMacros);
+    QHBoxLayout *buttonsLayout = new QHBoxLayout;
+    buttonsLayout->addWidget(bAddMacros);
+    buttonsLayout->addWidget(bLoadMacroses);
+    mainLayout->addLayout(buttonsLayout);
     mainLayout->setSpacing(0);
     mainLayout->setMargin(0);
     mainLayout->addSpacerItem(spacer);
@@ -135,7 +144,20 @@ void MacroWindow::delMacros(int index)
 void MacroWindow::connections()
 {
     connect(bAddMacros, SIGNAL(clicked(bool)), this, SLOT(addMacros()));
+    connect(bLoadMacroses, SIGNAL(clicked(bool)), this, SLOT(loadMacroses()));
     connect(tMacro, SIGNAL(timeout()), this, SLOT(tick()));
+}
+
+void MacroWindow::loadMacroses()
+{
+    QStringList fileNames;
+    if (fileDialog->exec())
+        fileNames = fileDialog->selectedFiles();
+
+    foreach (QString s, fileNames) {
+        addMacros();
+        MacrosList.last()->openPath(s);
+    }
 }
 
 void MacroWindow::start()
