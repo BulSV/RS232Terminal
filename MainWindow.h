@@ -17,6 +17,7 @@
 #include "ComPort.h"
 #include "MacroWindow.h"
 #include <QAbstractButton>
+#include <QFileDialog>
 
 class MyPlainTextEdit : public QPlainTextEdit
 {
@@ -25,10 +26,17 @@ public:
     MyPlainTextEdit(QWidget *parent = 0) : QPlainTextEdit(parent) {}
     void delLine(int lineNumber)
     {
-        QStringList list = this->toPlainText().split("\n");
-        list.removeAt(lineNumber);
-        this->clear();
-        this->insertPlainText(list.join("\n"));
+//        QStringList list = this->toPlainText().split("\n");
+//        list.removeAt(lineNumber);
+//        this->clear();
+//        this->insertPlainText(list.join("\n"));
+        QTextCursor cursor = this->textCursor();
+        cursor.movePosition(QTextCursor::Start);
+        cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, lineNumber);
+        cursor.select(QTextCursor::LineUnderCursor);
+        cursor.removeSelectedText();
+
+        this->setTextCursor(cursor);
     }
 };
 
@@ -61,6 +69,8 @@ class MainWindow : public QMainWindow
     QSpinBox *m_sbEchoInterval;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
+    QCheckBox *m_cbSaveWriteLog;
+    QCheckBox *m_cbSaveReadLog;
 
     QTimer *m_BlinkTimeTxNone;
     QTimer *m_BlinkTimeRxNone;
@@ -70,11 +80,17 @@ class MainWindow : public QMainWindow
     QTimer *m_tSend;
     QTimer *m_tEcho;
 
+    QTimer *m_tWriteLog;
+    QTimer *m_tReadLog;
+
     QSerialPort *m_Port;
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
     QSettings *settings;
     MacroWindow *macroWindow;
+    QFileDialog *fileDialog;
+    QFile writeLog;
+    QFile readLog;
 
     int maxWriteLogRows;
     int maxReadLogRows;
@@ -83,6 +99,10 @@ class MainWindow : public QMainWindow
     QStringList listOfBytes;
     int readBytesDisplayed;
     QStringList echoData;
+    bool logWrite;
+    bool logRead;
+    QString writeLogBuffer;
+    QString readLogBuffer;
 
     void view();
     void saveSession();
@@ -100,6 +120,10 @@ private slots:
     void saveWrite();
     void saveRead();
     void doOffset();
+    void writeLogTimeout();
+    void readLogTimeout();
+    void startWriteLog(bool check);
+    void startReadLog(bool check);
     void textChanged(QString text);
     void cleanEchoBuffer(bool check);
     void macrosRecieved(const QString &str);

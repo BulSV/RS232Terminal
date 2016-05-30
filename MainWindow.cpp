@@ -12,6 +12,7 @@
 #include <QSpacerItem>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QDateTime>
 
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
@@ -44,20 +45,24 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
     , m_sbEchoInterval(new QSpinBox(this))
-    , m_cbReadScroll(new QCheckBox("Auto scrolling", this))
-    , m_cbWriteScroll(new QCheckBox("Auto scrolling", this))
+    , m_cbReadScroll(new QCheckBox("Scrolling", this))
+    , m_cbWriteScroll(new QCheckBox("Scrolling", this))
+    , m_cbSaveWriteLog(new QCheckBox("Log", this))
+    , m_cbSaveReadLog(new QCheckBox("Log", this))
     , m_BlinkTimeTxNone(new QTimer(this))
     , m_BlinkTimeRxNone(new QTimer(this))
     , m_BlinkTimeTxColor(new QTimer(this))
     , m_BlinkTimeRxColor(new QTimer(this))
     , m_tSend(new QTimer(this))
     , m_tEcho(new QTimer(this))
+    , m_tWriteLog(new QTimer(this))
+    , m_tReadLog(new QTimer(this))
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , macroWindow(new MacroWindow(QString::fromUtf8("RS232 Terminal - Macro")))
-
+    , fileDialog(new QFileDialog(this))
 {
     setWindowTitle(title);    
     resize(settings->value("config/width", 750).toInt(), settings->value("config/height", 300).toInt());
@@ -66,6 +71,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     logReadRowsCount = 0;
     logWriteRowsCount = 0;
+    readBytesDisplayed = 0;
+    logWrite = false;
+    logRead = false;
 
     m_abSendPackage->setCheckable(true);
     m_abSendPackage->setEnabled(false);
@@ -124,7 +132,7 @@ void MainWindow::view()
     configLayout->addWidget(m_cbBaud, 5, 1);
     configLayout->addWidget(new QLabel("Data bits:", this), 6, 0);
     configLayout->addWidget(m_cbBits, 6, 1);
-    configLayout->addWidget(new QLabel("Paruty:", this), 7, 0);
+    configLayout->addWidget(new QLabel("Parity:", this), 7, 0);
     configLayout->addWidget(m_cbParity, 7, 1);
     configLayout->addWidget(new QLabel("Stop bits:", this), 8, 0);
     configLayout->addWidget(m_cbStopBits, 8, 1);
@@ -145,24 +153,28 @@ void MainWindow::view()
 
     QGridLayout *WriteLayout = new QGridLayout;
     WriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
-    m_cbWriteScroll->setFixedWidth(85);
+    m_cbWriteScroll->setFixedWidth(65);
     WriteLayout->addWidget(m_cbWriteScroll, 0, 1);
-    m_bWriteLogClear->setFixedWidth(50);
-    WriteLayout->addWidget(m_bWriteLogClear, 0, 2);
+    m_cbSaveWriteLog->setFixedWidth(35);
+    WriteLayout->addWidget(m_cbSaveWriteLog, 0, 2);
     m_bSaveWriteLog->setFixedWidth(50);
     WriteLayout->addWidget(m_bSaveWriteLog, 0, 3);
+    m_bWriteLogClear->setFixedWidth(50);
+    WriteLayout->addWidget(m_bWriteLogClear, 0, 4);
     WriteLayout->addWidget(m_eLogWrite, 1, 0, -1, -1);
     WriteLayout->setSpacing(5);
     WriteLayout->setMargin(5);
 
     QGridLayout *ReadLayout = new QGridLayout;
     ReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
-    m_cbReadScroll->setFixedWidth(85);
+    m_cbReadScroll->setFixedWidth(65);
     ReadLayout->addWidget(m_cbReadScroll, 0, 1);
-    m_bReadLogClear->setFixedWidth(50);
-    ReadLayout->addWidget(m_bReadLogClear, 0, 2);
+    m_cbSaveReadLog->setFixedWidth(35);
+    ReadLayout->addWidget(m_cbSaveReadLog, 0, 2);
     m_bSaveReadLog->setFixedWidth(50);
     ReadLayout->addWidget(m_bSaveReadLog, 0, 3);
+    m_bReadLogClear->setFixedWidth(50);
+    ReadLayout->addWidget(m_bReadLogClear, 0, 4);
     ReadLayout->addWidget(m_eLogRead, 1, 0, -1, -1);
     ReadLayout->setSpacing(5);
     ReadLayout->setMargin(5);
@@ -200,6 +212,8 @@ void MainWindow::connections()
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
+    connect(m_cbSaveWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
+    connect(m_cbSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
@@ -209,6 +223,9 @@ void MainWindow::connections()
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
     connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
 
+    connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
+    connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
+
     connect(macroWindow, SIGNAL(WriteMacros(const QString)), this, SLOT(macrosRecieved(const QString)));
 
     connect(m_BlinkTimeTxColor, SIGNAL(timeout()), this, SLOT(colorIsTx()));
@@ -217,9 +234,78 @@ void MainWindow::connections()
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
 }
 
+void MainWindow::writeLogTimeout()
+{
+    writeLog.close();
+    m_cbSaveWriteLog->setChecked(false);
+    logWrite = false;
+    m_tWriteLog->stop();
+}
+
+void MainWindow::readLogTimeout()
+{
+    readLog.close();
+    m_cbSaveReadLog->setChecked(false);
+    logRead = false;
+    m_tReadLog->stop();
+}
+
+void MainWindow::startWriteLog(bool check)
+{
+    if (check)
+    {
+        QString path = fileDialog->getSaveFileName(this,
+                                                   tr("Save File"),
+                                                   QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                                   tr("Log Files (*.txt)"));
+        if (path.isEmpty())
+        {
+            m_cbSaveWriteLog->setChecked(false);
+            return;
+        }
+        writeLog.setFileName(path);
+        writeLog.open(QIODevice::WriteOnly);
+        m_tWriteLog->start();
+        logWrite = true;
+    } else
+    {
+        m_tWriteLog->stop();
+        writeLog.close();
+        logWrite = false;
+    }
+}
+
+void MainWindow::startReadLog(bool check)
+{
+    if (check)
+    {
+        QString path = fileDialog->getSaveFileName(this,
+                                                   tr("Save File"),
+                                                   QDir::currentPath() + "/(READ)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                                   tr("Log Files (*.txt)"));
+        if (path.isEmpty())
+        {
+            m_cbSaveReadLog->setChecked(false);
+            return;
+        }
+        readLog.setFileName(path);
+        readLog.open(QIODevice::WriteOnly);
+        m_tReadLog->start();
+        logRead = true;
+    } else
+    {
+        m_tReadLog->stop();
+        readLog.close();
+        logRead = false;
+    }
+}
+
 void MainWindow::saveWrite()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), QDir::currentPath(), tr("Log Files (*.txt)"));
+    QString fileName = fileDialog->getSaveFileName(this,
+                                                   tr("Save File"),
+                                                   QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                                   tr("Log Files (*.txt)"));
 
         if (fileName != "") {
             QFile file(fileName);
@@ -237,7 +323,10 @@ void MainWindow::saveWrite()
 
 void MainWindow::saveRead()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), QDir::currentPath(), tr("Log Files (*.txt)"));
+    QString fileName = fileDialog->getSaveFileName(this,
+                                                   tr("Save File"),
+                                                   QDir::currentPath() + "/(READ)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                                   tr("Log Files (*.txt)"));
 
         if (fileName != "") {
             QFile file(fileName);
@@ -512,7 +601,9 @@ void MainWindow::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
 }
 
 void MainWindow::displayReadData(QString string)
-{
+{    
+    QTextStream readStream(&readLog);
+
     for (int i = 2; !(i >= string.length()); i += 3)
     {
         string.insert(i, SEPARATOR);
@@ -530,7 +621,19 @@ void MainWindow::displayReadData(QString string)
 
     if (!m_sbBytesCount->value())
     {
+        if (readBytesDisplayed)
+        {
+            m_eLogRead->insertPlainText("\n");
+            readBytesDisplayed = 0;
+            if (logRead)
+                readStream << "\n";
+        }
         m_eLogRead->insertPlainText(string.toUpper() + "\n");
+        if (m_cbSaveReadLog->isChecked())
+        {
+            QTextStream readStream(&readLog);
+            readStream << QString(string.toUpper() + "\n");
+        }
         logReadRowsCount++;
     }
     else
@@ -544,9 +647,13 @@ void MainWindow::displayReadData(QString string)
                 readBytesDisplayed = 0;
                 m_eLogRead->insertPlainText("\n");
                 logReadRowsCount++;
+                if (logRead)
+                    readStream << "\n";
             }
 
             m_eLogRead->insertPlainText(s.toUpper() + " ");
+            if (logRead)
+                readStream << s.toUpper() + " ";
             readBytesDisplayed++;
         }
         listOfBytes.clear();
@@ -563,6 +670,12 @@ void MainWindow::displayWriteData(QString string)
 {   
     logWriteRowsCount++;
     m_eLogWrite->insertPlainText(string.toUpper() + "\n");
+    if (logWrite)
+    {
+        QTextStream writeStream (&writeLog);
+        writeStream << string.toUpper() + "\n";
+    }
+
     if (logWriteRowsCount >= maxWriteLogRows)
     {
         m_eLogWrite->delLine(0);
@@ -628,6 +741,8 @@ void MainWindow::saveSession()
     settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
     settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
     settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
+    settings->setValue("config/write_log_timeout", m_tWriteLog->interval());
+    settings->setValue("config/read_log_timeout", m_tReadLog->interval());
 }
 
 void MainWindow::loadSession()
@@ -649,6 +764,8 @@ void MainWindow::loadSession()
     m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
     m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
+    m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
+    m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
