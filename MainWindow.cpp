@@ -10,10 +10,8 @@
 #include <QMouseEvent>
 #include <QSplitter>
 #include <QSpacerItem>
-#include <QFileDialog>
 #include <QTextStream>
 #include <QMessageBox>
-#include <QDateTime>
 
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
