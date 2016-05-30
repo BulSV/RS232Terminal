@@ -18,8 +18,11 @@
 #include "MacroWindow.h"
 #include <QAbstractButton>
 
-class MyPlainTextEdit : public QPlainTextEdit {
+class MyPlainTextEdit : public QPlainTextEdit
+{
+    Q_OBJECT
 public:
+    MyPlainTextEdit(QWidget *parent = 0) : QPlainTextEdit(parent) {}
     void delLine(int lineNumber)
     {
         QStringList list = this->toPlainText().split("\n");
@@ -44,6 +47,8 @@ class MainWindow : public QMainWindow
     QPushButton *m_bReadLogClear;
     QPushButton *m_bOffsetLeft;
     QPushButton *m_bShowMacroForm;
+    QPushButton *m_bSaveWriteLog;
+    QPushButton *m_bSaveReadLog;
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;
@@ -92,6 +97,8 @@ private slots:
     void start();
     void stop();
     void echo();
+    void saveWrite();
+    void saveRead();
     void doOffset();
     void textChanged(QString text);
     void cleanEchoBuffer(bool check);

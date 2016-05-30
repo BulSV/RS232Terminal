@@ -10,6 +10,10 @@
 #include <QMouseEvent>
 #include <QSplitter>
 #include <QSpacerItem>
+#include <QFileDialog>
+#include <QTextStream>
+#include <QMessageBox>
+#include <QDateTime>
 
 #define BLINKTIMETX 200
 #define BLINKTIMERX 500
@@ -30,6 +34,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_bReadLogClear(new QPushButton("Clear", this))
     , m_bOffsetLeft(new QPushButton("<-------", this))
     , m_bShowMacroForm(new QPushButton("Macro", this))
+    , m_bSaveWriteLog(new QPushButton("Save", this))
+    , m_bSaveReadLog(new QPushButton("Save", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
@@ -145,6 +151,8 @@ void MainWindow::view()
     WriteLayout->addWidget(m_cbWriteScroll, 0, 1);
     m_bWriteLogClear->setFixedWidth(50);
     WriteLayout->addWidget(m_bWriteLogClear, 0, 2);
+    m_bSaveWriteLog->setFixedWidth(50);
+    WriteLayout->addWidget(m_bSaveWriteLog, 0, 3);
     WriteLayout->addWidget(m_eLogWrite, 1, 0, -1, -1);
     WriteLayout->setSpacing(5);
     WriteLayout->setMargin(5);
@@ -155,6 +163,8 @@ void MainWindow::view()
     ReadLayout->addWidget(m_cbReadScroll, 0, 1);
     m_bReadLogClear->setFixedWidth(50);
     ReadLayout->addWidget(m_bReadLogClear, 0, 2);
+    m_bSaveReadLog->setFixedWidth(50);
+    ReadLayout->addWidget(m_bSaveReadLog, 0, 3);
     ReadLayout->addWidget(m_eLogRead, 1, 0, -1, -1);
     ReadLayout->setSpacing(5);
     ReadLayout->setMargin(5);
@@ -190,6 +200,8 @@ void MainWindow::connections()
     connect(m_bOffsetLeft, SIGNAL(clicked()), this, SLOT(doOffset()));
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
+    connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
+    connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
@@ -205,6 +217,42 @@ void MainWindow::connections()
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
     connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
+}
+
+void MainWindow::saveWrite()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), QDir::currentPath(), tr("Log Files (*.txt)"));
+
+        if (fileName != "") {
+            QFile file(fileName);
+            if (!file.open(QIODevice::WriteOnly)) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+                return;
+            } else {
+                QTextStream stream(&file);
+                stream << m_eLogWrite->toPlainText();
+                stream.flush();
+                file.close();
+            }
+        }
+}
+
+void MainWindow::saveRead()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), QDir::currentPath(), tr("Log Files (*.txt)"));
+
+        if (fileName != "") {
+            QFile file(fileName);
+            if (!file.open(QIODevice::WriteOnly)) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+                return;
+            } else {
+                QTextStream stream(&file);
+                stream << m_eLogRead->toPlainText();
+                stream.flush();
+                file.close();
+            }
+        }
 }
 
 void MainWindow::textChanged(QString text)
