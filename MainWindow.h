@@ -21,20 +21,21 @@
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QSpacerItem>
+#include <QListWidget>
 
-class MyPlainTextEdit : public QPlainTextEdit
-{
-    Q_OBJECT
-public:
-    MyPlainTextEdit(QWidget *parent = 0) : QPlainTextEdit(parent) {}
-    void delLine(int lineNumber)
-    {
-        QStringList list = this->toPlainText().split("\n");
-        list.removeAt(lineNumber);
-        this->clear();
-        this->insertPlainText(list.join("\n"));
-    }
-};
+//class MyPlainTextEdit : public QPlainTextEdit
+//{
+//    Q_OBJECT
+//public:
+//    MyPlainTextEdit(QWidget *parent = 0) : QPlainTextEdit(parent) {}
+//    void delLine(int lineNumber)
+//    {
+//        QStringList list = this->toPlainText().split("\n");
+//        list.removeAt(lineNumber);
+//        this->clear();
+//        this->insertPlainText(list.join("\n"));
+//    }
+//};
 
 class MiniMacros : public QWidget
 {
@@ -93,8 +94,8 @@ class MainWindow : public QMainWindow
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;
-    MyPlainTextEdit *m_eLogRead;
-    MyPlainTextEdit *m_eLogWrite;
+    QListWidget *m_eLogRead;
+    QListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
@@ -141,12 +142,12 @@ class MainWindow : public QMainWindow
     bool logRead;
     QString writeLogBuffer;
     QString readLogBuffer;
+    QString buffer;
 
     void view();
     void saveSession();
     void loadSession();
     void connections();
-    void scrollToBot(QCheckBox *cb, MyPlainTextEdit *te);
 
 protected:
     virtual void closeEvent(QCloseEvent *e);

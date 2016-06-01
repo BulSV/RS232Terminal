@@ -38,8 +38,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))
-    , m_eLogRead(new MyPlainTextEdit())
-    , m_eLogWrite(new MyPlainTextEdit())
+    , m_eLogRead(new QListWidget(this))
+    , m_eLogWrite(new QListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
@@ -83,8 +83,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_abSendPackage->setCheckable(true);
     m_abSendPackage->setEnabled(false);
     m_sbRepeatSendInterval->setEnabled(false);
-    m_eLogRead->setReadOnly(true);
-    m_eLogWrite->setReadOnly(true);
     m_bStop->setEnabled(false);
     m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
@@ -377,8 +375,10 @@ void MainWindow::saveWrite()
                 return;
             } else {
                 QTextStream stream(&file);
-                stream << m_eLogWrite->toPlainText();
-                stream.flush();
+                for(int i = 0; i < m_eLogWrite->count(); ++i)
+                {
+                    stream << m_eLogWrite->item(i)->text() + "\n";
+                }
                 file.close();
             }
         }
@@ -398,8 +398,10 @@ void MainWindow::saveRead()
                 return;
             } else {
                 QTextStream stream(&file);
-                stream << m_eLogRead->toPlainText();
-                stream.flush();
+                for(int i = 0; i < m_eLogRead->count(); ++i)
+                {
+                    stream << m_eLogRead->item(i)->text() + "\n";
+                }
                 file.close();
             }
         }
@@ -653,16 +655,6 @@ void MainWindow::sendPackage(QString string)
     }
 }
 
-void MainWindow::scrollToBot(QCheckBox *cb, MyPlainTextEdit *te)
-{
-    if (cb->checkState())
-    {
-        QTextCursor cursor =  te->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        te->setTextCursor(cursor);
-    }
-}
-
 void MainWindow::displayReadData(QString string)
 {    
     QTextStream readStream(&readLog);
@@ -684,18 +676,11 @@ void MainWindow::displayReadData(QString string)
 
     if (!m_sbBytesCount->value())
     {
-        if (readBytesDisplayed)
-        {
-            m_eLogRead->insertPlainText("\n");
-            readBytesDisplayed = 0;
-            if (logRead)
-                readStream << "\n";
-        }
-        m_eLogRead->insertPlainText(string.toUpper() + "\n");
+        m_eLogRead->addItem(string.toUpper());
         if (m_cbSaveReadLog->isChecked())
         {
             QTextStream readStream(&readLog);
-            readStream << QString(string.toUpper() + "\n");
+            readStream << string.toUpper() + "\n";
         }
         logReadRowsCount++;
     }
@@ -708,31 +693,30 @@ void MainWindow::displayReadData(QString string)
             if (readBytesDisplayed >= m_sbBytesCount->value())
             {
                 readBytesDisplayed = 0;
-                m_eLogRead->insertPlainText("\n");
+                m_eLogRead->addItem(buffer);
                 logReadRowsCount++;
                 if (logRead)
-                    readStream << "\n";
+                    readStream << buffer + "\n";
+                buffer.clear();
             }
-
-            m_eLogRead->insertPlainText(s.toUpper() + " ");
-            if (logRead)
-                readStream << s.toUpper() + " ";
+            buffer.append(s.toUpper() + " ");
             readBytesDisplayed++;
         }
         listOfBytes.clear();
     }
     if (logReadRowsCount >= maxReadLogRows)
     {
-        m_eLogRead->delLine(0);
+        delete m_eLogRead->takeItem(0);
         logReadRowsCount--;
     }
-    scrollToBot(m_cbReadScroll, m_eLogRead);
+    if (m_cbReadScroll->isChecked())
+        m_eLogRead->scrollToBottom();
 }
 
 void MainWindow::displayWriteData(QString string)
 {   
     logWriteRowsCount++;
-    m_eLogWrite->insertPlainText(string.toUpper() + "\n");
+    m_eLogWrite->addItem(string.toUpper());
     if (logWrite)
     {
         QTextStream writeStream (&writeLog);
@@ -741,17 +725,17 @@ void MainWindow::displayWriteData(QString string)
 
     if (logWriteRowsCount >= maxWriteLogRows)
     {
-        m_eLogWrite->delLine(0);
+        delete m_eLogWrite->takeItem(0);
         logWriteRowsCount--;
     }
-    scrollToBot(m_cbWriteScroll, m_eLogWrite);
+
+    if (m_cbWriteScroll->isChecked())
+        m_eLogWrite->scrollToBottom();
 }
 
 void MainWindow::doOffset()
 {
-    m_eLogRead->textCursor().deletePreviousChar();
-    m_eLogRead->textCursor().deletePreviousChar();
-    m_eLogRead->textCursor().deletePreviousChar();
+    buffer.chop(3);
     readBytesDisplayed--;
 }
 
