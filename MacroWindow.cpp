@@ -57,7 +57,6 @@ MacroWindow::MacroWindow(QString title, QWidget *parent)
     id = 0;
     activeMacrosCount = 0;
     sendingIndex = -1;
-    loadPrevSession();
 }
 
 void MacroWindow::loadPrevSession()
@@ -110,13 +109,15 @@ void MacroWindow::addMacros()
 {
     macrosCount++;
     MacrosList.insert(id, new Macros(id, path, portOpen, this));
-    id++;
     mainLayout->removeItem(spacer);
     mainLayout->addWidget(MacrosList.last());
     mainLayout->addSpacerItem(spacer);
     connect(MacrosList.last(), SIGNAL(Sending(bool)), this, SLOT(addDelSending(bool)));
     connect(MacrosList.last(), SIGNAL(DeleteMacros(int)), this, SLOT(delMacros(int)));
-    connect(MacrosList.last(), SIGNAL(WriteMacros(const QString)), this, SLOT(macrosRecieved(const QString)));
+    connect(MacrosList.last(), SIGNAL(WriteMacros(QString)), this, SLOT(macrosRecieved(QString)));
+    connect(MacrosList.last(), SIGNAL(textChanged(QString, int)), this, SLOT(textChanged(QString, int)));
+    id++;
+    emit macrosAdded(MacrosList.last()->index, MacrosList.last()->bMacros->text());
 }
 
 void MacroWindow::addDelSending(bool check)
@@ -139,6 +140,7 @@ void MacroWindow::delMacros(int index)
     macrosCount--;
     delete MacrosList[index];
     MacrosList.remove(index);
+    emit macrosDeleted(index);
 }
 
 void MacroWindow::connections()

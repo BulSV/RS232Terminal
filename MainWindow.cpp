@@ -44,6 +44,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
+    , m_cbSelectAllMiniMacroses(new QCheckBox("Check all", this))
     , m_sbEchoInterval(new QSpinBox(this))
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
@@ -63,6 +64,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , macroWindow(new MacroWindow(QString::fromUtf8("RS232 Terminal - Macro")))
     , fileDialog(new QFileDialog(this))
+    , m_bHiddenGroup(new QPushButton(">", this))
+    , m_gbHiddenGroup(new QGroupBox(this))
+    , hiddenLayout(new QVBoxLayout(this))
+    , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
 {
     setWindowTitle(title);    
     resize(settings->value("config/width", 750).toInt(), settings->value("config/height", 300).toInt());
@@ -116,6 +121,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     buffer << "1" << "1.5" << "2";
     m_cbStopBits->addItems(buffer);
     loadSession();
+    macroWindow->loadPrevSession();
 }
 
 void MainWindow::view()
@@ -195,11 +201,22 @@ void MainWindow::view()
     dataLayout->setSpacing(0);
     dataLayout->setMargin(0);
 
+    hiddenLayout->setSpacing(0);
+    hiddenLayout->setMargin(2);
+    hiddenLayout->addWidget(m_cbSelectAllMiniMacroses);
+    m_gbHiddenGroup->setLayout(hiddenLayout);
+
     QGridLayout *allLayouts = new QGridLayout;
+    allLayouts->setSpacing(5);
+    allLayouts->setMargin(5);
     allLayouts->addLayout(configLayout, 0, 0);
     allLayouts->addLayout(dataLayout, 0, 1);
+    m_bHiddenGroup->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    m_bHiddenGroup->setFixedWidth(15);
+    allLayouts->addWidget(m_bHiddenGroup, 0, 2);
+    allLayouts->addWidget(m_gbHiddenGroup, 0, 3);
     widget->setLayout(allLayouts);
-    setCentralWidget(widget);
+    setCentralWidget(widget);    
 }
 
 void MainWindow::connections()
@@ -212,8 +229,10 @@ void MainWindow::connections()
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
+    connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClick()));
     connect(m_cbSaveWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
     connect(m_cbSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
+    connect(m_cbSelectAllMiniMacroses, SIGNAL(toggled(bool)), this, SLOT(setAllMini(bool)));
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
@@ -232,6 +251,50 @@ void MainWindow::connections()
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
     connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
+
+    connect(macroWindow, SIGNAL(macrosAdded(int, const QString)), this, SLOT(addToHidden(int, const QString)));
+    connect(macroWindow, SIGNAL(macrosDeleted(int)), this, SLOT(delFromHidden(int)));
+    connect(macroWindow, SIGNAL(textChange(QString,int)), this, SLOT(miniMacrosTextChanged(QString, int)));
+}
+
+void MainWindow::setAllMini(bool check)
+{
+    foreach (MiniMacros *m, MiniMacrosList) {
+        m->cbMiniMacros->setChecked(check);
+        macroWindow->MacrosList[m->index]->cbMacrosActive->setChecked(check);
+    }
+}
+
+void MainWindow::hiddenClick()
+{
+    if (m_gbHiddenGroup->isHidden())
+    {
+        m_gbHiddenGroup->show();
+        m_bHiddenGroup->setText("<");
+        resize(width() + m_gbHiddenGroup->width() + 5, height());
+    }
+    else
+    {
+        m_gbHiddenGroup->hide();
+        m_bHiddenGroup->setText(">");
+        resize(width() - m_gbHiddenGroup->width() - 5, height());
+    }
+}
+
+void MainWindow::addToHidden(int index, const QString &str)
+{
+    MiniMacrosList.insert(index, new MiniMacros(index, str, this));
+    hiddenLayout->removeItem(spacer);
+    hiddenLayout->addWidget(MiniMacrosList.last());
+    hiddenLayout->addSpacerItem(spacer);
+    connect(MiniMacrosList.last(), SIGNAL(bPress(int)), macroWindow, SLOT(bPress(int)));
+    connect(MiniMacrosList.last(), SIGNAL(cbCheck(int,bool)), macroWindow, SLOT(cbCheck(int,bool)));
+}
+
+void MainWindow::delFromHidden(int index)
+{
+    delete MiniMacrosList[index];
+    MiniMacrosList.remove(index);
 }
 
 void MainWindow::writeLogTimeout()
@@ -743,6 +806,7 @@ void MainWindow::saveSession()
     settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
     settings->setValue("config/write_log_timeout", m_tWriteLog->interval());
     settings->setValue("config/read_log_timeout", m_tReadLog->interval());
+    settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
 }
 
 void MainWindow::loadSession()
@@ -766,6 +830,7 @@ void MainWindow::loadSession()
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
+    m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)

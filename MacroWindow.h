@@ -33,15 +33,22 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 public slots:
+    void cbCheck(int index, bool check) {MacrosList[index]->cbMacrosActive->setChecked(check);}
+    void bPress(int index) {MacrosList[index]->bMacros->click();}
     void addMacros();
     void delMacros(int index);
     void macrosRecieved(const QString &str){ emit WriteMacros(str); }
     void tick();
     void addDelSending(bool check);
     void loadMacroses();
+    void textChanged(QString str, int index) { emit textChange(str, index); }
 
 signals:
-        WriteMacros(const QString &str);
+    WriteMacros(const QString &str);
+    macrosAdded(int id, const QString &str);
+    macrosDeleted(int id);
+    textChange(const QString str, int index);
+
 public:
     QTimer *tMacro;
     QString path;

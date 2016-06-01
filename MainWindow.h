@@ -1,6 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "rs232terminalprotocol.h"
+#include "ComPort.h"
+#include "MacroWindow.h"
+#include "Macros.h"
 #include <QMainWindow>
 #include <QLabel>
 #include <QComboBox>
@@ -13,11 +17,10 @@
 #include <QLineEdit>
 #include <QSignalMapper>
 #include <QSettings>
-#include "rs232terminalprotocol.h"
-#include "ComPort.h"
-#include "MacroWindow.h"
 #include <QAbstractButton>
 #include <QFileDialog>
+#include <QGroupBox>
+#include <QSpacerItem>
 
 class MyPlainTextEdit : public QPlainTextEdit
 {
@@ -26,18 +29,48 @@ public:
     MyPlainTextEdit(QWidget *parent = 0) : QPlainTextEdit(parent) {}
     void delLine(int lineNumber)
     {
-//        QStringList list = this->toPlainText().split("\n");
-//        list.removeAt(lineNumber);
-//        this->clear();
-//        this->insertPlainText(list.join("\n"));
-        QTextCursor cursor = this->textCursor();
-        cursor.movePosition(QTextCursor::Start);
-        cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, lineNumber);
-        cursor.select(QTextCursor::LineUnderCursor);
-        cursor.removeSelectedText();
-
-        this->setTextCursor(cursor);
+        QStringList list = this->toPlainText().split("\n");
+        list.removeAt(lineNumber);
+        this->clear();
+        this->insertPlainText(list.join("\n"));
     }
+};
+
+class MiniMacros : public QWidget
+{
+    Q_OBJECT
+signals:
+    bPress(int index);
+    cbCheck(int index, bool check);
+
+public:
+    int index;
+    QHBoxLayout *layout;
+    QCheckBox *cbMiniMacros;
+    QPushButton *bMiniMacros;
+
+    MiniMacros(int i, QString title, QWidget *parent = 0) : QWidget(parent)
+    {
+        index = i;
+        cbMiniMacros = new QCheckBox;
+        bMiniMacros = new QPushButton;
+        layout = new QHBoxLayout;
+        bMiniMacros->setText(title);
+
+        layout->setSpacing(2);
+        layout->setMargin(2);
+
+        layout->addWidget(cbMiniMacros);
+        layout->addWidget(bMiniMacros);
+        setLayout(layout);
+
+        connect(bMiniMacros, SIGNAL(clicked(bool)), this, SLOT(click()));
+        connect(cbMiniMacros, SIGNAL(toggled(bool)), this, SLOT(ckeck(bool)));
+    }
+
+public slots:
+    void click() { emit bPress(index); }
+    void ckeck(bool check) { emit cbCheck(index, check); }
 };
 
 class MainWindow : public QMainWindow
@@ -66,6 +99,7 @@ class MainWindow : public QMainWindow
     QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
     QCheckBox *m_cbEchoMode;
+    QCheckBox *m_cbSelectAllMiniMacroses;
     QSpinBox *m_sbEchoInterval;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
@@ -89,9 +123,13 @@ class MainWindow : public QMainWindow
     QSettings *settings;
     MacroWindow *macroWindow;
     QFileDialog *fileDialog;
+    QPushButton *m_bHiddenGroup;
+    QGroupBox *m_gbHiddenGroup;
+    QVBoxLayout *hiddenLayout;
+    QSpacerItem *spacer;
+
     QFile writeLog;
     QFile readLog;
-
     int maxWriteLogRows;
     int maxReadLogRows;
     int logReadRowsCount;
@@ -114,6 +152,8 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
+    void setAllMini(bool check);
+    void hiddenClick();
     void start();
     void stop();
     void echo();
@@ -137,8 +177,12 @@ private slots:
     void colorIsTx();
     void colorTxNone();
     void startSending(bool checked);
+    void addToHidden(int index, const QString &str);
+    void delFromHidden(int index);
+    void miniMacrosTextChanged(QString str, int index) { MiniMacrosList[index]->bMiniMacros->setText(str); }
 
 public:
+    QMap<int, MiniMacros *> MiniMacrosList;
     void displayReadData(QString string);
     void displayWriteData(QString string);
     void sendPackage(QString string);

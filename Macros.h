@@ -31,6 +31,7 @@ signals:
     WriteMacros(const QString &str);
     Sending(bool);
     PeriodSending(const QString &str);
+    textChanged(QString str, int index);
 
 public:
     QLineEdit *leMacros;

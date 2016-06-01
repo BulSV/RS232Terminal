@@ -140,6 +140,7 @@ void Macros::openLoad()
             path = fileName;
             QFileInfo fileInfo(file.fileName());
             bMacros->setText(fileInfo.baseName());
+            emit textChanged(bMacros->text(), index);
             file.close();
             cbMacrosActive->setEnabled(true);
             cbPeriodSending->setEnabled(true);
@@ -158,6 +159,7 @@ bool Macros::openPath(QString fileName)
         path = fileName;
         QFileInfo fileInfo(file.fileName());
         bMacros->setText(fileInfo.baseName());
+        emit textChanged(bMacros->text(), index);
         file.close();
         cbMacrosActive->setEnabled(true);
         cbPeriodSending->setEnabled(true);
