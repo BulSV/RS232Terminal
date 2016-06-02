@@ -27,6 +27,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbBits(new QComboBox(this))
     , m_cbParity(new QComboBox(this))
     , m_cbStopBits(new QComboBox(this))
+    , m_cbMode(new QComboBox(this))
     , m_bStart(new QPushButton("Start", this))
     , m_bStop(new QPushButton("Stop", this))
     , m_bWriteLogClear(new QPushButton("Clear", this))
@@ -41,7 +42,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_eLogRead(new QListWidget(this))
     , m_eLogWrite(new QListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
-    , m_leSendPackage(new QLineEdit(this))
+    , m_leSendPackage(new HEXLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
     , m_cbSelectAllMiniMacroses(new QCheckBox("Check all", this))
@@ -66,7 +67,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , fileDialog(new QFileDialog(this))
     , m_bHiddenGroup(new QPushButton(">", this))
     , m_gbHiddenGroup(new QGroupBox(this))
-    , hiddenLayout(new QVBoxLayout(this))
+    , hiddenLayout(new QVBoxLayout())
     , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
 {
     setWindowTitle(title);    
@@ -99,14 +100,14 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_eLogRead->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
     m_eLogWrite->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
 
-    QStringList portsNames;
+    QStringList buffer;
     foreach(QSerialPortInfo portsAvailable, QSerialPortInfo::availablePorts())
     {
-        portsNames << portsAvailable.portName();
+        buffer << portsAvailable.portName();
     }
-    m_cbPort->addItems(portsNames);
+    m_cbPort->addItems(buffer);
 
-    QStringList buffer;
+    buffer.clear();
     buffer << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
     m_cbBaud->addItems(buffer);
     buffer.clear();
@@ -118,6 +119,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     buffer.clear();
     buffer << "1" << "1.5" << "2";
     m_cbStopBits->addItems(buffer);
+    buffer.clear();
+    buffer << "HEX" << "DEC";
+    m_cbMode->addItems(buffer);
+
     loadSession();
     macroWindow->loadPrevSession();
 }
@@ -126,7 +131,7 @@ void MainWindow::view()
 {
     QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding);
     QGridLayout *configLayout = new QGridLayout;
-    configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='50' width='180'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
+    configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='160'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
     configLayout->addWidget(m_bShowMacroForm, 2, 0, 1, 2);
     configLayout->addWidget(m_lTx, 3, 0);
     configLayout->addWidget(m_lRx, 3, 1);
@@ -140,14 +145,16 @@ void MainWindow::view()
     configLayout->addWidget(m_cbParity, 7, 1);
     configLayout->addWidget(new QLabel("Stop bits:", this), 8, 0);
     configLayout->addWidget(m_cbStopBits, 8, 1);
-    configLayout->addWidget(m_bStart, 9, 0);
-    configLayout->addWidget(m_bStop, 9, 1);
-    configLayout->addWidget(m_cbEchoMode, 10, 0);
-    configLayout->addWidget(m_sbEchoInterval, 10, 1);
-    configLayout->addWidget(new QLabel("Bytes count:", this), 11, 0);
-    configLayout->addWidget(m_sbBytesCount, 11, 1);
-    configLayout->addWidget(m_bOffsetLeft, 12, 0, 1, 2);
-    configLayout->addItem(spacer, 13, 0, -1, -1);
+    configLayout->addWidget(m_cbEchoMode, 9, 0);
+    configLayout->addWidget(m_sbEchoInterval, 9, 1);
+    configLayout->addWidget(new QLabel("Bytes count:", this), 10, 0);
+    configLayout->addWidget(m_sbBytesCount, 10, 1);
+    configLayout->addWidget(new QLabel("Mode:", this), 11, 0);
+    configLayout->addWidget(m_cbMode, 11, 1);
+    configLayout->addWidget(m_bStart, 12, 0);
+    configLayout->addWidget(m_bStop, 12, 1);
+    configLayout->addWidget(m_bOffsetLeft, 13, 0, 1, 2);
+    configLayout->addItem(spacer, 14, 0, -1, -1);
     configLayout->setSpacing(5);
 
     QGridLayout *sendPackageLayout = new QGridLayout;
@@ -571,7 +578,9 @@ void MainWindow::received(bool isReceived)
             m_BlinkTimeRxColor->start();
             m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         }
-        displayReadData(m_Protocol->getReadedData());
+        QByteArray out = m_Protocol->getReadedData();
+        displayReadData(QString(out.toHex()));
+
     }
 }
 

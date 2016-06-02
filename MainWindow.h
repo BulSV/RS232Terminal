@@ -5,6 +5,7 @@
 #include "ComPort.h"
 #include "MacroWindow.h"
 #include "Macros.h"
+#include "MiniMacros.h"
 #include <QMainWindow>
 #include <QLabel>
 #include <QComboBox>
@@ -14,7 +15,7 @@
 #include <QSerialPort>
 #include <QCheckBox>
 #include <QSpinBox>
-#include <QLineEdit>
+#include <HEXLineEdit.h>
 #include <QSignalMapper>
 #include <QSettings>
 #include <QAbstractButton>
@@ -22,43 +23,6 @@
 #include <QGroupBox>
 #include <QSpacerItem>
 #include <QListWidget>
-
-class MiniMacros : public QWidget
-{
-    Q_OBJECT
-signals:
-    bPress(int index);
-    cbCheck(int index, bool check);
-
-public:
-    int index;
-    QHBoxLayout *layout;
-    QCheckBox *cbMiniMacros;
-    QPushButton *bMiniMacros;
-
-    MiniMacros(int i, QString title, QWidget *parent = 0) : QWidget(parent)
-    {
-        index = i;
-        cbMiniMacros = new QCheckBox;
-        bMiniMacros = new QPushButton;
-        layout = new QHBoxLayout;
-        bMiniMacros->setText(title);
-
-        layout->setSpacing(2);
-        layout->setMargin(2);
-
-        layout->addWidget(cbMiniMacros);
-        layout->addWidget(bMiniMacros);
-        setLayout(layout);
-
-        connect(bMiniMacros, SIGNAL(clicked(bool)), this, SLOT(click()));
-        connect(cbMiniMacros, SIGNAL(toggled(bool)), this, SLOT(ckeck(bool)));
-    }
-
-public slots:
-    void click() { emit bPress(index); }
-    void ckeck(bool check) { emit cbCheck(index, check); }
-};
 
 class MainWindow : public QMainWindow
 {
@@ -69,6 +33,7 @@ class MainWindow : public QMainWindow
     QComboBox *m_cbBits;
     QComboBox *m_cbParity;
     QComboBox *m_cbStopBits;
+    QComboBox *m_cbMode;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
     QPushButton *m_bWriteLogClear;
@@ -83,7 +48,7 @@ class MainWindow : public QMainWindow
     QListWidget *m_eLogRead;
     QListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
-    QLineEdit *m_leSendPackage;
+    HEXLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
     QCheckBox *m_cbEchoMode;
     QCheckBox *m_cbSelectAllMiniMacroses;
@@ -97,10 +62,8 @@ class MainWindow : public QMainWindow
     QTimer *m_BlinkTimeRxNone;
     QTimer *m_BlinkTimeTxColor;
     QTimer *m_BlinkTimeRxColor;
-
     QTimer *m_tSend;
     QTimer *m_tEcho;
-
     QTimer *m_tWriteLog;
     QTimer *m_tReadLog;
 
