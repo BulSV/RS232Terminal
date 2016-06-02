@@ -32,6 +32,7 @@ signals:
     Sending(bool);
     PeriodSending(const QString &str);
     textChanged(QString str, int index);
+    checked(bool, int);
 
 public:
     QLineEdit *leMacros;

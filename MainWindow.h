@@ -23,20 +23,6 @@
 #include <QSpacerItem>
 #include <QListWidget>
 
-//class MyPlainTextEdit : public QPlainTextEdit
-//{
-//    Q_OBJECT
-//public:
-//    MyPlainTextEdit(QWidget *parent = 0) : QPlainTextEdit(parent) {}
-//    void delLine(int lineNumber)
-//    {
-//        QStringList list = this->toPlainText().split("\n");
-//        list.removeAt(lineNumber);
-//        this->clear();
-//        this->insertPlainText(list.join("\n"));
-//    }
-//};
-
 class MiniMacros : public QWidget
 {
     Q_OBJECT
@@ -181,6 +167,7 @@ private slots:
     void addToHidden(int index, const QString &str);
     void delFromHidden(int index);
     void miniMacrosTextChanged(QString str, int index) { MiniMacrosList[index]->bMiniMacros->setText(str); }
+    void miniMacrosChecked(bool check, int index) { MiniMacrosList[index]->cbMiniMacros->setChecked(check); }
 
 public:
     QMap<int, MiniMacros *> MiniMacrosList;

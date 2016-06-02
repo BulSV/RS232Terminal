@@ -110,6 +110,7 @@ void Macros::singleSend()
 
 void Macros::stateChange(bool check)
 {
+    checked(check, index);
     if (check)
     {
         emit Sending(true);

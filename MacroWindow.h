@@ -34,6 +34,7 @@ protected:
 
 public slots:
     void cbCheck(int index, bool check) {MacrosList[index]->cbMacrosActive->setChecked(check);}
+    void macChecked(bool check, int index) { emit checked(check, index); }
     void bPress(int index) {MacrosList[index]->bMacros->click();}
     void addMacros();
     void delMacros(int index);
@@ -44,6 +45,7 @@ public slots:
     void textChanged(QString str, int index) { emit textChange(str, index); }
 
 signals:
+    checked(bool, int index);
     WriteMacros(const QString &str);
     macrosAdded(int id, const QString &str);
     macrosDeleted(int id);

@@ -253,6 +253,7 @@ void MainWindow::connections()
     connect(macroWindow, SIGNAL(macrosAdded(int, const QString)), this, SLOT(addToHidden(int, const QString)));
     connect(macroWindow, SIGNAL(macrosDeleted(int)), this, SLOT(delFromHidden(int)));
     connect(macroWindow, SIGNAL(textChange(QString,int)), this, SLOT(miniMacrosTextChanged(QString, int)));
+    connect(macroWindow, SIGNAL(checked(bool,int)), this, SLOT(miniMacrosChecked(bool,int)));
 }
 
 void MainWindow::setAllMini(bool check)
