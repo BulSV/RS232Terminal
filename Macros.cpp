@@ -115,9 +115,11 @@ void Macros::stateChange(bool check)
     {
         emit Sending(true);
         bMacros->setStyleSheet("font-weight: bold; color: red;");
+        cbPeriodSending->setEnabled(false);
     } else {
         emit Sending(false);
         bMacros->setStyleSheet("font-weight: bold;");
+        cbPeriodSending->setEnabled(true);
     }
 }
 
