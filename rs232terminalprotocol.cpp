@@ -13,7 +13,7 @@ void RS232TerminalProtocol::setDataToWrite(const QString &data)
     itsWriteData = data;
 }
 
-QString RS232TerminalProtocol::getReadedData() const
+QByteArray RS232TerminalProtocol::getReadedData() const
 {
     return itsReadData;
 }
@@ -27,7 +27,7 @@ void RS232TerminalProtocol::readData(bool isReaded)
 
         ba = itsComPort->getReadData();
 
-        itsReadData = QString(ba.toHex());
+        itsReadData = ba;
 
         emit DataIsReaded(true);
     } else {

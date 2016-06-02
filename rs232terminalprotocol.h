@@ -12,13 +12,13 @@ class RS232TerminalProtocol : public IProtocol
 public:
     explicit RS232TerminalProtocol(ComPort *comPort, QObject *parent = 0);
     virtual void setDataToWrite(const QString &data);
-    virtual QString getReadedData() const;
+    virtual QByteArray getReadedData() const;
 
 private:
     ComPort *itsComPort;
 
     QString itsWriteData;
-    QString itsReadData;
+    QByteArray itsReadData;
 
     // преобразует word в byte
     int wordToInt(QByteArray ba);

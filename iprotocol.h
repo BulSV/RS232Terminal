@@ -12,7 +12,7 @@ public:
     explicit IProtocol(QObject *parent = 0) : QObject(parent) {}
     virtual ~IProtocol() {}
     virtual void setDataToWrite(const QString &data) = 0;
-    virtual QString getReadedData() const = 0;
+    virtual QByteArray getReadedData() const = 0;
 public slots:
     virtual void writeData() = 0;
 signals:
