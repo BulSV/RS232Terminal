@@ -35,6 +35,14 @@ void RS232TerminalProtocol::readData(bool isReaded)
     }
 }
 
+void RS232TerminalProtocol::writeDataNow(QByteArray ba)
+{
+    ba.append(itsWriteData.toInt());
+
+    itsComPort->setWriteData(ba);
+    itsComPort->writeData();
+}
+
 void RS232TerminalProtocol::writeData()
 {
     QByteArray ba;
