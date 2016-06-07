@@ -14,6 +14,7 @@ public:
     virtual void setDataToWrite(const QString &data) = 0;
     virtual QByteArray getReadedData() const = 0;
 public slots:
+    virtual void writeDataNow(QByteArray ba) = 0;
     virtual void writeData() = 0;
 signals:
     void DataIsReaded(bool);
