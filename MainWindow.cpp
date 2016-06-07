@@ -42,7 +42,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_eLogRead(new QListWidget(this))
     , m_eLogWrite(new QListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
-    , m_leSendPackage(new HEXLineEdit(this))
+    , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
     , m_cbSelectAllMiniMacroses(new QCheckBox("Check all", this))
@@ -120,7 +120,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     buffer << "1" << "1.5" << "2";
     m_cbStopBits->addItems(buffer);
     buffer.clear();
-    buffer << "HEX" << "DEC";
+    buffer << "HEX" << "ASCII" << "DEC";
     m_cbMode->addItems(buffer);
 
     loadSession();
@@ -579,8 +579,12 @@ void MainWindow::received(bool isReceived)
             m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         }
         QByteArray out = m_Protocol->getReadedData();
-        displayReadData(QString(out.toHex()));
-
+        if (m_cbMode->currentText() == "HEX")
+            displayReadDataHEX(QString(out.toHex()));
+        if (m_cbMode->currentText() == "ASCII")
+            displayReadDataASCII(QString(out));
+        if (m_cbMode->currentText() == "DEC")
+            displayReadDataDEC(QString(out));
     }
 }
 
@@ -634,38 +638,79 @@ void MainWindow::startSending(bool checked)
 
 void MainWindow::sendPackage(QString string)
 {
-    if (m_Port->isOpen())
-    {
-        QString out;
-        QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
-        if (!byteList.isEmpty())
-        {
+    if (m_cbMode->currentText() == "HEX")
+        sendPackageHEX(string);
+    if (m_cbMode->currentText() == "ASCII")
+        sendPackageASCII(string);
+    if (m_cbMode->currentText() == "DEC")
+        sendPackageDEC(string);
 
-            if (byteList.last().length() == 1)
-                string.insert(string.length()-1, "0");
-
-            if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
-                m_BlinkTimeTxColor->start();
-                m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
-            }
-
-            foreach (QString s, byteList)
-            {
-                bool ok;
-                m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
-                if (ok)
-                {
-                    m_Protocol->writeData();
-                    out += s;
-                }
-            }
-            displayWriteData(string);
-            m_tSend->setInterval(m_sbRepeatSendInterval->value());
-        }
+    if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
+        m_BlinkTimeTxColor->start();
+        m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
     }
 }
 
-void MainWindow::displayReadData(QString string)
+void MainWindow::sendPackageDEC(QString string)
+{
+    if (m_Port->isOpen())
+    {
+        m_tSend->setInterval(m_sbRepeatSendInterval->value());
+        m_Protocol->setDataToWrite(string);
+        m_Protocol->writeData();
+        displayWriteData(string);
+    }
+}
+
+void MainWindow::sendPackageASCII(QString string)
+{
+    if (m_Port->isOpen())
+    {
+        m_tSend->setInterval(m_sbRepeatSendInterval->value());
+        m_Protocol->writeDataNow(string.toLatin1());
+        displayWriteData(string);
+    }
+}
+
+void MainWindow::sendPackageHEX(QString string)
+{
+    if (m_Port->isOpen())
+    {
+        QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
+
+        if (byteList.last().length() == 1)
+            string.insert(string.length()-1, "0");
+
+        m_tSend->setInterval(m_sbRepeatSendInterval->value());
+        foreach (QString s, byteList)
+        {
+            bool ok;
+            m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+            if (ok)
+                m_Protocol->writeData();
+        }
+        displayWriteData(string.toUpper());
+    }
+}
+
+void MainWindow::displayReadDataASCII(QString string)
+{
+    QTextStream readStream(&readLog);
+    logReadRowsCount++;
+    m_eLogRead->addItem(string);
+    if (logRead)
+        readStream << string + "\n";
+
+    if (logReadRowsCount >= maxReadLogRows)
+    {
+        delete m_eLogRead->takeItem(0);
+        logReadRowsCount--;
+    }
+    if (m_cbReadScroll->isChecked())
+        m_eLogRead->scrollToBottom();
+}
+
+void MainWindow::displayReadDataHEX(QString string)
 {    
     QTextStream readStream(&readLog);
 
@@ -687,11 +732,8 @@ void MainWindow::displayReadData(QString string)
     if (!m_sbBytesCount->value())
     {
         m_eLogRead->addItem(string.toUpper());
-        if (m_cbSaveReadLog->isChecked())
-        {
-            QTextStream readStream(&readLog);
+        if (logRead)
             readStream << string.toUpper() + "\n";
-        }
         logReadRowsCount++;
     }
     else
@@ -723,14 +765,19 @@ void MainWindow::displayReadData(QString string)
         m_eLogRead->scrollToBottom();
 }
 
+void MainWindow::displayReadDataDEC(QString string)
+{
+    m_eLogRead->addItem(string);
+}
+
 void MainWindow::displayWriteData(QString string)
 {   
     logWriteRowsCount++;
-    m_eLogWrite->addItem(string.toUpper());
+    m_eLogWrite->addItem(string);
     if (logWrite)
     {
         QTextStream writeStream (&writeLog);
-        writeStream << string.toUpper() + "\n";
+        writeStream << string + "\n";
     }
 
     if (logWriteRowsCount >= maxWriteLogRows)
@@ -801,6 +848,7 @@ void MainWindow::saveSession()
     settings->setValue("config/write_log_timeout", m_tWriteLog->interval());
     settings->setValue("config/read_log_timeout", m_tReadLog->interval());
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
+    settings->setValue("config/mode", m_cbMode->currentIndex());
 }
 
 void MainWindow::loadSession()
@@ -825,6 +873,7 @@ void MainWindow::loadSession()
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
     m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
+    m_cbMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)

@@ -15,7 +15,6 @@
 #include <QSerialPort>
 #include <QCheckBox>
 #include <QSpinBox>
-#include <HEXLineEdit.h>
 #include <QSignalMapper>
 #include <QSettings>
 #include <QAbstractButton>
@@ -48,7 +47,7 @@ class MainWindow : public QMainWindow
     QListWidget *m_eLogRead;
     QListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
-    HEXLineEdit *m_leSendPackage;
+    QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
     QCheckBox *m_cbEchoMode;
     QCheckBox *m_cbSelectAllMiniMacroses;
@@ -134,9 +133,14 @@ private slots:
 
 public:
     QMap<int, MiniMacros *> MiniMacrosList;
-    void displayReadData(QString string);
+    void displayReadDataHEX(QString string);
+    void displayReadDataASCII(QString string);
+    void displayReadDataDEC(QString string);
     void displayWriteData(QString string);
     void sendPackage(QString string);
+    void sendPackageHEX(QString string);
+    void sendPackageASCII(QString string);
+    void sendPackageDEC(QString string);
     explicit MainWindow(QString title, QWidget *parent = 0);
 };
 
