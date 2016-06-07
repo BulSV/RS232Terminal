@@ -12,8 +12,7 @@ SOURCES += main.cpp\
     ComPort.cpp \
     Macros.cpp \
     MacroWindow.cpp \
-    MainWindow.cpp \
-    HEXLineEdit.cpp
+    MainWindow.cpp
 
 HEADERS  += \
     rs232terminalprotocol.h \
@@ -22,7 +21,6 @@ HEADERS  += \
     Macros.h \
     MacroWindow.h \
     MainWindow.h \
-    HEXLineEdit.h \
     MiniMacros.h
 
 RESOURCES += \
