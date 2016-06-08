@@ -102,6 +102,7 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
+    void editMacrosWindowShow(int index);
     void setAllMiniIntervals(bool check);
     void setAllMiniPeriods(bool check);
     void hiddenClick();

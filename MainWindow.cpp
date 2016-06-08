@@ -1,5 +1,6 @@
 #include <QDebug>
 #include "MainWindow.h"
+#include "MacrosEditing.h"
 #include <QGridLayout>
 #include <QString>
 #include <QApplication>
@@ -316,6 +317,14 @@ void MainWindow::addToHidden(int index, const QString &str)
     connect(MiniMacrosList.last(), SIGNAL(bPress(int)), macroWindow, SLOT(bPress(int)));
     connect(MiniMacrosList.last(), SIGNAL(cbCheckInterval(int,bool)), macroWindow, SLOT(cbCheckInterval(int,bool)));
     connect(MiniMacrosList.last(), SIGNAL(cbCheckPeriod(int,bool)), macroWindow, SLOT(cbCheckPeriod(int,bool)));
+    connect(MiniMacrosList.last(), SIGNAL(editMacros(int)), this, SLOT(editMacrosWindowShow(int)));
+}
+
+void MainWindow::editMacrosWindowShow(int index)
+{
+    Macros *mac = macroWindow->MacrosList[index];
+    MacrosEditing *editing = new MacrosEditing(mac);
+    editing->show();
 }
 
 void MainWindow::delFromHidden(int index)
