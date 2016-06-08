@@ -322,8 +322,9 @@ void MainWindow::addToHidden(int index, const QString &str)
 
 void MainWindow::editMacrosWindowShow(int index)
 {
-    Macros *mac = macroWindow->MacrosList[index];
-    MacrosEditing *editing = new MacrosEditing(mac);
+    MacrosEditing *editing = new MacrosEditing(macroWindow->MacrosList[index]->bMacros->text(),
+                                               macroWindow->MacrosList[index]->leMacros->text(),
+                                               macroWindow->MacrosList[index]->sbMacrosInterval->value());
     editing->show();
 }
 
