@@ -45,7 +45,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
-    , m_cbSelectAllMiniMacroses(new QCheckBox("Check all", this))
+    , m_cbSelectIntervals(new QCheckBox("Intervals", this))
+    , m_cbSelectPeriods(new QCheckBox("Periods", this))
     , m_sbEchoInterval(new QSpinBox(this))
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
@@ -208,7 +209,10 @@ void MainWindow::view()
 
     hiddenLayout->setSpacing(0);
     hiddenLayout->setMargin(2);
-    hiddenLayout->addWidget(m_cbSelectAllMiniMacroses);
+    QHBoxLayout *cbLayout = new QHBoxLayout;
+    cbLayout->addWidget(m_cbSelectIntervals);
+    cbLayout->addWidget(m_cbSelectPeriods);
+    hiddenLayout->addLayout(cbLayout);
     m_gbHiddenGroup->setLayout(hiddenLayout);
 
     QGridLayout *allLayouts = new QGridLayout;
@@ -237,7 +241,8 @@ void MainWindow::connections()
     connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClick()));
     connect(m_cbSaveWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
     connect(m_cbSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
-    connect(m_cbSelectAllMiniMacroses, SIGNAL(toggled(bool)), this, SLOT(setAllMini(bool)));
+    connect(m_cbSelectIntervals, SIGNAL(toggled(bool)), this, SLOT(setAllMiniIntervals(bool)));
+    connect(m_cbSelectPeriods, SIGNAL(toggled(bool)), this, SLOT(setAllMiniPeriods(bool)));
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
@@ -261,13 +266,28 @@ void MainWindow::connections()
     connect(macroWindow, SIGNAL(macrosDeleted(int)), this, SLOT(delFromHidden(int)));
     connect(macroWindow, SIGNAL(textChange(QString,int)), this, SLOT(miniMacrosTextChanged(QString, int)));
     connect(macroWindow, SIGNAL(checked(bool,int)), this, SLOT(miniMacrosChecked(bool,int)));
+    connect(macroWindow, SIGNAL(checkedPeriod(bool,int)), this, SLOT(miniMacrosCheckedPeriod(bool,int)));
 }
 
-void MainWindow::setAllMini(bool check)
+void MainWindow::setAllMiniIntervals(bool check)
 {
+    m_cbSelectPeriods->setEnabled(!check);
     foreach (MiniMacros *m, MiniMacrosList) {
-        m->cbMiniMacros->setChecked(check);
+        if (m->cbMiniMacrosPeriod->isChecked())
+            m->cbMiniMacrosPeriod->setChecked(false);
+        m->cbMiniMacrosInterval->setChecked(check);
         macroWindow->MacrosList[m->index]->cbMacrosActive->setChecked(check);
+    }
+}
+
+void MainWindow::setAllMiniPeriods(bool check)
+{
+    m_cbSelectIntervals->setEnabled(!check);
+    foreach (MiniMacros *m, MiniMacrosList) {
+        if (m->cbMiniMacrosInterval->isChecked())
+            m->cbMiniMacrosInterval->setChecked(false);
+        m->cbMiniMacrosPeriod->setChecked(check);
+        macroWindow->MacrosList[m->index]->cbPeriodSending->setChecked(check);
     }
 }
 
@@ -294,7 +314,8 @@ void MainWindow::addToHidden(int index, const QString &str)
     hiddenLayout->addWidget(MiniMacrosList.last());
     hiddenLayout->addSpacerItem(spacer);
     connect(MiniMacrosList.last(), SIGNAL(bPress(int)), macroWindow, SLOT(bPress(int)));
-    connect(MiniMacrosList.last(), SIGNAL(cbCheck(int,bool)), macroWindow, SLOT(cbCheck(int,bool)));
+    connect(MiniMacrosList.last(), SIGNAL(cbCheckInterval(int,bool)), macroWindow, SLOT(cbCheckInterval(int,bool)));
+    connect(MiniMacrosList.last(), SIGNAL(cbCheckPeriod(int,bool)), macroWindow, SLOT(cbCheckPeriod(int,bool)));
 }
 
 void MainWindow::delFromHidden(int index)
@@ -647,9 +668,12 @@ void MainWindow::sendPackage(QString string)
     if (m_cbMode->currentText() == "DEC")
         sendPackageDEC(string);
 
-    if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
-        m_BlinkTimeTxColor->start();
-        m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
+    if (m_Port->isOpen())
+    {
+        if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
+            m_BlinkTimeTxColor->start();
+            m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
+        }
     }
 }
 

@@ -68,6 +68,7 @@ void Macros::tick()
 
 void Macros::startStopPeriodSending(bool check)
 {
+    emit checkedPeriod(check, index);
     if (check)
     {
         cbMacrosActive->setEnabled(false);
@@ -110,7 +111,7 @@ void Macros::singleSend()
 
 void Macros::stateChange(bool check)
 {
-    checked(check, index);
+    emit checkedInterval(check, index);
     if (check)
     {
         emit Sending(true);

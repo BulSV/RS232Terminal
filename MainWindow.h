@@ -50,7 +50,8 @@ class MainWindow : public QMainWindow
     QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
     QCheckBox *m_cbEchoMode;
-    QCheckBox *m_cbSelectAllMiniMacroses;
+    QCheckBox *m_cbSelectIntervals;
+    QCheckBox *m_cbSelectPeriods;
     QSpinBox *m_sbEchoInterval;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
@@ -101,7 +102,8 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
-    void setAllMini(bool check);
+    void setAllMiniIntervals(bool check);
+    void setAllMiniPeriods(bool check);
     void hiddenClick();
     void start();
     void stop();
@@ -129,7 +131,8 @@ private slots:
     void addToHidden(int index, const QString &str);
     void delFromHidden(int index);
     void miniMacrosTextChanged(QString str, int index) { MiniMacrosList[index]->bMiniMacros->setText(str); }
-    void miniMacrosChecked(bool check, int index) { MiniMacrosList[index]->cbMiniMacros->setChecked(check); }
+    void miniMacrosChecked(bool check, int index) {MiniMacrosList[index]->cbMiniMacrosInterval->setChecked(check);}
+    void miniMacrosCheckedPeriod(bool check, int index) {MiniMacrosList[index]->cbMiniMacrosPeriod->setChecked(check);}
 
 public:
     QMap<int, MiniMacros *> MiniMacrosList;

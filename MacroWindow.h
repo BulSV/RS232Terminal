@@ -33,8 +33,10 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 public slots:
-    void cbCheck(int index, bool check) {MacrosList[index]->cbMacrosActive->setChecked(check);}
+    void cbCheckInterval(int index, bool check) {MacrosList[index]->cbMacrosActive->setChecked(check);}
+    void cbCheckPeriod(int index, bool check) {MacrosList[index]->cbPeriodSending->setChecked(check);}
     void macChecked(bool check, int index) { emit checked(check, index); }
+    void perChecked(bool check, int index) { emit checkedPeriod(check, index); }
     void bPress(int index) {MacrosList[index]->bMacros->click();}
     void addMacros();
     void delMacros(int index);
@@ -46,6 +48,7 @@ public slots:
 
 signals:
     checked(bool, int index);
+    checkedPeriod(bool, int index);
     WriteMacros(const QString &str);
     macrosAdded(int id, const QString &str);
     macrosDeleted(int id);

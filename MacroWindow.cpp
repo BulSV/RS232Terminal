@@ -116,7 +116,8 @@ void MacroWindow::addMacros()
     connect(MacrosList.last(), SIGNAL(DeleteMacros(int)), this, SLOT(delMacros(int)));
     connect(MacrosList.last(), SIGNAL(WriteMacros(QString)), this, SLOT(macrosRecieved(QString)));
     connect(MacrosList.last(), SIGNAL(textChanged(QString, int)), this, SLOT(textChanged(QString, int)));
-    connect(MacrosList.last(), SIGNAL(checked(bool, int)), this, SLOT(macChecked(bool, int)));
+    connect(MacrosList.last(), SIGNAL(checkedInterval(bool,int)), this, SLOT(macChecked(bool, int)));
+    connect(MacrosList.last(), SIGNAL(checkedPeriod(bool,int)), this, SLOT(perChecked(bool, int)));
     id++;
     emit macrosAdded(MacrosList.last()->index, MacrosList.last()->bMacros->text());
 }
