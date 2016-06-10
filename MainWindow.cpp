@@ -156,7 +156,7 @@ void MainWindow::view()
     configLayout->addWidget(m_bStart, 12, 0);
     configLayout->addWidget(m_bStop, 12, 1);
     configLayout->addWidget(m_bOffsetLeft, 13, 0, 1, 2);
-    configLayout->addItem(spacer, 14, 0, -1, -1);
+    configLayout->addItem(spacer, 14, 0);
     configLayout->setSpacing(5);
 
     QGridLayout *sendPackageLayout = new QGridLayout;
@@ -174,7 +174,7 @@ void MainWindow::view()
     WriteLayout->addWidget(m_bSaveWriteLog, 0, 3);
     m_bWriteLogClear->setFixedWidth(50);
     WriteLayout->addWidget(m_bWriteLogClear, 0, 4);
-    WriteLayout->addWidget(m_eLogWrite, 1, 0, -1, -1);
+    WriteLayout->addWidget(m_eLogWrite, 1, 0, 1, 5);
     WriteLayout->setSpacing(5);
     WriteLayout->setMargin(5);
 
@@ -188,7 +188,7 @@ void MainWindow::view()
     ReadLayout->addWidget(m_bSaveReadLog, 0, 3);
     m_bReadLogClear->setFixedWidth(50);
     ReadLayout->addWidget(m_bReadLogClear, 0, 4);
-    ReadLayout->addWidget(m_eLogRead, 1, 0, -1, -1);
+    ReadLayout->addWidget(m_eLogRead, 1, 0, 1, 5);
     ReadLayout->setSpacing(5);
     ReadLayout->setMargin(5);
 
@@ -204,7 +204,7 @@ void MainWindow::view()
 
     QGridLayout *dataLayout = new QGridLayout;
     dataLayout->addWidget(splitter, 0, 0);
-    dataLayout->addLayout(sendPackageLayout, 1, 0, -1, -1);
+    dataLayout->addLayout(sendPackageLayout, 1, 0);
     dataLayout->setSpacing(0);
     dataLayout->setMargin(0);
 
