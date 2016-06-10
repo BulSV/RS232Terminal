@@ -249,6 +249,7 @@ void MainWindow::connections()
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
+    connect(m_leSendPackage, SIGNAL(returnPressed()), m_abSendPackage, SLOT(click()));
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
