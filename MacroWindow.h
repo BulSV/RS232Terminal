@@ -47,12 +47,12 @@ public slots:
     void textChanged(QString str, int index) { emit textChange(str, index); }
 
 signals:
-    checked(bool, int index);
-    checkedPeriod(bool, int index);
-    WriteMacros(const QString &str);
-    macrosAdded(int id, const QString &str);
-    macrosDeleted(int id);
-    textChange(const QString str, int index);
+    void checked(bool, int index);
+    void checkedPeriod(bool, int index);
+    void WriteMacros(const QString &str);
+    void macrosAdded(int id, const QString &str);
+    void macrosDeleted(int id);
+    void textChange(const QString str, int index);
 
 public:
     QTimer *tMacro;

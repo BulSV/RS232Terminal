@@ -9,10 +9,10 @@ class MiniMacros : public QWidget
 {
     Q_OBJECT
 signals:
-    bPress(int index);
-    cbCheckInterval(int index, bool check);
-    cbCheckPeriod(int index, bool check);
-    editMacros(int index);
+    void bPress(int index);
+    void cbCheckInterval(int index, bool check);
+    void cbCheckPeriod(int index, bool check);
+    void editMacros(int index);
 
 public:
     int index;

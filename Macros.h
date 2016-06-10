@@ -27,13 +27,13 @@ private slots:
     void tick();
 
 signals:
-    DeleteMacros(int);
-    WriteMacros(const QString &str);
-    Sending(bool);
-    PeriodSending(const QString &str);
-    textChanged(QString str, int index);
-    checkedInterval(bool, int);
-    checkedPeriod(bool, int);
+    void DeleteMacros(int);
+    void WriteMacros(const QString &str);
+    void Sending(bool);
+    void PeriodSending(const QString &str);
+    void textChanged(QString str, int index);
+    void checkedInterval(bool, int);
+    void checkedPeriod(bool, int);
 
 public:
     QLineEdit *leMacros;
