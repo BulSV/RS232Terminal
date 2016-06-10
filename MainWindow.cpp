@@ -108,6 +108,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
         buffer << portsAvailable.portName();
     }
     m_cbPort->addItems(buffer);
+    m_cbPort->setEditable(true);
 
     buffer.clear();
     buffer << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
