@@ -9,7 +9,7 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QComboBox>
-#include <QPushButton>
+#include <MyPushButton.h>
 #include <QPlainTextEdit>
 #include <QTimer>
 #include <QSerialPort>
@@ -33,14 +33,14 @@ class MainWindow : public QMainWindow
     QComboBox *m_cbParity;
     QComboBox *m_cbStopBits;
     QComboBox *m_cbMode;
-    QPushButton *m_bStart;
-    QPushButton *m_bStop;
-    QPushButton *m_bWriteLogClear;
-    QPushButton *m_bReadLogClear;
-    QPushButton *m_bOffsetLeft;
-    QPushButton *m_bShowMacroForm;
-    QPushButton *m_bSaveWriteLog;
-    QPushButton *m_bSaveReadLog;
+    MyPushButton *m_bStart;
+    MyPushButton *m_bStop;
+    MyPushButton *m_bWriteLogClear;
+    MyPushButton *m_bReadLogClear;
+    MyPushButton *m_bOffsetLeft;
+    MyPushButton *m_bShowMacroForm;
+    MyPushButton *m_bSaveWriteLog;
+    MyPushButton *m_bSaveReadLog;
     QLabel *m_lTx;
     QLabel *m_lRx;
     QSpinBox *m_sbBytesCount;

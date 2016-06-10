@@ -15,8 +15,8 @@
 #include <QMessageBox>
 #include <QDateTime>
 
-#define BLINKTIMETX 200
-#define BLINKTIMERX 500
+#define BLINKTIMETX 50
+#define BLINKTIMERX 50
 
 #define SEPARATOR " "
 
@@ -29,14 +29,14 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbParity(new QComboBox(this))
     , m_cbStopBits(new QComboBox(this))
     , m_cbMode(new QComboBox(this))
-    , m_bStart(new QPushButton("Start", this))
-    , m_bStop(new QPushButton("Stop", this))
-    , m_bWriteLogClear(new QPushButton("Clear", this))
-    , m_bReadLogClear(new QPushButton("Clear", this))
-    , m_bOffsetLeft(new QPushButton("<-------", this))
-    , m_bShowMacroForm(new QPushButton("Macro", this))
-    , m_bSaveWriteLog(new QPushButton("Save", this))
-    , m_bSaveReadLog(new QPushButton("Save", this))
+    , m_bStart(new MyPushButton("Start", this))
+    , m_bStop(new MyPushButton("Stop", this))
+    , m_bWriteLogClear(new MyPushButton("Clear", this))
+    , m_bReadLogClear(new MyPushButton("Clear", this))
+    , m_bOffsetLeft(new MyPushButton("<-------", this))
+    , m_bShowMacroForm(new MyPushButton("Macro", this))
+    , m_bSaveWriteLog(new MyPushButton("Save", this))
+    , m_bSaveReadLog(new MyPushButton("Save", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_sbBytesCount(new QSpinBox(this))

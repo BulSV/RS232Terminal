@@ -3,26 +3,7 @@
 
 #include <QHBoxLayout>
 #include <QCheckBox>
-#include <QPushButton>
-#include <QMouseEvent>
-
-class MyPushButton : public QPushButton
-{
-    Q_OBJECT
-
-public:
-    QRightClickButton(QWidget *parent = 0);
-
-private slots:
-    void mousePressEvent(QMouseEvent *e)
-    {
-        if(e->button()==Qt::RightButton)
-                emit rightClicked();
-    }
-
-signals:
-    void rightClicked();
-};
+#include "MyPushButton.h"
 
 class MiniMacros : public QWidget
 {
@@ -45,9 +26,8 @@ public:
         index = i;
         cbMiniMacrosInterval = new QCheckBox;
         cbMiniMacrosPeriod = new QCheckBox;
-        bMiniMacros = new MyPushButton;
+        bMiniMacros = new MyPushButton(title);
         layout = new QHBoxLayout;
-        bMiniMacros->setText(title);
         bMiniMacros->setStyleSheet("font-weight: bold;");
 
         layout->setSpacing(2);
