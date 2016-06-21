@@ -21,7 +21,7 @@
 #define SEPARATOR " "
 
 MainWindow::MainWindow(QString title, QWidget *parent)
-    : QMainWindow(parent, Qt::WindowCloseButtonHint)
+    : QMainWindow(parent)
     , widget(new QWidget(this))
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
@@ -72,6 +72,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , hiddenLayout(new QVBoxLayout())
     , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
 {
+    setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
     setWindowTitle(title);    
     resize(settings->value("config/width", 750).toInt(), settings->value("config/height", 300).toInt());
     view();
