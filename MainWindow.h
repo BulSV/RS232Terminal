@@ -4,8 +4,6 @@
 #include "macrosediting.h"
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
-#include "MacroWindow.h"
-#include "Macros.h"
 #include "MiniMacros.h"
 #include <QMainWindow>
 #include <QLabel>
@@ -24,6 +22,7 @@
 #include <QSpacerItem>
 #include <QListWidget>
 #include <QScrollArea>
+#include <QToolBar>
 
 class MainWindow : public QMainWindow
 {
@@ -39,13 +38,10 @@ class MainWindow : public QMainWindow
     MyPushButton *m_bStop;
     MyPushButton *m_bWriteLogClear;
     MyPushButton *m_bReadLogClear;
-    MyPushButton *m_bOffsetLeft;
-    MyPushButton *m_bShowMacroForm;
     MyPushButton *m_bSaveWriteLog;
     MyPushButton *m_bSaveReadLog;
     QLabel *m_lTx;
     QLabel *m_lRx;
-    QSpinBox *m_sbBytesCount;
     QListWidget *m_eLogRead;
     QListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
@@ -73,7 +69,6 @@ class MainWindow : public QMainWindow
     ComPort *m_ComPort;
     RS232TerminalProtocol *m_Protocol;
     QSettings *settings;
-    MacroWindow *macroWindow;
     QFileDialog *fileDialog;
     QPushButton *m_bHiddenGroup;
     QGroupBox *m_gbHiddenGroup;
@@ -82,6 +77,7 @@ class MainWindow : public QMainWindow
     QScrollArea *scrollArea;
     QWidget *widgetScroll;
     QVBoxLayout *HiddenLayout;
+    QToolBar *toolBar;
 
     QFile writeLog;
     QFile readLog;
@@ -97,7 +93,6 @@ class MainWindow : public QMainWindow
     QString writeLogBuffer;
     QString readLogBuffer;
     QString buffer;
-    QList<MacrosEditing *> editingList;
 
     void view();
     void saveSession();
@@ -108,24 +103,18 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
-    void editMacrosWindowShow(int index);
-    void setAllMiniIntervals(bool check);
-    void setAllMiniPeriods(bool check);
     void hiddenClick();
     void start();
     void stop();
     void echo();
     void saveWrite();
     void saveRead();
-    void doOffset();
     void writeLogTimeout();
     void readLogTimeout();
     void startWriteLog(bool check);
     void startReadLog(bool check);
     void textChanged(QString text);
     void cleanEchoBuffer(bool check);
-    void macrosRecieved(const QString &str);
-    void showMacroWindow();
     void clearReadLog();
     void clearWriteLog();
     void received(bool isReceived);
@@ -135,14 +124,10 @@ private slots:
     void colorIsTx();
     void colorTxNone();
     void startSending(bool checked);
-    void addToHidden(int index, const QString &str);
+    void addToHidden();
     void delFromHidden(int index);
-    void miniMacrosTextChanged(QString str, int index) { MiniMacrosList[index]->bMiniMacros->setText(str); }
-    void miniMacrosChecked(bool check, int index) {MiniMacrosList[index]->cbMiniMacrosInterval->setChecked(check);}
-    void miniMacrosCheckedPeriod(bool check, int index) {MiniMacrosList[index]->cbMiniMacrosPeriod->setChecked(check);}
 
 public:
-    QMap<int, MiniMacros *> MiniMacrosList;
     void displayReadDataHEX(QString string);
     void displayReadDataASCII(QString string);
     void displayReadDataDEC(QString string);
