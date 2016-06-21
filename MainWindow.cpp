@@ -324,10 +324,10 @@ void MainWindow::addToHidden(int index, const QString &str)
 
 void MainWindow::editMacrosWindowShow(int index)
 {
-    MacrosEditing *editing = new MacrosEditing(macroWindow->MacrosList[index]->bMacros->text(),
+    editingList.append(new MacrosEditing(macroWindow->MacrosList[index]->bMacros->text(),
                                                macroWindow->MacrosList[index]->leMacros->text(),
-                                               macroWindow->MacrosList[index]->sbMacrosInterval->value());
-    editing->show();
+                                               macroWindow->MacrosList[index]->sbMacrosInterval->value()));
+    editingList.last()->show();
 }
 
 void MainWindow::delFromHidden(int index)
@@ -919,5 +919,8 @@ void MainWindow::closeEvent(QCloseEvent *e)
     saveSession();
     macroWindow->saveSession();
     macroWindow->close();
+    foreach (MacrosEditing *ed, editingList) {
+        ed->close();
+    }
     e->accept();
 }

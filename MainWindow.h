@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "macrosediting.h"
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
 #include "MacroWindow.h"
@@ -92,6 +93,7 @@ class MainWindow : public QMainWindow
     QString writeLogBuffer;
     QString readLogBuffer;
     QString buffer;
+    QList<MacrosEditing *> editingList;
 
     void view();
     void saveSession();
