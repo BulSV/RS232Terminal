@@ -14,6 +14,7 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QScrollBar>
 
 #define BLINKTIMETX 50
 #define BLINKTIMERX 50
@@ -22,7 +23,7 @@
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
-    , widget(new QWidget(this))
+    , widget(new QWidget(this))    
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
     , m_cbBits(new QComboBox(this))
@@ -69,9 +70,11 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , fileDialog(new QFileDialog(this))
     , m_bHiddenGroup(new QPushButton(">", this))
     , m_gbHiddenGroup(new QGroupBox(this))
-    , hiddenLayout(new QVBoxLayout())
     , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
-{
+    , scrollAreaLayout(new QVBoxLayout)
+    , scrollArea(new QScrollArea(m_gbHiddenGroup))
+    , widgetScroll(new QWidget(scrollArea))
+    , HiddenLayout(new QVBoxLayout(widgetScroll)){
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
     setWindowTitle(title);    
     resize(settings->value("config/width", 750).toInt(), settings->value("config/height", 300).toInt());
@@ -210,13 +213,22 @@ void MainWindow::view()
     dataLayout->setSpacing(0);
     dataLayout->setMargin(0);
 
-    hiddenLayout->setSpacing(0);
-    hiddenLayout->setMargin(2);
+    scrollArea->setWidget(widgetScroll);
+    scrollArea->show();
+    scrollArea->setVisible(true);
+    scrollArea->setVerticalScrollBar(new QScrollBar(Qt::Vertical, scrollArea));
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setWidgetResizable(true);
+    scrollAreaLayout->addWidget(scrollArea);
+    HiddenLayout->setSpacing(0);
+    HiddenLayout->setMargin(2);
     QHBoxLayout *cbLayout = new QHBoxLayout;
     cbLayout->addWidget(m_cbSelectIntervals);
     cbLayout->addWidget(m_cbSelectPeriods);
-    hiddenLayout->addLayout(cbLayout);
-    m_gbHiddenGroup->setLayout(hiddenLayout);
+    HiddenLayout->addLayout(cbLayout);
+    m_gbHiddenGroup->setLayout(scrollAreaLayout);
+    m_gbHiddenGroup->setFixedWidth(170);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
@@ -314,9 +326,9 @@ void MainWindow::hiddenClick()
 void MainWindow::addToHidden(int index, const QString &str)
 {
     MiniMacrosList.insert(index, new MiniMacros(index, str, this));
-    hiddenLayout->removeItem(spacer);
-    hiddenLayout->addWidget(MiniMacrosList.last());
-    hiddenLayout->addSpacerItem(spacer);
+    HiddenLayout->removeItem(spacer);
+    HiddenLayout->addWidget(MiniMacrosList.last());
+    HiddenLayout->addSpacerItem(spacer);
     connect(MiniMacrosList.last(), SIGNAL(bPress(int)), macroWindow, SLOT(bPress(int)));
     connect(MiniMacrosList.last(), SIGNAL(cbCheckInterval(int,bool)), macroWindow, SLOT(cbCheckInterval(int,bool)));
     connect(MiniMacrosList.last(), SIGNAL(cbCheckPeriod(int,bool)), macroWindow, SLOT(cbCheckPeriod(int,bool)));

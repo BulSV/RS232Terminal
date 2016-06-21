@@ -23,6 +23,7 @@
 #include <QGroupBox>
 #include <QSpacerItem>
 #include <QListWidget>
+#include <QScrollArea>
 
 class MainWindow : public QMainWindow
 {
@@ -76,8 +77,11 @@ class MainWindow : public QMainWindow
     QFileDialog *fileDialog;
     QPushButton *m_bHiddenGroup;
     QGroupBox *m_gbHiddenGroup;
-    QVBoxLayout *hiddenLayout;
     QSpacerItem *spacer;
+    QVBoxLayout *scrollAreaLayout;
+    QScrollArea *scrollArea;
+    QWidget *widgetScroll;
+    QVBoxLayout *HiddenLayout;
 
     QFile writeLog;
     QFile readLog;
