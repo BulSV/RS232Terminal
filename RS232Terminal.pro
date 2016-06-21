@@ -10,8 +10,6 @@ win32:RC_FILE = RS232Terminal.rc
 SOURCES += main.cpp\
     rs232terminalprotocol.cpp \
     ComPort.cpp \
-    Macros.cpp \
-    MacroWindow.cpp \
     MainWindow.cpp \
     MacrosEditing.cpp
 
@@ -19,8 +17,6 @@ HEADERS  += \
     rs232terminalprotocol.h \
     ComPort.h \
     IProtocol.h \
-    Macros.h \
-    MacroWindow.h \
     MainWindow.h \
     MiniMacros.h \
     MacrosEditing.h \

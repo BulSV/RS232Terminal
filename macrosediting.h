@@ -2,10 +2,10 @@
 #define MACROSEDITING_H
 
 #include <QWidget>
-#include "Macros.h"
 #include <QPushButton>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QHBoxLayout>
 
 class MacrosEditing : public QWidget
 {

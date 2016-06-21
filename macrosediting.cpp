@@ -1,5 +1,4 @@
 #include "MacrosEditing.h"
-#include "Macros.h"
 #include <QFileDialog>
 #include <QTextStream>
 #include <QMessageBox>
