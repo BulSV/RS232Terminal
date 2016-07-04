@@ -1,12 +1,12 @@
 #include <QDebug>
 #include "MainWindow.h"
-#include "Macros.h"
+#include "rs232terminalprotocol.h"
+#include "MiniMacros.h"
 #include <QGridLayout>
 #include <QString>
 #include <QApplication>
 #include <QLineEdit>
 #include <QSerialPortInfo>
-#include "rs232terminalprotocol.h"
 #include <QCloseEvent>
 #include <QMouseEvent>
 #include <QSplitter>
@@ -15,9 +15,10 @@
 #include <QMessageBox>
 #include <QDateTime>
 #include <QScrollBar>
+#include <QDir>
 
-#define BLINKTIMETX 50
-#define BLINKTIMERX 50
+#define BLINKTIMETX 100
+#define BLINKTIMERX 100
 
 #define SEPARATOR " "
 
@@ -30,12 +31,12 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbParity(new QComboBox(this))
     , m_cbStopBits(new QComboBox(this))
     , m_cbMode(new QComboBox(this))
-    , m_bStart(new MyPushButton("Start", this))
-    , m_bStop(new MyPushButton("Stop", this))
-    , m_bWriteLogClear(new MyPushButton("Clear", this))
-    , m_bReadLogClear(new MyPushButton("Clear", this))
-    , m_bSaveWriteLog(new MyPushButton("Save", this))
-    , m_bSaveReadLog(new MyPushButton("Save", this))
+    , m_bStart(new QPushButton("Start", this))
+    , m_bStop(new QPushButton("Stop", this))
+    , m_bWriteLogClear(new QPushButton("Clear", this))
+    , m_bReadLogClear(new QPushButton("Clear", this))
+    , m_bSaveWriteLog(new QPushButton("Save", this))
+    , m_bSaveReadLog(new QPushButton("Save", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
     , m_eLogRead(new QListWidget(this))
@@ -44,8 +45,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_leSendPackage(new QLineEdit(this))
     , m_abSendPackage(new QPushButton("Send", this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
-    , m_cbSelectIntervals(new QCheckBox("Intervals", this))
-    , m_cbSelectPeriods(new QCheckBox("Periods", this))
     , m_sbEchoInterval(new QSpinBox(this))
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
@@ -75,12 +74,12 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 {
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
     setWindowTitle(title);    
-    resize(settings->value("config/width", 750).toInt(), settings->value("config/height", 300).toInt());
+    resize(settings->value("config/width").toInt(), settings->value("config/height").toInt());
     view();
     connections();
 
-    toolBar->addAction("Add Macros", this, SLOT(addMacros()));
-    toolBar->addAction("Load Macroses");
+    toolBar->addAction(QIcon(":/Resources/add.png"), "Add Macros", this, SLOT(addMacros()));
+    toolBar->addAction(QIcon(":/Resources/open.png"), "Load Macroses");
     toolBar->setMovable(false);
     addToolBar(Qt::TopToolBarArea, toolBar);
 
@@ -136,6 +135,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     buffer.clear();
     buffer << "HEX" << "ASCII" << "DEC";
     m_cbMode->addItems(buffer);
+
+    QDir dir;
+    if (!dir.exists(dir.currentPath()+"/Macros"))
+        dir.mkpath(dir.currentPath()+"/Macros");
 
     loadSession();
 }
@@ -225,12 +228,8 @@ void MainWindow::view()
     scrollAreaLayout->addWidget(scrollArea);
     HiddenLayout->setSpacing(0);
     HiddenLayout->setMargin(2);
-    QHBoxLayout *cbLayout = new QHBoxLayout;
-    cbLayout->addWidget(m_cbSelectIntervals);
-    cbLayout->addWidget(m_cbSelectPeriods);
-    HiddenLayout->addLayout(cbLayout);
     m_gbHiddenGroup->setLayout(scrollAreaLayout);
-    m_gbHiddenGroup->setFixedWidth(170);
+    m_gbHiddenGroup->setFixedWidth(300);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
@@ -292,19 +291,20 @@ void MainWindow::hiddenClick()
 }
 
 void MainWindow::addMacros()
-{
-    while(MacrosList.contains(index))
-        index++;
-    MacrosList.insert(index, new Macros());
-    MacrosList.value(index)->show();
-    //HiddenLayout->removeItem(spacer);
-    //HiddenLayout->addSpacerItem(spacer);
+{    
+    HiddenLayout->removeItem(spacer);
+    MiniMacrosList.insert(index, new MiniMacros(index, this));
+    HiddenLayout->addWidget(MiniMacrosList[index]);
+    HiddenLayout->addSpacerItem(spacer);
+
+    connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
+    index++;
 }
 
-void MainWindow::delFromHidden(int index)
+void MainWindow::delMacros(int index)
 {
-    //delete MiniMacrosList[index];
-    //MiniMacrosList.remove(index);
+    delete MiniMacrosList[index];
+    MiniMacrosList.remove(index);
 }
 
 void MainWindow::writeLogTimeout()
@@ -849,6 +849,9 @@ void MainWindow::loadSession()
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
+    foreach (MiniMacros *m, MiniMacrosList.values()) {
+        m->editing->close();
+    }
     saveSession();
     e->accept();
 }

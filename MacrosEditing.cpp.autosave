@@ -3,29 +3,32 @@
 #include <QTextStream>
 #include <QMessageBox>
 
-MacrosEditing::MacrosEditing(QString title, QString p, int i, QWidget *parent)
+MacrosEditing::MacrosEditing(QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
-    , load(new QPushButton("Load", this))
-    , save(new QPushButton("Save", this))
+    , toolBar(new QToolBar(this))
     , package(new QLineEdit(this))
-    , interval(new QSpinBox(this))
-    , mainLay(new QHBoxLayout(this))
+    , mainLay(new QGridLayout(this))
+    , rbHEX(new QRadioButton(this))
+    , rbDEC(new QRadioButton(this))
+    , rbASCII(new QRadioButton(this))
+    , lbHEX(new QLabel(this))
+    , lbDEC(new QLabel(this))
+    , lbASCII(new QLabel(this))
 {
-    setWindowTitle("RS232 Terminal - Macro: " + title);
-    mainLay->addWidget(load);
-    mainLay->addWidget(save);
-    mainLay->addWidget(package);
-    mainLay->addWidget(interval);
+    setWindowTitle("RS232 Terminal - Macros");
+    
+    addToolBar(Qt::TopToolBarArea, toolBar);
+    toolBar->addAction("New");
+    toolBar->addAction("Load");
+    toolBar->addAction("Save");
+    toolBar->addAction("Save as", this, SLOT(saveDialog());
+
+    setLayout(mainLay);
     mainLay->setSpacing(3);
     mainLay->setMargin(3);
-    setLayout(mainLay);
-    setMaximumHeight(sizeHint().height());
-    resize(500, height());
-
-    package->setText(p);
-    interval->setValue(i);
-
-    connect(save, SIGNAL(clicked(bool)), this, SLOT(saveDialog()));
+    mainLay->addWidget(new QLabel("Formats:", this), 0, 0);
+    mainLay->addWidget(package, 0, 1);
+    mainLay->addWidget(rbHEX, 1,);
 }
 
 void MacrosEditing::saveDialog()

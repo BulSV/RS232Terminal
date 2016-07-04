@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "macros.h"
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
 #include "MiniMacros.h"
@@ -34,12 +33,12 @@ class MainWindow : public QMainWindow
     QComboBox *m_cbParity;
     QComboBox *m_cbStopBits;
     QComboBox *m_cbMode;
-    MyPushButton *m_bStart;
-    MyPushButton *m_bStop;
-    MyPushButton *m_bWriteLogClear;
-    MyPushButton *m_bReadLogClear;
-    MyPushButton *m_bSaveWriteLog;
-    MyPushButton *m_bSaveReadLog;
+    QPushButton *m_bStart;
+    QPushButton *m_bStop;
+    QPushButton *m_bWriteLogClear;
+    QPushButton *m_bReadLogClear;
+    QPushButton *m_bSaveWriteLog;
+    QPushButton *m_bSaveReadLog;
     QLabel *m_lTx;
     QLabel *m_lRx;
     QListWidget *m_eLogRead;
@@ -48,8 +47,6 @@ class MainWindow : public QMainWindow
     QLineEdit *m_leSendPackage;
     QAbstractButton *m_abSendPackage;
     QCheckBox *m_cbEchoMode;
-    QCheckBox *m_cbSelectIntervals;
-    QCheckBox *m_cbSelectPeriods;
     QSpinBox *m_sbEchoInterval;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
@@ -95,7 +92,7 @@ class MainWindow : public QMainWindow
     QString buffer;
 
     int index;
-    QMap<int, Macros *> MacrosList;
+    QMap<int, MiniMacros *> MiniMacrosList;
 
     void view();
     void saveSession();
@@ -128,7 +125,7 @@ private slots:
     void colorTxNone();
     void startSending(bool checked);
     void addMacros();
-    void delFromHidden(int index);
+    void delMacros(int index);
 
 public:
     void displayReadDataHEX(QString string);
