@@ -1,6 +1,6 @@
 #include <QDebug>
 #include "MainWindow.h"
-#include "MacrosEditing.h"
+#include "Macros.h"
 #include <QGridLayout>
 #include <QString>
 #include <QApplication>
@@ -49,8 +49,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_sbEchoInterval(new QSpinBox(this))
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
-    , m_cbSaveWriteLog(new QCheckBox("Log", this))
-    , m_cbSaveReadLog(new QCheckBox("Log", this))
+    , m_abSaveWriteLog(new QPushButton(this))
+    , m_abSaveReadLog(new QPushButton(this))
     , m_BlinkTimeTxNone(new QTimer(this))
     , m_BlinkTimeRxNone(new QTimer(this))
     , m_BlinkTimeTxColor(new QTimer(this))
@@ -79,8 +79,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     view();
     connections();
 
-    toolBar->addAction("Add Macros", this, SLOT(addToHidden()));
+    toolBar->addAction("Add Macros", this, SLOT(addMacros()));
     toolBar->addAction("Load Macroses");
+    toolBar->setMovable(false);
     addToolBar(Qt::TopToolBarArea, toolBar);
 
     logReadRowsCount = 0;
@@ -88,7 +89,12 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     readBytesDisplayed = 0;
     logWrite = false;
     logRead = false;
+    index = 0;
 
+    m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
+    m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
+    m_abSaveWriteLog->setCheckable(true);
+    m_abSaveReadLog->setCheckable(true);
     m_abSendPackage->setCheckable(true);
     m_abSendPackage->setEnabled(false);
     m_sbRepeatSendInterval->setEnabled(false);
@@ -169,8 +175,8 @@ void MainWindow::view()
     WriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
     m_cbWriteScroll->setFixedWidth(65);
     WriteLayout->addWidget(m_cbWriteScroll, 0, 1);
-    m_cbSaveWriteLog->setFixedWidth(35);
-    WriteLayout->addWidget(m_cbSaveWriteLog, 0, 2);
+    m_abSaveWriteLog->setFixedWidth(35);
+    WriteLayout->addWidget(m_abSaveWriteLog, 0, 2);
     m_bSaveWriteLog->setFixedWidth(50);
     WriteLayout->addWidget(m_bSaveWriteLog, 0, 3);
     m_bWriteLogClear->setFixedWidth(50);
@@ -183,8 +189,8 @@ void MainWindow::view()
     ReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
     m_cbReadScroll->setFixedWidth(65);
     ReadLayout->addWidget(m_cbReadScroll, 0, 1);
-    m_cbSaveReadLog->setFixedWidth(35);
-    ReadLayout->addWidget(m_cbSaveReadLog, 0, 2);
+    m_abSaveReadLog->setFixedWidth(35);
+    ReadLayout->addWidget(m_abSaveReadLog, 0, 2);
     m_bSaveReadLog->setFixedWidth(50);
     ReadLayout->addWidget(m_bSaveReadLog, 0, 3);
     m_bReadLogClear->setFixedWidth(50);
@@ -248,8 +254,8 @@ void MainWindow::connections()
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
     connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClick()));
-    connect(m_cbSaveWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
-    connect(m_cbSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
+    connect(m_abSaveWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
+    connect(m_abSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
@@ -285,11 +291,14 @@ void MainWindow::hiddenClick()
     }
 }
 
-void MainWindow::addToHidden()
+void MainWindow::addMacros()
 {
-    HiddenLayout->removeItem(spacer);
-    //HiddenLayout->addWidget(MiniMacrosList.last());
-    HiddenLayout->addSpacerItem(spacer);
+    while(MacrosList.contains(index))
+        index++;
+    MacrosList.insert(index, new Macros());
+    MacrosList.value(index)->show();
+    //HiddenLayout->removeItem(spacer);
+    //HiddenLayout->addSpacerItem(spacer);
 }
 
 void MainWindow::delFromHidden(int index)
@@ -301,7 +310,7 @@ void MainWindow::delFromHidden(int index)
 void MainWindow::writeLogTimeout()
 {
     writeLog.close();
-    m_cbSaveWriteLog->setChecked(false);
+    m_abSaveWriteLog->setChecked(false);
     logWrite = false;
     m_tWriteLog->stop();
 }
@@ -309,7 +318,7 @@ void MainWindow::writeLogTimeout()
 void MainWindow::readLogTimeout()
 {
     readLog.close();
-    m_cbSaveReadLog->setChecked(false);
+    m_abSaveReadLog->setChecked(false);
     logRead = false;
     m_tReadLog->stop();
 }
@@ -324,18 +333,20 @@ void MainWindow::startWriteLog(bool check)
                                                    tr("Log Files (*.txt)"));
         if (path.isEmpty())
         {
-            m_cbSaveWriteLog->setChecked(false);
+            m_abSaveWriteLog->setChecked(false);
             return;
         }
         writeLog.setFileName(path);
         writeLog.open(QIODevice::WriteOnly);
         m_tWriteLog->start();
         logWrite = true;
+        m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
     } else
     {
         m_tWriteLog->stop();
         writeLog.close();
         logWrite = false;
+        m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     }
 }
 
@@ -349,18 +360,20 @@ void MainWindow::startReadLog(bool check)
                                                    tr("Log Files (*.txt)"));
         if (path.isEmpty())
         {
-            m_cbSaveReadLog->setChecked(false);
+            m_abSaveReadLog->setChecked(false);
             return;
         }
         readLog.setFileName(path);
         readLog.open(QIODevice::WriteOnly);
         m_tReadLog->start();
         logRead = true;
+        m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
     } else
     {
         m_tReadLog->stop();
         readLog.close();
         logRead = false;
+        m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     }
 }
 

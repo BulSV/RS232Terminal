@@ -1,7 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "macrosediting.h"
+#include "macros.h"
 #include "rs232terminalprotocol.h"
 #include "ComPort.h"
 #include "MiniMacros.h"
@@ -53,8 +53,8 @@ class MainWindow : public QMainWindow
     QSpinBox *m_sbEchoInterval;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
-    QCheckBox *m_cbSaveWriteLog;
-    QCheckBox *m_cbSaveReadLog;
+    QAbstractButton *m_abSaveWriteLog;
+    QAbstractButton *m_abSaveReadLog;
 
     QTimer *m_BlinkTimeTxNone;
     QTimer *m_BlinkTimeRxNone;
@@ -94,6 +94,9 @@ class MainWindow : public QMainWindow
     QString readLogBuffer;
     QString buffer;
 
+    int index;
+    QMap<int, Macros *> MacrosList;
+
     void view();
     void saveSession();
     void loadSession();
@@ -124,7 +127,7 @@ private slots:
     void colorIsTx();
     void colorTxNone();
     void startSending(bool checked);
-    void addToHidden();
+    void addMacros();
     void delFromHidden(int index);
 
 public:
