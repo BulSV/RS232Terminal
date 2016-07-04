@@ -11,16 +11,17 @@ SOURCES += main.cpp\
     rs232terminalprotocol.cpp \
     ComPort.cpp \
     MainWindow.cpp \
-    Macros.cpp
+    Macros.cpp \
+    MiniMacros.cpp
 
 HEADERS  += \
     rs232terminalprotocol.h \
     ComPort.h \
     IProtocol.h \
     MainWindow.h \
-    MiniMacros.h \
     MyPushButton.h \
-    Macros.h
+    Macros.h \
+    MiniMacros.h
 
 RESOURCES += \
     RS232Terminal.qrc

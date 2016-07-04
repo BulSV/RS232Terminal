@@ -2,6 +2,9 @@
     <qresource prefix="/">
         <file>Resources/elisat.png</file>
 		<file>Resources/del.png</file>
+		<file>Resources/add.png</file>
+		<file>Resources/open.png</file>
+		<file>Resources/save.png</file>
 		<file>Resources/startRecToFile.png</file>
 		<file>Resources/startRecToFileBlink.png</file>
 		<file>Resources/terminal.ico</file>
