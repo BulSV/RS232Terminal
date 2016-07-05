@@ -20,19 +20,29 @@ class Macros : public QMainWindow
     QRadioButton *rbHEX;
     QRadioButton *rbDEC;
     QRadioButton *rbASCII;
-    QLabel *lbHEX;
-    QLabel *lbDEC;
-    QLabel *lbASCII;
+    QLineEdit *lbHEX;
+    QLineEdit *lbDEC;
+    QLineEdit *lbASCII;
 
 public:
     explicit Macros(QWidget *parent = 0);
+    void update(int t);
 
 signals:
     void packageChanged(QString);
+    void upd(bool, QString, int);
 
 public slots:
-    void saveDialog();
+    void rbChecked() { compute(package->text()); }
+    void compute(QString str);
+    void reset();
+    void saveAs();
+    void save();
     void openDialog();
+
+private:
+    int time;
+    QString path;
 };
 
 #endif // MACROSEDITING_H

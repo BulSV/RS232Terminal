@@ -20,8 +20,6 @@
 #define BLINKTIMETX 100
 #define BLINKTIMERX 100
 
-#define SEPARATOR " "
-
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
     , widget(new QWidget(this))    
@@ -229,7 +227,7 @@ void MainWindow::view()
     HiddenLayout->setSpacing(0);
     HiddenLayout->setMargin(2);
     m_gbHiddenGroup->setLayout(scrollAreaLayout);
-    m_gbHiddenGroup->setFixedWidth(300);
+    m_gbHiddenGroup->setFixedWidth(320);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
@@ -582,12 +580,13 @@ void MainWindow::received(bool isReceived)
             m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         }
         QByteArray out = m_Protocol->getReadedData();
+        bool ok;
         if (m_cbMode->currentText() == "HEX")
             displayReadDataHEX(QString(out.toHex()));
         if (m_cbMode->currentText() == "ASCII")
             displayReadDataASCII(QString(out));
         if (m_cbMode->currentText() == "DEC")
-            displayReadDataDEC(QString(out));
+            displayReadDataDEC(QString(out.toInt(&ok, 16)));
     }
 }
 
@@ -682,7 +681,7 @@ void MainWindow::sendPackageHEX(QString string)
 {
     if (m_Port->isOpen())
     {
-        QStringList byteList = string.split(SEPARATOR, QString::SkipEmptyParts);
+        QStringList byteList = string.split(" ", QString::SkipEmptyParts);
 
         if (byteList.last().length() == 1)
             string.insert(string.length()-1, "0");
@@ -722,7 +721,7 @@ void MainWindow::displayReadDataHEX(QString string)
 
     for (int i = 2; !(i >= string.length()); i += 3)
     {
-        string.insert(i, SEPARATOR);
+        string.insert(i, " ");
     }
 
     if (m_cbEchoMode->isChecked())
@@ -751,7 +750,19 @@ void MainWindow::displayReadDataHEX(QString string)
 
 void MainWindow::displayReadDataDEC(QString string)
 {
+    QTextStream readStream(&readLog);
+    logReadRowsCount++;
     m_eLogRead->addItem(string);
+    if (logRead)
+        readStream << string + "\n";
+
+    if (logReadRowsCount >= maxReadLogRows)
+    {
+        delete m_eLogRead->takeItem(0);
+        logReadRowsCount--;
+    }
+    if (m_cbReadScroll->isChecked())
+        m_eLogRead->scrollToBottom();
 }
 
 void MainWindow::displayWriteData(QString string)

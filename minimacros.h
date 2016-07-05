@@ -27,6 +27,8 @@ public:
 public slots:
     void intervalToggled(bool);
     void periodToggled(bool);
+    void timeChanged();
+    void update(bool enabled, QString buttonText, int t);
     void delMac() { emit deleteSignal(index); }
 
 signals:
