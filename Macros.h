@@ -39,6 +39,7 @@ public slots:
     void saveAs();
     void save();
     void openDialog();
+    void openPath(QString fileName);
 
 private:
     int time;

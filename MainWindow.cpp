@@ -77,7 +77,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     connections();
 
     toolBar->addAction(QIcon(":/Resources/add.png"), "Add Macros", this, SLOT(addMacros()));
-    toolBar->addAction(QIcon(":/Resources/open.png"), "Load Macroses");
+    toolBar->addAction(QIcon(":/Resources/open.png"), "Load Macroses", this, SLOT(openDialog()));
     toolBar->setMovable(false);
     addToolBar(Qt::TopToolBarArea, toolBar);
 
@@ -137,6 +137,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     QDir dir;
     if (!dir.exists(dir.currentPath()+"/Macros"))
         dir.mkpath(dir.currentPath()+"/Macros");
+    fileDialog->setDirectory(dir.currentPath()+"/Macros");
+    fileDialog->setFileMode(QFileDialog::ExistingFiles);
+    fileDialog->setNameFilter(trUtf8("Macro Files (*.rsmc)"));
 
     loadSession();
 }
@@ -285,6 +288,18 @@ void MainWindow::hiddenClick()
         m_gbHiddenGroup->hide();
         m_bHiddenGroup->setText(">");
         resize(width() - m_gbHiddenGroup->width() - 5, height());
+    }
+}
+
+void MainWindow::openDialog()
+{
+    QStringList fileNames;
+    if (fileDialog->exec())
+        fileNames = fileDialog->selectedFiles();
+
+    foreach (QString s, fileNames) {
+        addMacros();
+        MiniMacrosList.last()->editing->openPath(s);
     }
 }
 

@@ -48,10 +48,10 @@ Macros::Macros(QWidget *parent)
     lbHEX->setReadOnly(true);
     lbDEC->setReadOnly(true);
     lbASCII->setReadOnly(true);
-    lbHEX->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
-    lbDEC->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
-    lbASCII->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
-    package->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
+    lbHEX->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
+    lbDEC->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
+    lbASCII->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
+    package->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
     setMinimumSize(400, 150);
     rbHEX->setChecked(true);
 }
@@ -232,3 +232,29 @@ void Macros::openDialog()
         }
 }
 
+void Macros::openPath(QString fileName)
+{
+        if (fileName != "") {
+            QFile file(fileName);
+            if (!file.open(QIODevice::ReadOnly)) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+                return;
+            }
+            QTextStream stream(&file);
+            QString mode = stream.readLine(0);
+            if (mode == "HEX")
+                rbHEX->setChecked(true);
+            if (mode == "DEC")
+                rbDEC->setChecked(true);
+            if (mode == "ASCII")
+                rbASCII->setChecked(true);
+            package->setText(stream.readLine(0));
+            time = stream.readLine(0).toInt();
+            resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
+            QFileInfo fileInfo(file.fileName());
+            emit upd(true, fileInfo.baseName(), time);
+            setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
+            file.close();
+            path = fileName;
+        }
+}

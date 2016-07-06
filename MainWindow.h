@@ -125,6 +125,7 @@ private slots:
     void colorTxNone();
     void startSending(bool checked);
     void addMacros();
+    void openDialog();
     void delMacros(int index);
 
 public:
