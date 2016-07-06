@@ -9,6 +9,7 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     , time(new QSpinBox(this))
     , send(new MyPushButton("Empty", this))
     , editing(new Macros(this))
+    , tPeriod(new QTimer(this))
 {
     index = i;
 
@@ -36,9 +37,18 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     connect(interval, SIGNAL(toggled(bool)), this, SLOT(intervalToggled(bool)));
     connect(period, SIGNAL(toggled(bool)), this, SLOT(periodToggled(bool)));
     connect(send, SIGNAL(rightClicked()), editing, SLOT(show()));
+    connect(send, SIGNAL(clicked()), this, SLOT(sendPeriod()));
     connect(time, SIGNAL(valueChanged(int)), this, SLOT(timeChanged()));
     connect(del, SIGNAL(pressed()), this, SLOT(delMac()));
     connect(editing, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
+    connect(editing, SIGNAL(act(bool)), this, SLOT(activate(bool)));
+    connect(tPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
+}
+
+void MiniMacros::sendPeriod()
+{
+    tPeriod->setInterval(time->value());
+    emit setSend(editing->package->text(), mode);
 }
 
 void MiniMacros::intervalToggled(bool check)
@@ -53,6 +63,10 @@ void MiniMacros::periodToggled(bool check)
     interval->setChecked(false);
     interval->setEnabled(!check);   
     editing->update(time->value());
+    if (check)
+        tPeriod->start();
+    else
+        tPeriod->stop();
 }
 
 void MiniMacros::timeChanged()
@@ -66,4 +80,23 @@ void MiniMacros::update(bool enabled, QString buttonText, int t)
     period->setEnabled(enabled);
     send->setText(buttonText);
     time->setValue(t);
+    if (editing->rbHEX->isChecked())
+        mode = 0;
+    if (editing->rbASCII->isChecked())
+        mode = 1;
+    if (editing->rbDEC->isChecked())
+        mode = 2;
+}
+
+void MiniMacros::activate(bool enabled)
+{
+    interval->setEnabled(enabled);
+    period->setEnabled(enabled);
+
+    if (editing->rbHEX->isChecked())
+        mode = 0;
+    if (editing->rbASCII->isChecked())
+        mode = 1;
+    if (editing->rbDEC->isChecked())
+        mode = 2;
 }

@@ -28,7 +28,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbBits(new QComboBox(this))
     , m_cbParity(new QComboBox(this))
     , m_cbStopBits(new QComboBox(this))
-    , m_cbMode(new QComboBox(this))
+    , m_cbSendMode(new QComboBox(this))
+    , m_cbReadMode(new QComboBox(this))
+    , m_cbWriteMode(new QComboBox(this))
     , m_bStart(new QPushButton("Start", this))
     , m_bStop(new QPushButton("Stop", this))
     , m_bWriteLogClear(new QPushButton("Clear", this))
@@ -132,7 +134,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbStopBits->addItems(buffer);
     buffer.clear();
     buffer << "HEX" << "ASCII" << "DEC";
-    m_cbMode->addItems(buffer);
+    m_cbSendMode->addItems(buffer);
+    m_cbReadMode->addItems(buffer);
+    m_cbWriteMode->addItems(buffer);
 
     QDir dir;
     if (!dir.exists(dir.currentPath()+"/Macros"))
@@ -163,43 +167,47 @@ void MainWindow::view()
     configLayout->addWidget(m_cbStopBits, 7, 1);
     configLayout->addWidget(m_cbEchoMode, 8, 0);
     configLayout->addWidget(m_sbEchoInterval, 8, 1);
-    configLayout->addWidget(new QLabel("Mode:", this), 9, 0);
-    configLayout->addWidget(m_cbMode, 9, 1);
-    configLayout->addWidget(m_bStart, 10, 0);
-    configLayout->addWidget(m_bStop, 10, 1);
-    configLayout->addItem(spacer, 11, 0);
+    configLayout->addWidget(m_bStart, 9, 0);
+    configLayout->addWidget(m_bStop, 9, 1);
+    configLayout->addItem(spacer, 10, 0);
     configLayout->setSpacing(5);
 
-    QGridLayout *sendPackageLayout = new QGridLayout;
-    sendPackageLayout->addWidget(m_leSendPackage, 0, 0);
-    sendPackageLayout->addWidget(m_sbRepeatSendInterval, 0, 1);
-    sendPackageLayout->addWidget(m_abSendPackage, 0, 2);
+    QHBoxLayout *sendPackageLayout = new QHBoxLayout;
+    sendPackageLayout->addWidget(new QLabel("Mode:", this));
+    sendPackageLayout->addWidget(m_cbSendMode);
+    sendPackageLayout->addWidget(m_leSendPackage);
+    sendPackageLayout->addWidget(m_sbRepeatSendInterval);
+    sendPackageLayout->addWidget(m_abSendPackage);
 
     QGridLayout *WriteLayout = new QGridLayout;
-    WriteLayout->addWidget(new QLabel("Write:", this), 0, 0);
+    WriteLayout->addWidget(new QLabel("Write :", this), 0, 0);
+    m_cbWriteMode->setFixedWidth(55);
+    WriteLayout->addWidget(m_cbWriteMode, 0, 1);
     m_cbWriteScroll->setFixedWidth(65);
-    WriteLayout->addWidget(m_cbWriteScroll, 0, 1);
+    WriteLayout->addWidget(m_cbWriteScroll, 0, 2);
     m_abSaveWriteLog->setFixedWidth(35);
-    WriteLayout->addWidget(m_abSaveWriteLog, 0, 2);
+    WriteLayout->addWidget(m_abSaveWriteLog, 0, 3);
     m_bSaveWriteLog->setFixedWidth(50);
-    WriteLayout->addWidget(m_bSaveWriteLog, 0, 3);
+    WriteLayout->addWidget(m_bSaveWriteLog, 0, 4);
     m_bWriteLogClear->setFixedWidth(50);
-    WriteLayout->addWidget(m_bWriteLogClear, 0, 4);
-    WriteLayout->addWidget(m_eLogWrite, 1, 0, 1, 5);
+    WriteLayout->addWidget(m_bWriteLogClear, 0, 5);
+    WriteLayout->addWidget(m_eLogWrite, 1, 0, 1, 6);
     WriteLayout->setSpacing(5);
     WriteLayout->setMargin(5);
 
     QGridLayout *ReadLayout = new QGridLayout;
     ReadLayout->addWidget(new QLabel("Read:", this), 0, 0);
+    m_cbReadMode->setFixedWidth(55);
+    ReadLayout->addWidget(m_cbReadMode, 0, 1);
     m_cbReadScroll->setFixedWidth(65);
-    ReadLayout->addWidget(m_cbReadScroll, 0, 1);
+    ReadLayout->addWidget(m_cbReadScroll, 0, 2);
     m_abSaveReadLog->setFixedWidth(35);
-    ReadLayout->addWidget(m_abSaveReadLog, 0, 2);
+    ReadLayout->addWidget(m_abSaveReadLog, 0, 3);
     m_bSaveReadLog->setFixedWidth(50);
-    ReadLayout->addWidget(m_bSaveReadLog, 0, 3);
+    ReadLayout->addWidget(m_bSaveReadLog, 0, 4);
     m_bReadLogClear->setFixedWidth(50);
-    ReadLayout->addWidget(m_bReadLogClear, 0, 4);
-    ReadLayout->addWidget(m_eLogRead, 1, 0, 1, 5);
+    ReadLayout->addWidget(m_bReadLogClear, 0, 5);
+    ReadLayout->addWidget(m_eLogRead, 1, 0, 1, 6);
     ReadLayout->setSpacing(5);
     ReadLayout->setMargin(5);
 
@@ -311,6 +319,7 @@ void MainWindow::addMacros()
     HiddenLayout->addSpacerItem(spacer);
 
     connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
+    connect(MiniMacrosList[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
     index++;
 }
 
@@ -594,14 +603,7 @@ void MainWindow::received(bool isReceived)
             m_BlinkTimeRxColor->start();
             m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         }
-        QByteArray out = m_Protocol->getReadedData();
-        bool ok;
-        if (m_cbMode->currentText() == "HEX")
-            displayReadDataHEX(QString(out.toHex()));
-        if (m_cbMode->currentText() == "ASCII")
-            displayReadDataASCII(QString(out));
-        if (m_cbMode->currentText() == "DEC")
-            displayReadDataDEC(QString(out.toInt(&ok, 16)));
+        displayReadData(m_Protocol->getReadedData());
     }
 }
 
@@ -619,12 +621,12 @@ void MainWindow::colorRxNone()
 
 void MainWindow::sendSingle()
 {
-    sendPackage(m_leSendPackage->text());
+    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
 }
 
 void MainWindow::echo()
 {
-    sendPackage(echoData.takeFirst());
+    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
     if (echoData.isEmpty())
     {
         m_tEcho->stop();
@@ -639,7 +641,7 @@ void MainWindow::startSending(bool checked)
             {
                 if (m_sbRepeatSendInterval->value() == 0)
                 {
-                    sendPackage(m_leSendPackage->text());
+                    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
                     m_abSendPackage->setChecked(false);
                 } else
                 {
@@ -653,107 +655,103 @@ void MainWindow::startSending(bool checked)
         }
 }
 
-void MainWindow::sendPackage(QString string)
-{
-    if (m_cbMode->currentText() == "HEX")
-        sendPackageHEX(string);
-    if (m_cbMode->currentText() == "ASCII")
-        sendPackageASCII(string);
-    if (m_cbMode->currentText() == "DEC")
-        sendPackageDEC(string);
-
-    if (m_Port->isOpen())
-    {
-        if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
-            m_BlinkTimeTxColor->start();
-            m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
-        }
-    }
-}
-
-void MainWindow::sendPackageDEC(QString string)
+void MainWindow::sendPackage(QString string, int mode)
 {
     if (m_Port->isOpen())
     {
-        m_tSend->setInterval(m_sbRepeatSendInterval->value());
-        m_Protocol->setDataToWrite(string);
-        m_Protocol->writeData();
-        displayWriteData(string);
-    }
-}
-
-void MainWindow::sendPackageASCII(QString string)
-{
-    if (m_Port->isOpen())
-    {
-        m_tSend->setInterval(m_sbRepeatSendInterval->value());
-        m_Protocol->writeDataNow(string.toLatin1());
-        displayWriteData(string);
-    }
-}
-
-void MainWindow::sendPackageHEX(QString string)
-{
-    if (m_Port->isOpen())
-    {
-        QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-
-        if (byteList.last().length() == 1)
-            string.insert(string.length()-1, "0");
-
-        m_tSend->setInterval(m_sbRepeatSendInterval->value());
-        foreach (QString s, byteList)
+        if (m_Port->isOpen())
         {
-            bool ok;
-            m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
-            if (ok)
-                m_Protocol->writeData();
+            if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
+                m_BlinkTimeTxColor->start();
+                m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
+            }
         }
-        displayWriteData(string.toUpper());
+        m_tSend->setInterval(m_sbRepeatSendInterval->value());
+        switch (mode) {
+            case 0:
+            {
+                QStringList byteList = string.split(" ", QString::SkipEmptyParts);
+                if (byteList.last().length() == 1)
+                    string.insert(string.length()-1, "0");
+
+                foreach (QString s, byteList)
+                {
+                    bool ok;
+                    m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+                    if (ok)
+                        m_Protocol->writeData();
+                }
+                string = string.toUpper();
+                break;
+            }
+            case 1:
+            {
+                foreach (QChar ch, string) {
+                    int ascii = ch.toLatin1();
+                    m_Protocol->setDataToWrite(QString::number(ascii, 10));
+                    m_Protocol->writeData();
+                }
+                break;
+            }
+            case 2:
+            {
+                QStringList byteList = string.split(" ", QString::SkipEmptyParts);
+                foreach (QString s, byteList)
+                {
+                    bool ok;
+                    m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 10)));
+                    if (ok)
+                        m_Protocol->writeData();
+                }
+                break;
+            }
+
+        }
+        displayWriteData(string);
     }
 }
 
-void MainWindow::displayReadDataASCII(QString string)
-{
-    QTextStream readStream(&readLog);
-    logReadRowsCount++;
-    m_eLogRead->addItem(string);
-    if (logRead)
-        readStream << string + "\n";
-
-    if (logReadRowsCount >= maxReadLogRows)
-    {
-        delete m_eLogRead->takeItem(0);
-        logReadRowsCount--;
-    }
-    if (m_cbReadScroll->isChecked())
-        m_eLogRead->scrollToBottom();
-}
-
-void MainWindow::displayReadDataHEX(QString string)
+void MainWindow::displayReadData(QByteArray ba)
 {    
     QTextStream readStream(&readLog);
 
-    for (int i = 2; !(i >= string.length()); i += 3)
+    switch (m_cbReadMode->currentIndex())
     {
-        string.insert(i, " ");
-    }
-
-    if (m_cbEchoMode->isChecked())
+    case 0:
     {
-        echoData.append(string);
-        if (!m_tEcho->isActive())
+        QString string = ba.toHex();
+        for (int i = 2; !(i >= string.length()); i += 3)
         {
-            m_tEcho->setInterval(m_sbEchoInterval->value());
-            m_tEcho->start();
+            string.insert(i, " ");
         }
+        m_eLogRead->addItem(string.toUpper());
+        if (logRead)
+            readStream << string.toUpper() + "\n";
+        break;
+    }
+    case 1:
+    {
+        m_eLogRead->addItem(QString(ba));
+        if (logRead)
+            readStream << QString(ba) + "\n";
+        break;
+    }
+    case 2:         //Доделать десятичный вывод принятых данных
+    {
+        QString outDEC;
+        QString in = QString(ba);
+        foreach (QChar ch, in) {
+            int ascii = ch.toLatin1();
+            outDEC.append(QString::number(ascii, 16) + " ");
+        }
+        m_eLogRead->addItem(outDEC);
+        if (logRead)
+            readStream << outDEC + "\n";
+        break;
+    }
     }
 
-    m_eLogRead->addItem(string.toUpper());
-    if (logRead)
-        readStream << string.toUpper() + "\n";
     logReadRowsCount++;
-
     if (logReadRowsCount >= maxReadLogRows)
     {
         delete m_eLogRead->takeItem(0);
@@ -763,27 +761,12 @@ void MainWindow::displayReadDataHEX(QString string)
         m_eLogRead->scrollToBottom();
 }
 
-void MainWindow::displayReadDataDEC(QString string)
-{
-    QTextStream readStream(&readLog);
-    logReadRowsCount++;
-    m_eLogRead->addItem(string);
-    if (logRead)
-        readStream << string + "\n";
-
-    if (logReadRowsCount >= maxReadLogRows)
-    {
-        delete m_eLogRead->takeItem(0);
-        logReadRowsCount--;
-    }
-    if (m_cbReadScroll->isChecked())
-        m_eLogRead->scrollToBottom();
-}
 
 void MainWindow::displayWriteData(QString string)
 {   
     logWriteRowsCount++;
     m_eLogWrite->addItem(string);
+
     if (logWrite)
     {
         QTextStream writeStream (&writeLog);
@@ -795,7 +778,6 @@ void MainWindow::displayWriteData(QString string)
         delete m_eLogWrite->takeItem(0);
         logWriteRowsCount--;
     }
-
     if (m_cbWriteScroll->isChecked())
         m_eLogWrite->scrollToBottom();
 }
@@ -846,7 +828,7 @@ void MainWindow::saveSession()
     settings->setValue("config/write_log_timeout", m_tWriteLog->interval());
     settings->setValue("config/read_log_timeout", m_tReadLog->interval());
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
-    settings->setValue("config/mode", m_cbMode->currentIndex());
+    settings->setValue("config/mode", m_cbSendMode->currentIndex());
 
     settings->remove("macros");
     int i = 1;
@@ -893,7 +875,7 @@ void MainWindow::loadSession()
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
     m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
-    m_cbMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
+    m_cbSendMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
 
     int size = settings->value("macros/size", 0).toInt();
     if (!size)

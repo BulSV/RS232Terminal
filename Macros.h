@@ -33,6 +33,7 @@ class Macros : public QMainWindow
 signals:
     void packageChanged(QString);
     void upd(bool, QString, int);
+    void act(bool);
 
 public slots:
     void rbChecked() { compute(package->text()); }

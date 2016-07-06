@@ -32,7 +32,9 @@ class MainWindow : public QMainWindow
     QComboBox *m_cbBits;
     QComboBox *m_cbParity;
     QComboBox *m_cbStopBits;
-    QComboBox *m_cbMode;
+    QComboBox *m_cbSendMode;
+    QComboBox *m_cbReadMode;
+    QComboBox *m_cbWriteMode;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
     QPushButton *m_bWriteLogClear;
@@ -127,16 +129,11 @@ private slots:
     void addMacros();
     void openDialog();
     void delMacros(int index);
+    void sendPackage(QString string, int mode);
 
 public:
-    void displayReadDataHEX(QString string);
-    void displayReadDataASCII(QString string);
-    void displayReadDataDEC(QString string);
+    void displayReadData(QByteArray ba);
     void displayWriteData(QString string);
-    void sendPackage(QString string);
-    void sendPackageHEX(QString string);
-    void sendPackageASCII(QString string);
-    void sendPackageDEC(QString string);
     explicit MainWindow(QString title, QWidget *parent = 0);
 };
 

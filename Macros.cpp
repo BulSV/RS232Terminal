@@ -41,10 +41,10 @@ Macros::Macros(QWidget *parent)
     mainLay->addWidget(package, 0, 1);
     mainLay->addWidget(rbHEX, 1, 0);
     mainLay->addWidget(lbHEX, 1, 1);
-    mainLay->addWidget(rbDEC, 2, 0);
-    mainLay->addWidget(lbDEC, 2, 1);
-    mainLay->addWidget(rbASCII, 3, 0);
-    mainLay->addWidget(lbASCII, 3, 1);
+    mainLay->addWidget(rbASCII, 2, 0);
+    mainLay->addWidget(lbASCII, 2, 1);
+    mainLay->addWidget(rbDEC, 3, 0);
+    mainLay->addWidget(lbDEC, 3, 1);
 
     lbHEX->setReadOnly(true);
     lbDEC->setReadOnly(true);
@@ -64,6 +64,7 @@ void Macros::compute(QString str)
         lbDEC->clear();
         lbASCII->clear();
         lbHEX->clear();
+        emit act(false);
     }
     if (rbHEX->isChecked())
     {
@@ -115,6 +116,7 @@ void Macros::compute(QString str)
             lbHEX->setText(outHEX);
         }
     }
+    emit act(true);
 }
 
 void Macros::update(int t)
@@ -143,10 +145,10 @@ void Macros::saveAs()
                 QString mode;
                 if (rbHEX->isChecked())
                     mode = "HEX";
-                if (rbDEC->isChecked())
-                    mode = "DEC";
                 if (rbASCII->isChecked())
                     mode = "ASCII";
+                if (rbDEC->isChecked())
+                    mode = "DEC";
                 stream << mode + "\n";
                 stream.flush();
                 stream << package->text() + "\n";
@@ -184,10 +186,10 @@ void Macros::save()
                     QString mode;
                     if (rbHEX->isChecked())
                         mode = "HEX";
-                    if (rbDEC->isChecked())
-                        mode = "DEC";
                     if (rbASCII->isChecked())
                         mode = "ASCII";
+                    if (rbDEC->isChecked())
+                        mode = "DEC";
                     stream << mode + "\n";
                     stream.flush();
                     stream << package->text() + "\n";
@@ -220,10 +222,10 @@ void Macros::openDialog()
             QString mode = stream.readLine(0);
             if (mode == "HEX")
                 rbHEX->setChecked(true);
-            if (mode == "DEC")
-                rbDEC->setChecked(true);
             if (mode == "ASCII")
                 rbASCII->setChecked(true);
+            if (mode == "DEC")
+                rbDEC->setChecked(true);
             package->setText(stream.readLine(0));
             time = stream.readLine(0).toInt();
             resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
@@ -246,10 +248,10 @@ bool Macros::openPath(QString fileName)
             QString mode = stream.readLine(0);
             if (mode == "HEX")
                 rbHEX->setChecked(true);
-            if (mode == "DEC")
-                rbDEC->setChecked(true);
             if (mode == "ASCII")
                 rbASCII->setChecked(true);
+            if (mode == "DEC")
+                rbDEC->setChecked(true);
             package->setText(stream.readLine(0));
             time = stream.readLine(0).toInt();
             resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
