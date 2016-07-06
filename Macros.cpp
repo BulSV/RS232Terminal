@@ -8,17 +8,18 @@ Macros::Macros(QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
     , widget(new QWidget(this))
     , toolBar(new QToolBar(this))
-    , package(new QLineEdit(this))
     , mainLay(new QGridLayout())
-    , rbHEX(new QRadioButton("HEX", this))
-    , rbDEC(new QRadioButton("DEC", this))
-    , rbASCII(new QRadioButton("ASCII", this))
     , lbHEX(new QLineEdit(this))
     , lbDEC(new QLineEdit(this))
     , lbASCII(new QLineEdit(this))
+    , package(new QLineEdit(this))
+    , rbHEX(new QRadioButton("HEX", this))
+    , rbDEC(new QRadioButton("DEC", this))
+    , rbASCII(new QRadioButton("ASCII", this))
 {
     setWindowTitle("RS232 Terminal - Macros: Empty");
     time = 50;
+    isFromFile = false;
 
     addToolBar(Qt::TopToolBarArea, toolBar);
     toolBar->setMovable(false);
@@ -160,6 +161,7 @@ void Macros::saveAs()
                 setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
                 file.close();
                 path = fileName;
+                isFromFile = true;
             }
         }
 }
@@ -199,6 +201,7 @@ void Macros::save()
                     emit upd(true, fileInfo.baseName(), time);
                     setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
                     file.close();
+                    isFromFile = true;
                 }
             }
     }
@@ -229,17 +232,16 @@ void Macros::openDialog()
             setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
             file.close();
             path = fileName;
+            isFromFile = true;
         }
 }
 
-void Macros::openPath(QString fileName)
+bool Macros::openPath(QString fileName)
 {
         if (fileName != "") {
             QFile file(fileName);
-            if (!file.open(QIODevice::ReadOnly)) {
-                QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-                return;
-            }
+            if (!file.open(QIODevice::ReadOnly))
+                return false;
             QTextStream stream(&file);
             QString mode = stream.readLine(0);
             if (mode == "HEX")
@@ -256,5 +258,8 @@ void Macros::openPath(QString fileName)
             setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
             file.close();
             path = fileName;
-        }
+            isFromFile = true;
+            return true;
+        } else
+            return false;
 }

@@ -847,6 +847,29 @@ void MainWindow::saveSession()
     settings->setValue("config/read_log_timeout", m_tReadLog->interval());
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
     settings->setValue("config/mode", m_cbMode->currentIndex());
+
+    settings->remove("macros");
+    int i = 1;
+    foreach (MiniMacros *m, MiniMacrosList.values()) {
+        if (!m->editing->isFromFile)
+        {
+            QString mode;
+            if (m->editing->rbHEX->isChecked())
+                mode = "HEX";
+            if (m->editing->rbDEC->isChecked())
+                mode = "DEC";
+            if (m->editing->rbASCII->isChecked())
+                mode = "ASCII";
+            settings->setValue("macros/"+QString::number(i)+"/mode", mode);
+            settings->setValue("macros/"+QString::number(i)+"/packege", m->editing->package->text());
+            settings->setValue("macros/"+QString::number(i)+"/interval", m->time->value());
+        }
+        settings->setValue("macros/"+QString::number(i)+"/checked_interval", m->interval->isChecked());
+        settings->setValue("macros/"+QString::number(i)+"/checked_period", m->period->isChecked());
+        settings->setValue("macros/"+QString::number(i)+"/path", m->editing->path);
+        i++;
+    }
+    settings->setValue("macros/size", i-1);
 }
 
 void MainWindow::loadSession()
@@ -871,13 +894,37 @@ void MainWindow::loadSession()
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
     m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
     m_cbMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
+
+    int size = settings->value("macros/size", 0).toInt();
+    if (!size)
+    {
+        addMacros();
+        return;
+    }
+    for (int i = 1; i <= size; ++i) {
+        addMacros();
+        if (!MiniMacrosList.last()->editing->openPath(settings->value("macros/"+QString::number(i)+"/path").toString()))
+        {
+            QString mode = settings->value("macros/"+QString::number(i)+"/mode").toString();
+            if (mode == "HEX")
+                MiniMacrosList.last()->editing->rbHEX->setChecked(true);
+            if (mode == "DEC")
+                MiniMacrosList.last()->editing->rbDEC->setChecked(true);
+            if (mode == "ASCII")
+                MiniMacrosList.last()->editing->rbASCII->setChecked(true);
+            MiniMacrosList.last()->editing->package->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
+            MiniMacrosList.last()->time->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
+        }
+         MiniMacrosList.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
+         MiniMacrosList.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
+    saveSession();
     foreach (MiniMacros *m, MiniMacrosList.values()) {
         m->editing->close();
     }
-    saveSession();
     e->accept();
 }

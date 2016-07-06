@@ -13,20 +13,22 @@
 class Macros : public QMainWindow
 {
     Q_OBJECT
+    public:
     QWidget *widget;
     QToolBar *toolBar;
-    QLineEdit *package;
     QGridLayout *mainLay;
-    QRadioButton *rbHEX;
-    QRadioButton *rbDEC;
-    QRadioButton *rbASCII;
     QLineEdit *lbHEX;
     QLineEdit *lbDEC;
     QLineEdit *lbASCII;
+    QLineEdit *package;
+    QRadioButton *rbHEX;
+    QRadioButton *rbDEC;
+    QRadioButton *rbASCII;
 
-public:
     explicit Macros(QWidget *parent = 0);
     void update(int t);
+    bool isFromFile;
+    QString path;
 
 signals:
     void packageChanged(QString);
@@ -39,11 +41,10 @@ public slots:
     void saveAs();
     void save();
     void openDialog();
-    void openPath(QString fileName);
+    bool openPath(QString fileName);
 
 private:
     int time;
-    QString path;
 };
 
 #endif // MACROSEDITING_H
