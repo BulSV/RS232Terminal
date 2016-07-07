@@ -52,38 +52,3 @@ void RS232TerminalProtocol::writeData()
     itsComPort->setWriteData(ba);
     itsComPort->writeData();
 }
-
-
-int RS232TerminalProtocol::wordToInt(QByteArray ba)
-{
-    int temp = ba[0];
-    if(temp < 0)
-    {
-        temp += 0x100;
-        temp *= 0x100;
-    }
-    else
-        temp = ba[0]*0x100;
-
-    int i = ba[1];
-    if(i < 0)
-    {
-        i += 0x100;
-        temp += i;
-    }
-    else
-        temp += ba[1];
-
-    return temp;
-}
-
-QByteArray RS232TerminalProtocol::intToByteArray(const int &value, const int &numBytes)
-{
-    QByteArray ba;
-
-    for(int i = numBytes - 1; i > - 1; --i) {
-        ba.append((value >> 8*i) & 0xFF);
-    }
-
-    return ba;
-}

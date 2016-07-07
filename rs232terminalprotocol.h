@@ -13,8 +13,6 @@ public:
     explicit RS232TerminalProtocol(ComPort *comPort, QObject *parent = 0);
     virtual void setDataToWrite(const QString &data);
     virtual QByteArray getReadedData() const;
-    int wordToInt(QByteArray ba);
-    QByteArray intToByteArray(const int &value, const int &numBytes);
 
 private:
     ComPort *itsComPort;
