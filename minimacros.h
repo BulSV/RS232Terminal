@@ -39,6 +39,7 @@ public slots:
 signals:
     void deleteSignal(int);
     void setSend(QString, int);
+    void setIntervalSend(int, bool);
 };
 
 #endif // MINIMACROS_H

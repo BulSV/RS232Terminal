@@ -58,6 +58,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tEcho(new QTimer(this))
     , m_tWriteLog(new QTimer(this))
     , m_tReadLog(new QTimer(this))
+    , m_tIntervalSending(new QTimer(this))
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
@@ -85,7 +86,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     logReadRowsCount = 0;
     logWriteRowsCount = 0;
-    readBytesDisplayed = 0;
     logWrite = false;
     logRead = false;
     index = 0;
@@ -96,7 +96,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_abSaveReadLog->setCheckable(true);
     m_abSendPackage->setCheckable(true);
     m_abSendPackage->setEnabled(false);
-    m_sbRepeatSendInterval->setEnabled(false);
     m_bStop->setEnabled(false);
     m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
@@ -271,6 +270,7 @@ void MainWindow::connections()
     connect(m_leSendPackage, SIGNAL(returnPressed()), m_abSendPackage, SLOT(click()));
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
+    connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
     connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
 
@@ -281,6 +281,14 @@ void MainWindow::connections()
     connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
     connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
     connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
+}
+
+void MainWindow::sendInterval()
+{
+    int index = intervalSendingIndexes.takeFirst();
+    intervalSendingIndexes.append(index);
+    m_tIntervalSending->setInterval(MiniMacrosList[intervalSendingIndexes[0]]->time->value());
+    sendPackage(MiniMacrosList[index]->editing->package->text(), MiniMacrosList[index]->mode);
 }
 
 void MainWindow::hiddenClick()
@@ -320,7 +328,27 @@ void MainWindow::addMacros()
 
     connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
     connect(MiniMacrosList[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
+    connect(MiniMacrosList[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
     index++;
+}
+
+void MainWindow::intervalSendAdded(int index, bool check)
+{
+    if (check)
+    {
+        intervalSendingIndexes.append(index);
+        if (intervalSendingIndexes.count() == 1)
+        {
+            m_tIntervalSending->setInterval(MiniMacrosList[index]->time->value());
+            m_tIntervalSending->start();
+        }
+    }
+    else
+    {
+        intervalSendingIndexes.removeAt(intervalSendingIndexes.indexOf(index));
+        if (intervalSendingIndexes.isEmpty())
+            m_tIntervalSending->stop();
+    }
 }
 
 void MainWindow::delMacros(int index)
@@ -449,13 +477,11 @@ void MainWindow::textChanged(QString text)
 {
     if (!text.isEmpty() && m_bStop->isEnabled())
     {
-        m_sbRepeatSendInterval->setEnabled(true);
         m_abSendPackage->setEnabled(true);
         m_abSendPackage->setCheckable(true);
     }
     else
     {
-        m_sbRepeatSendInterval->setEnabled(false);
         m_abSendPackage->setEnabled(false);
         m_abSendPackage->setCheckable(false);
     }
@@ -813,7 +839,6 @@ void MainWindow::clearReadLog()
 {
     m_eLogRead->clear();
     logReadRowsCount = 0;
-    readBytesDisplayed = 0;
 }
 
 void MainWindow::clearWriteLog()

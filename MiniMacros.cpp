@@ -53,6 +53,7 @@ void MiniMacros::sendPeriod()
 
 void MiniMacros::intervalToggled(bool check)
 {
+    emit setIntervalSend(index, check);
     period->setChecked(false);
     period->setEnabled(!check);
     editing->update(time->value());

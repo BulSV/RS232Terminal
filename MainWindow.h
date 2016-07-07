@@ -63,6 +63,7 @@ class MainWindow : public QMainWindow
     QTimer *m_tEcho;
     QTimer *m_tWriteLog;
     QTimer *m_tReadLog;
+    QTimer *m_tIntervalSending;
 
     QSerialPort *m_Port;
     ComPort *m_ComPort;
@@ -84,17 +85,13 @@ class MainWindow : public QMainWindow
     int maxReadLogRows;
     int logReadRowsCount;
     int logWriteRowsCount;
-    QStringList listOfBytes;
-    int readBytesDisplayed;
     QStringList echoData;
     bool logWrite;
     bool logRead;
-    QString writeLogBuffer;
-    QString readLogBuffer;
-    QString buffer;
 
     int index;
     QMap<int, MiniMacros *> MiniMacrosList;
+    QList<int> intervalSendingIndexes;
 
     void view();
     void saveSession();
@@ -105,6 +102,8 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
+    void sendInterval();
+    void intervalSendAdded(int index, bool check);
     void hiddenClick();
     void start();
     void stop();
