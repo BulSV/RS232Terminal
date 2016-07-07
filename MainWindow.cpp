@@ -714,19 +714,18 @@ void MainWindow::sendPackage(QString string, int mode)
 void MainWindow::displayReadData(QByteArray ba)
 {    
     QTextStream readStream(&readLog);
+    QString in = QString(ba.toHex()).toUpper();
+    for (int i = 2; !(i >= in.length()); i += 3)
+        in.insert(i, " ");
+    QStringList list = in.split(" ", QString::SkipEmptyParts);
 
     switch (m_cbReadMode->currentIndex())
     {
     case 0:
     {
-        QString string = ba.toHex();
-        for (int i = 2; !(i >= string.length()); i += 3)
-        {
-            string.insert(i, " ");
-        }
-        m_eLogRead->addItem(string.toUpper());
+        m_eLogRead->addItem(in);
         if (logRead)
-            readStream << string.toUpper() + "\n";
+            readStream << in + "\n";
         break;
     }
     case 1:
@@ -736,13 +735,14 @@ void MainWindow::displayReadData(QByteArray ba)
             readStream << QString(ba) + "\n";
         break;
     }
-    case 2:         //Доделать десятичный вывод принятых данных
+    case 2:
     {
         QString outDEC;
-        QString in = QString(ba);
-        foreach (QChar ch, in) {
-            int ascii = ch.toLatin1();
-            outDEC.append(QString::number(ascii, 16) + " ");
+        foreach (QString s, list) {
+            bool ok;
+            int dec = s.toInt(&ok, 16);
+            if (ok)
+                outDEC.append(QString::number(dec) + " ");
         }
         m_eLogRead->addItem(outDEC);
         if (logRead)
@@ -760,7 +760,6 @@ void MainWindow::displayReadData(QByteArray ba)
     if (m_cbReadScroll->isChecked())
         m_eLogRead->scrollToBottom();
 }
-
 
 void MainWindow::displayWriteData(QString string)
 {   
