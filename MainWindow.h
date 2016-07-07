@@ -133,7 +133,7 @@ private slots:
 
 public:
     void displayReadData(QByteArray ba);
-    void displayWriteData(QString string);
+    void displayWriteData(QStringList list);
     explicit MainWindow(QString title, QWidget *parent = 0);
 };
 

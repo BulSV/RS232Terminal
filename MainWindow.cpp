@@ -667,6 +667,7 @@ void MainWindow::sendPackage(QString string, int mode)
             }
         }
         m_tSend->setInterval(m_sbRepeatSendInterval->value());
+        QStringList out;
         switch (mode) {
             case 0:
             {
@@ -680,6 +681,7 @@ void MainWindow::sendPackage(QString string, int mode)
                     m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
                     if (ok)
                         m_Protocol->writeData();
+                    out.append(QString::number(s.toInt(&ok, 16)));
                 }
                 string = string.toUpper();
                 break;
@@ -690,6 +692,7 @@ void MainWindow::sendPackage(QString string, int mode)
                     int ascii = ch.toLatin1();
                     m_Protocol->setDataToWrite(QString::number(ascii, 10));
                     m_Protocol->writeData();
+                    out.append(QString::number(ascii, 10));
                 }
                 break;
             }
@@ -702,12 +705,13 @@ void MainWindow::sendPackage(QString string, int mode)
                     m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 10)));
                     if (ok)
                         m_Protocol->writeData();
+                    out.append(QString::number(s.toInt(&ok, 10)));
                 }
                 break;
             }
 
         }
-        displayWriteData(string);
+        displayWriteData(out);
     }
 }
 
@@ -761,17 +765,41 @@ void MainWindow::displayReadData(QByteArray ba)
         m_eLogRead->scrollToBottom();
 }
 
-void MainWindow::displayWriteData(QString string)
+void MainWindow::displayWriteData(QStringList list)
 {   
-    logWriteRowsCount++;
-    m_eLogWrite->addItem(string);
-
-    if (logWrite)
+    QTextStream writeStream (&writeLog);
+    QString out;
+    foreach (QString s, list)
     {
-        QTextStream writeStream (&writeLog);
-        writeStream << string + "\n";
+        int num = s.toInt();
+        switch (m_cbWriteMode->currentIndex())
+        {
+        case 0:
+        {
+            QString hex = QString::number(num, 16).toUpper();
+            if (hex.length() < 2)
+                hex.insert(0, "0");
+            out.append(hex + " ");
+            break;
+        }
+        case 1:
+        {
+            QChar ch(num);
+            out.append(ch);
+            break;
+        }
+        case 2:
+        {
+            out.append(s + " ");
+        }
+        }
     }
 
+    m_eLogWrite->addItem(out);
+    if (logWrite)
+        writeStream << out + "\n";
+
+    logWriteRowsCount++;
     if (logWriteRowsCount >= maxWriteLogRows)
     {
         delete m_eLogWrite->takeItem(0);
