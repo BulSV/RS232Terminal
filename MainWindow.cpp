@@ -927,6 +927,8 @@ void MainWindow::loadSession()
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
     m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
+    if (!m_gbHiddenGroup->isHidden())
+        m_bHiddenGroup->setText("<");
     m_cbSendMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
 
     int size = settings->value("macros/size", 0).toInt();
