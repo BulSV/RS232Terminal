@@ -72,8 +72,10 @@ void Macros::compute(QString str)
         QString outASCII;
         QStringList list = str.split(" ", QString::SkipEmptyParts);
         bool ok;
-        foreach (QString s, list) {
-            int hex = s.toInt(&ok, 16);
+        int count = list.count();
+        for (int i = 0; i < count; i++)
+        {
+            int hex = list[i].toInt(&ok, 16);
             if (ok)
             {
                 outDEC.append(QString::number(hex) + " ");
@@ -89,8 +91,10 @@ void Macros::compute(QString str)
     {
         QString outDEC;
         QString outHEX;
-        foreach (QChar ch, str) {
-            int ascii = ch.toLatin1();
+        int count = str.length();
+        for (int i = 0; i < count; i++)
+        {
+            int ascii = str[i].toLatin1();
             outDEC.append(QString::number(ascii) + " ");
             lbDEC->setText(outDEC);
             lbASCII->setText(str);
@@ -103,8 +107,10 @@ void Macros::compute(QString str)
         QString outASCII;
         QString outHEX;
         QStringList list = str.split(" ", QString::SkipEmptyParts);
-        foreach (QString s, list) {
-            int dec = s.toInt();
+        int count = list.count();
+        for (int i = 0; i < count; i++)
+        {
+            int dec = list[i].toInt();
             lbDEC->setText(str);
             QChar ch(dec);
             outASCII.append(ch);

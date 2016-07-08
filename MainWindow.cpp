@@ -718,21 +718,24 @@ void MainWindow::sendPackage(QString string, int mode)
                     if (byteList.last().length() == 1)
                         string.insert(string.length()-1, "0");
 
-                    foreach (QString s, byteList)
+                    int count = byteList.length();
+                    for (int i = 0; i < count; i++)
                     {
                         bool ok;
-                        m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+                        m_Protocol->setDataToWrite(QString::number(byteList[i].toInt(&ok, 16)));
                         if (ok)
                             m_Protocol->writeData();
-                        out.append(QString::number(s.toInt(&ok, 16)));
+                        out.append(QString::number(byteList[i].toInt(&ok, 16)));
                     }
                     string = string.toUpper();
                     break;
                 }
                 case 1:
                 {
-                    foreach (QChar ch, string) {
-                        int ascii = ch.toLatin1();
+                    int count = string.length();
+                    for (int i = 0; i < count; i++)
+                    {
+                        int ascii = string[i].toLatin1();
                         m_Protocol->setDataToWrite(QString::number(ascii, 10));
                         m_Protocol->writeData();
                         out.append(QString::number(ascii, 10));
@@ -742,13 +745,14 @@ void MainWindow::sendPackage(QString string, int mode)
                 case 2:
                 {
                     QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-                    foreach (QString s, byteList)
+                    int count = byteList.length();
+                    for (int i = 0; i < count; i++)
                     {
                         bool ok;
-                        m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 10)));
+                        m_Protocol->setDataToWrite(QString::number(byteList[i].toInt(&ok, 10)));
                         if (ok)
                             m_Protocol->writeData();
-                        out.append(QString::number(s.toInt(&ok, 10)));
+                        out.append(QString::number(byteList[i].toInt(&ok, 10)));
                     }
                     break;
                 }
@@ -768,9 +772,10 @@ void MainWindow::displayWriteData(QStringList list)
 {   
     QTextStream writeStream (&writeLog);
     QString out;
-    foreach (QString s, list)
+    int count = list.length();
+    for (int i = 0; i < count; i++)
     {
-        int num = s.toInt();
+        int num = list[i].toInt();
         switch (m_cbWriteMode->currentIndex())
         {
         case 0:
@@ -789,7 +794,7 @@ void MainWindow::displayWriteData(QStringList list)
         }
         case 2:
         {
-            out.append(s + " ");
+            out.append(list[i] + " ");
         }
         }
     }
@@ -822,9 +827,11 @@ void MainWindow::breakLine()
         in.insert(i, " ");
     QStringList list = in.split(" ", QString::SkipEmptyParts);
     QString outDEC;
-    foreach (QString s, list) {
+    int count = list.length();
+    for (int i = 0; i < count; i++)
+    {
         bool ok;
-        int dec = s.toInt(&ok, 16);
+        int dec = list[i].toInt(&ok, 16);
         if (ok)
             outDEC.append(QString::number(dec) + " ");
     }
