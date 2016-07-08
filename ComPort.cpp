@@ -12,6 +12,7 @@ ComPort::ComPort(QSerialPort *port, QObject *parent)
       itsPort(port)
 {
     itsReadData.clear();
+    itsPort->setReadBufferSize(1);
 
     connect(itsPort, SIGNAL(readyRead()), this, SLOT(readData()));
 }

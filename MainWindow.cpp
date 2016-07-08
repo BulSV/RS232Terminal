@@ -1,3 +1,6 @@
+//Режим эхо должен делать интервалы и периоды неактивными; в многократном режиме работать как период
+//Задержку считать между байтами (setReadBufferSize для порта)
+
 #include <QDebug>
 #include "MainWindow.h"
 #include "rs232terminalprotocol.h"
@@ -59,6 +62,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tWriteLog(new QTimer(this))
     , m_tReadLog(new QTimer(this))
     , m_tIntervalSending(new QTimer(this))
+    , m_tDelay(new QTimer(this))
     , m_Port(new QSerialPort(this))
     , m_ComPort(new ComPort(m_Port))
     , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
@@ -72,6 +76,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , widgetScroll(new QWidget(scrollArea))
     , HiddenLayout(new QVBoxLayout(widgetScroll))
     , toolBar(new QToolBar(this))
+    , m_sbDelay(new QSpinBox(this))
 {
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
     setWindowTitle(title);    
@@ -100,6 +105,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
     m_sbEchoInterval->setRange(0, 100000);
+    m_sbDelay->setRange(1, 100000);
+    m_sbDelay->setValue(10);
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
@@ -166,9 +173,11 @@ void MainWindow::view()
     configLayout->addWidget(m_cbStopBits, 7, 1);
     configLayout->addWidget(m_cbEchoMode, 8, 0);
     configLayout->addWidget(m_sbEchoInterval, 8, 1);
-    configLayout->addWidget(m_bStart, 9, 0);
-    configLayout->addWidget(m_bStop, 9, 1);
-    configLayout->addItem(spacer, 10, 0);
+    configLayout->addWidget(new QLabel("Delay:", this), 9, 0);
+    configLayout->addWidget(m_sbDelay, 9, 1);
+    configLayout->addWidget(m_bStart, 10, 0);
+    configLayout->addWidget(m_bStop, 10, 1);
+    configLayout->addItem(spacer, 11, 0);
     configLayout->setSpacing(5);
 
     QHBoxLayout *sendPackageLayout = new QHBoxLayout;
@@ -273,7 +282,7 @@ void MainWindow::connections()
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
     connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
-
+    connect(m_tDelay, SIGNAL(timeout()), this, SLOT(breakLine()));
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
 
@@ -620,15 +629,13 @@ void MainWindow::stop()
     m_abSendPackage->setChecked(false);
     m_tSend->stop();
     m_tEcho->stop();
+    m_tDelay->stop();
 }
 
 void MainWindow::received(bool isReceived)
 {
-    if(isReceived) {
-        if(!m_BlinkTimeRxColor->isActive() && !m_BlinkTimeRxNone->isActive()) {
-            m_BlinkTimeRxColor->start();
-            m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
-        }
+    if(isReceived) {        
+        m_tDelay->start(m_sbDelay->value());
         displayReadData(m_Protocol->getReadedData());
     }
 }
@@ -742,53 +749,28 @@ void MainWindow::sendPackage(QString string, int mode)
 }
 
 void MainWindow::displayReadData(QByteArray ba)
-{    
-    QTextStream readStream(&readLog);
+{
     QString in = QString(ba.toHex()).toUpper();
-    for (int i = 2; !(i >= in.length()); i += 3)
-        in.insert(i, " ");
-    QStringList list = in.split(" ", QString::SkipEmptyParts);
-
     switch (m_cbReadMode->currentIndex())
     {
     case 0:
     {
-        m_eLogRead->addItem(in);
-        if (logRead)
-            readStream << in + "\n";
+        readBuffer.append(in + " ");
         break;
     }
     case 1:
     {
-        m_eLogRead->addItem(QString(ba));
-        if (logRead)
-            readStream << QString(ba) + "\n";
+        readBuffer.append(QString(ba));
         break;
     }
     case 2:
     {
-        QString outDEC;
-        foreach (QString s, list) {
-            bool ok;
-            int dec = s.toInt(&ok, 16);
-            if (ok)
-                outDEC.append(QString::number(dec) + " ");
-        }
-        m_eLogRead->addItem(outDEC);
-        if (logRead)
-            readStream << outDEC + "\n";
+        bool ok;
+        int dec = in.toInt(&ok, 16);
+        readBuffer.append(QString::number(dec) + " ");
         break;
     }
     }
-
-    logReadRowsCount++;
-    if (logReadRowsCount >= maxReadLogRows)
-    {
-        delete m_eLogRead->takeItem(0);
-        logReadRowsCount--;
-    }
-    if (m_cbReadScroll->isChecked())
-        m_eLogRead->scrollToBottom();
 }
 
 void MainWindow::displayWriteData(QStringList list)
@@ -833,6 +815,31 @@ void MainWindow::displayWriteData(QStringList list)
     }
     if (m_cbWriteScroll->isChecked())
         m_eLogWrite->scrollToBottom();
+}
+
+void MainWindow::breakLine()
+{
+    m_tDelay->stop();
+    if(!m_BlinkTimeRxColor->isActive() && !m_BlinkTimeRxNone->isActive()) {
+        m_BlinkTimeRxColor->start();
+        m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
+    }
+    m_eLogRead->addItem(readBuffer);
+    if (logRead)
+    {
+        QTextStream readStream(&readLog);
+        readStream << readBuffer + "\n";
+    }
+    readBuffer.clear();
+
+    logReadRowsCount++;
+    if (logReadRowsCount >= maxReadLogRows)
+    {
+        delete m_eLogRead->takeItem(0);
+        logReadRowsCount--;
+    }
+    if (m_cbReadScroll->isChecked())
+        m_eLogRead->scrollToBottom();
 }
 
 void MainWindow::clearReadLog()

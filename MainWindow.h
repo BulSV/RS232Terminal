@@ -10,6 +10,7 @@
 #include <MyPushButton.h>
 #include <QPlainTextEdit>
 #include <QTimer>
+#include <QTime>
 #include <QSerialPort>
 #include <QCheckBox>
 #include <QSpinBox>
@@ -64,6 +65,7 @@ class MainWindow : public QMainWindow
     QTimer *m_tWriteLog;
     QTimer *m_tReadLog;
     QTimer *m_tIntervalSending;
+    QTimer *m_tDelay;
 
     QSerialPort *m_Port;
     ComPort *m_ComPort;
@@ -78,6 +80,7 @@ class MainWindow : public QMainWindow
     QWidget *widgetScroll;
     QVBoxLayout *HiddenLayout;
     QToolBar *toolBar;
+    QSpinBox *m_sbDelay;
 
     QFile writeLog;
     QFile readLog;
@@ -89,6 +92,7 @@ class MainWindow : public QMainWindow
     bool logWrite;
     bool logRead;
 
+    QString readBuffer;
     int index;
     QMap<int, MiniMacros *> MiniMacrosList;
     QList<int> intervalSendingIndexes;
@@ -102,6 +106,7 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
+    void breakLine();
     void sendInterval();
     void intervalSendAdded(int index, bool check);
     void hiddenClick();
