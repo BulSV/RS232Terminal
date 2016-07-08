@@ -88,11 +88,12 @@ class MainWindow : public QMainWindow
     int maxReadLogRows;
     int logReadRowsCount;
     int logWriteRowsCount;
-    QStringList echoData;
     bool logWrite;
     bool logRead;
 
-    QString readBuffer;
+    bool echoWaiting;
+    QStringList echoBuffer;
+    QByteArray readBuffer;
     int index;
     QMap<int, MiniMacros *> MiniMacrosList;
     QList<int> intervalSendingIndexes;
@@ -120,7 +121,7 @@ private slots:
     void startWriteLog(bool check);
     void startReadLog(bool check);
     void textChanged(QString text);
-    void cleanEchoBuffer(bool check);
+    void echoCheck(bool check);
     void clearReadLog();
     void clearWriteLog();
     void received(bool isReceived);
@@ -136,7 +137,6 @@ private slots:
     void sendPackage(QString string, int mode);
 
 public:
-    void displayReadData(QByteArray ba);
     void displayWriteData(QStringList list);
     explicit MainWindow(QString title, QWidget *parent = 0);
 };

@@ -1,5 +1,4 @@
 //Режим эхо должен делать интервалы и периоды неактивными; в многократном режиме работать как период
-//Задержку считать между байтами (setReadBufferSize для порта)
 
 #include <QDebug>
 #include "MainWindow.h"
@@ -94,6 +93,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     logWrite = false;
     logRead = false;
     index = 0;
+    echoWaiting = false;
 
     m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
@@ -274,7 +274,7 @@ void MainWindow::connections()
     connect(m_abSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
 
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
-    connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(cleanEchoBuffer(bool)));
+    connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(echoCheck(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_leSendPackage, SIGNAL(returnPressed()), m_abSendPackage, SLOT(click()));
     connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
@@ -496,11 +496,25 @@ void MainWindow::textChanged(QString text)
     }
 }
 
-void MainWindow::cleanEchoBuffer(bool check)
+void MainWindow::echoCheck(bool check)
 {
-    m_tEcho->stop();
-    if (!check)
-        echoData.clear();
+    if (check)
+    {
+        m_abSendPackage->setChecked(false);
+        foreach (MiniMacros *m, MiniMacrosList.values()) {
+            m->interval->setChecked(false);
+            m->period->setChecked(false);
+            m->interval->setEnabled(false);
+            m->period->setEnabled(false);
+        }
+    }
+    else
+    {
+        foreach (MiniMacros *m, MiniMacrosList.values()) {
+            m->interval->setEnabled(true);
+            m->period->setEnabled(true);
+        }
+    }
 }
 
 void MainWindow::start()
@@ -636,7 +650,7 @@ void MainWindow::received(bool isReceived)
 {
     if(isReceived) {        
         m_tDelay->start(m_sbDelay->value());
-        displayReadData(m_Protocol->getReadedData());
+        readBuffer += m_Protocol->getReadedData();
     }
 }
 
@@ -659,11 +673,7 @@ void MainWindow::sendSingle()
 
 void MainWindow::echo()
 {
-    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
-    if (echoData.isEmpty())
-    {
-        m_tEcho->stop();
-    }
+    sendPackage(echoBuffer.join(" "), 2);
 }
 
 void MainWindow::startSending(bool checked)
@@ -672,14 +682,15 @@ void MainWindow::startSending(bool checked)
         {
             if (m_Port->isOpen())
             {
-                if (m_sbRepeatSendInterval->value() == 0)
-                {
-                    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
-                    m_abSendPackage->setChecked(false);
-                } else
+                if (m_sbRepeatSendInterval->value() != 0 && !m_cbEchoMode->isChecked())
                 {
                     m_tSend->setInterval(m_sbRepeatSendInterval->value());
                     m_tSend->start();
+
+                } else
+                {
+                    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
+                    m_abSendPackage->setChecked(false);
                 }
             }
         } else
@@ -692,84 +703,64 @@ void MainWindow::sendPackage(QString string, int mode)
 {
     if (m_Port->isOpen())
     {
-        if (m_Port->isOpen())
+        if (!string.isEmpty())
         {
             if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
                 m_BlinkTimeTxColor->start();
                 m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
             }
-        }
-        m_tSend->setInterval(m_sbRepeatSendInterval->value());
-        QStringList out;
-        switch (mode) {
-            case 0:
-            {
-                QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-                if (byteList.last().length() == 1)
-                    string.insert(string.length()-1, "0");
-
-                foreach (QString s, byteList)
+            m_tSend->setInterval(m_sbRepeatSendInterval->value());
+            QStringList out;
+            switch (mode) {
+                case 0:
                 {
-                    bool ok;
-                    m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
-                    if (ok)
-                        m_Protocol->writeData();
-                    out.append(QString::number(s.toInt(&ok, 16)));
+                    QStringList byteList = string.split(" ", QString::SkipEmptyParts);
+                    if (byteList.last().length() == 1)
+                        string.insert(string.length()-1, "0");
+
+                    foreach (QString s, byteList)
+                    {
+                        bool ok;
+                        m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 16)));
+                        if (ok)
+                            m_Protocol->writeData();
+                        out.append(QString::number(s.toInt(&ok, 16)));
+                    }
+                    string = string.toUpper();
+                    break;
                 }
-                string = string.toUpper();
-                break;
-            }
-            case 1:
-            {
-                foreach (QChar ch, string) {
-                    int ascii = ch.toLatin1();
-                    m_Protocol->setDataToWrite(QString::number(ascii, 10));
-                    m_Protocol->writeData();
-                    out.append(QString::number(ascii, 10));
-                }
-                break;
-            }
-            case 2:
-            {
-                QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-                foreach (QString s, byteList)
+                case 1:
                 {
-                    bool ok;
-                    m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 10)));
-                    if (ok)
+                    foreach (QChar ch, string) {
+                        int ascii = ch.toLatin1();
+                        m_Protocol->setDataToWrite(QString::number(ascii, 10));
                         m_Protocol->writeData();
-                    out.append(QString::number(s.toInt(&ok, 10)));
+                        out.append(QString::number(ascii, 10));
+                    }
+                    break;
                 }
-                break;
+                case 2:
+                {
+                    QStringList byteList = string.split(" ", QString::SkipEmptyParts);
+                    foreach (QString s, byteList)
+                    {
+                        bool ok;
+                        m_Protocol->setDataToWrite(QString::number(s.toInt(&ok, 10)));
+                        if (ok)
+                            m_Protocol->writeData();
+                        out.append(QString::number(s.toInt(&ok, 10)));
+                    }
+                    break;
+                }
+
             }
-
+            displayWriteData(out);
+            if (m_cbEchoMode->isChecked())
+            {
+                echoBuffer = out;
+                echoWaiting = true;
+            }
         }
-        displayWriteData(out);
-    }
-}
-
-void MainWindow::displayReadData(QByteArray ba)
-{
-    QString in = QString(ba.toHex()).toUpper();
-    switch (m_cbReadMode->currentIndex())
-    {
-    case 0:
-    {
-        readBuffer.append(in + " ");
-        break;
-    }
-    case 1:
-    {
-        readBuffer.append(QString(ba));
-        break;
-    }
-    case 2:
-    {
-        bool ok;
-        int dec = in.toInt(&ok, 16);
-        readBuffer.append(QString::number(dec) + " ");
-        break;
-    }
     }
 }
 
@@ -824,11 +815,62 @@ void MainWindow::breakLine()
         m_BlinkTimeRxColor->start();
         m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
     }
-    m_eLogRead->addItem(readBuffer);
-    if (logRead)
+
+    QTextStream readStream(&readLog);
+    QString in = QString(readBuffer.toHex()).toUpper();
+    for (int i = 2; !(i >= in.length()); i += 3)
+        in.insert(i, " ");
+    QStringList list = in.split(" ", QString::SkipEmptyParts);
+    QString outDEC;
+    foreach (QString s, list) {
+        bool ok;
+        int dec = s.toInt(&ok, 16);
+        if (ok)
+            outDEC.append(QString::number(dec) + " ");
+    }
+    switch (m_cbReadMode->currentIndex())
     {
-        QTextStream readStream(&readLog);
-        readStream << readBuffer + "\n";
+    case 0:
+    {
+        m_eLogRead->addItem(in);
+        if (logRead)
+            readStream << in + "\n";
+        break;
+    }
+    case 1:
+    {
+        m_eLogRead->addItem(QString(readBuffer));
+        if (logRead)
+            readStream << QString(readBuffer) + "\n";
+        break;
+    }
+    case 2:
+    {
+        m_eLogRead->addItem(outDEC);
+        if (logRead)
+            readStream << outDEC + "\n";
+        break;
+    }
+    }
+    if (m_cbEchoMode->isChecked() && echoWaiting)
+    {
+        if (QString::compare(echoBuffer.join(" "), outDEC.remove(outDEC.length() - 1, 1), Qt::CaseInsensitive) == 0)
+        {
+            m_eLogWrite->item(m_eLogWrite->count() - 1)->setBackgroundColor(Qt::green);
+            m_eLogWrite->item(m_eLogWrite->count() - 1)->setTextColor(Qt::white);
+            m_eLogRead->item(m_eLogRead->count() - 1)->setBackgroundColor(Qt::green);
+            m_eLogRead->item(m_eLogRead->count() - 1)->setTextColor(Qt::white);
+        }
+        else
+        {
+            m_eLogWrite->item(m_eLogWrite->count() - 1)->setBackgroundColor(Qt::red);
+            m_eLogWrite->item(m_eLogWrite->count() - 1)->setTextColor(Qt::white);
+            m_eLogRead->item(m_eLogRead->count() - 1)->setBackgroundColor(Qt::red);
+            m_eLogRead->item(m_eLogRead->count() - 1)->setTextColor(Qt::white);
+        }
+        if (m_sbEchoInterval->value() != 0)
+            m_tEcho->singleShot(m_sbEchoInterval->value(), this, SLOT(echo()));
+        echoWaiting = false;
     }
     readBuffer.clear();
 
@@ -879,7 +921,6 @@ void MainWindow::saveSession()
     settings->setValue("config/data_bits", m_cbBits->currentIndex());
     settings->setValue("config/parity", m_cbParity->currentIndex());
     settings->setValue("config/stop_bits", m_cbStopBits->currentIndex());
-    settings->setValue("config/echo", m_cbEchoMode->checkState());
     settings->setValue("config/echo_interval", m_sbEchoInterval->value());
     settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
     settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
@@ -926,7 +967,6 @@ void MainWindow::loadSession()
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
     m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
     m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
-    m_cbEchoMode->setChecked(settings->value("config/echo").toBool());
     m_sbEchoInterval->setValue(settings->value("config/echo_interval").toInt());
     m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
     m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
