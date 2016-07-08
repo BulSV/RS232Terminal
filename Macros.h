@@ -36,7 +36,9 @@ signals:
     void act(bool);
 
 public slots:
-    void rbChecked() { compute(package->text()); }
+    void hexChecked() { package->setText(lbHEX->text()); }
+    void asciiChecked() { package->setText(lbASCII->text()); }
+    void decChecked() { package->setText(lbDEC->text()); }
     void compute(QString str);
     void reset();
     void saveAs();

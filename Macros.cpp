@@ -29,9 +29,9 @@ Macros::Macros(QWidget *parent)
     toolBar->addAction("Save as", this, SLOT(saveAs()));
 
     connect(package, SIGNAL(textChanged(QString)), this, SLOT(compute(QString)));
-    connect(rbHEX, SIGNAL(toggled(bool)), this, SLOT(rbChecked()));
-    connect(rbDEC, SIGNAL(toggled(bool)), this, SLOT(rbChecked()));
-    connect(rbASCII, SIGNAL(toggled(bool)), this, SLOT(rbChecked()));
+    connect(rbHEX, SIGNAL(toggled(bool)), this, SLOT(hexChecked()));
+    connect(rbDEC, SIGNAL(toggled(bool)), this, SLOT(decChecked()));
+    connect(rbASCII, SIGNAL(toggled(bool)), this, SLOT(asciiChecked()));
 
     widget->setLayout(mainLay);
     setCentralWidget(widget);
