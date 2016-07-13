@@ -1,6 +1,5 @@
 #include <QDebug>
 #include "MainWindow.h"
-#include "rs232terminalprotocol.h"
 #include "MiniMacros.h"
 #include <QGridLayout>
 #include <QString>
@@ -61,8 +60,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
     , m_Port(new QSerialPort(this))
-    , m_ComPort(new ComPort(m_Port))
-    , m_Protocol(new RS232TerminalProtocol(m_ComPort, this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
     , m_gbHiddenGroup(new QGroupBox(this))
@@ -78,6 +75,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     resize(settings->value("config/width").toInt(), settings->value("config/height").toInt());
     view();
     connections();
+
+    m_Port->setReadBufferSize(1);
 
     toolBar->addAction(QIcon(":/Resources/add.png"), "Add Macros", this, SLOT(addMacros()));
     toolBar->addAction(QIcon(":/Resources/open.png"), "Load Macroses", this, SLOT(openDialog()));
@@ -269,7 +268,6 @@ void MainWindow::connections()
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(echoCheck(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_leSendPackage, SIGNAL(returnPressed()), m_abSendPackage, SLOT(click()));
-    connect(m_Protocol, SIGNAL(DataIsReaded(bool)), this, SLOT(received(bool)));
 
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
@@ -277,6 +275,8 @@ void MainWindow::connections()
     connect(m_tDelay, SIGNAL(timeout()), this, SLOT(breakLine()));
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
+
+    connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
 }
 
 void MainWindow::sendInterval()
@@ -629,12 +629,10 @@ void MainWindow::stop()
     m_tDelay->stop();
 }
 
-void MainWindow::received(bool isReceived)
+void MainWindow::received()
 {
-    if(isReceived) {        
-        m_tDelay->start(m_sbDelay->value());
-        readBuffer += m_Protocol->getReadedData();
-    }
+    m_tDelay->start(m_sbDelay->value());
+    readBuffer += m_Port->readAll();
 }
 
 void MainWindow::sendSingle()
@@ -672,7 +670,7 @@ void MainWindow::startSending(bool checked)
 
 void MainWindow::sendPackage(QString string, int mode)
 {
-    if (m_Port->isOpen())
+    if (m_Port->isOpen() && m_Port->openMode() != QSerialPort::ReadOnly)
     {
         if (!string.isEmpty())
         {
@@ -697,12 +695,10 @@ void MainWindow::sendPackage(QString string, int mode)
                     for (int i = 0; i < count; i++)
                     {
                         bool ok;
-                        m_Protocol->setDataToWrite(QString::number(byteList[i].toInt(&ok, 16)));
-                        if (ok)
-                            m_Protocol->writeData();
-                        out.append(QString::number(byteList[i].toInt(&ok, 16)));
+                        int n = byteList[i].toInt(&ok, 16);
+                        m_Port->write(QByteArray::number(n));
+                        out.append(QString::number(n));
                     }
-                    string = string.toUpper();
                     break;
                 }
                 case 1:
@@ -711,8 +707,7 @@ void MainWindow::sendPackage(QString string, int mode)
                     for (int i = 0; i < count; i++)
                     {
                         int ascii = string[i].toLatin1();
-                        m_Protocol->setDataToWrite(QString::number(ascii, 10));
-                        m_Protocol->writeData();
+                        m_Port->write(QByteArray::number(ascii));
                         out.append(QString::number(ascii, 10));
                     }
                     break;
@@ -724,10 +719,9 @@ void MainWindow::sendPackage(QString string, int mode)
                     for (int i = 0; i < count; i++)
                     {
                         bool ok;
-                        m_Protocol->setDataToWrite(QString::number(byteList[i].toInt(&ok, 10)));
-                        if (ok)
-                            m_Protocol->writeData();
-                        out.append(QString::number(byteList[i].toInt(&ok, 10)));
+                        int n = byteList[i].toInt(&ok, 10);
+                        m_Port->write(QByteArray::number(n));
+                        out.append(QString::number(n));
                     }
                     break;
                 }

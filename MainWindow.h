@@ -1,8 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "rs232terminalprotocol.h"
-#include "ComPort.h"
 #include "MiniMacros.h"
 #include <QMainWindow>
 #include <QLabel>
@@ -67,8 +65,6 @@ class MainWindow : public QMainWindow
     QCheckBox *m_cbWriteScroll;   
 
     QSerialPort *m_Port;
-    ComPort *m_ComPort;
-    RS232TerminalProtocol *m_Protocol;
     QSettings *settings;
     QFileDialog *fileDialog;
     QGroupBox *m_gbHiddenGroup;
@@ -125,7 +121,7 @@ private slots:
     void echoCheck(bool check);
     void clearReadLog();
     void clearWriteLog();
-    void received(bool isReceived);
+    void received();
     void sendSingle();
     void startSending(bool checked);
     void addMacros();

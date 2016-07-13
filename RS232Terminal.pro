@@ -8,16 +8,11 @@ TEMPLATE = app
 win32:RC_FILE = RS232Terminal.rc
 
 SOURCES += main.cpp\
-    rs232terminalprotocol.cpp \
-    ComPort.cpp \
     MainWindow.cpp \
     Macros.cpp \
     MiniMacros.cpp
 
 HEADERS  += \
-    rs232terminalprotocol.h \
-    ComPort.h \
-    IProtocol.h \
     MainWindow.h \
     MyPushButton.h \
     Macros.h \
