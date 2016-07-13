@@ -16,8 +16,8 @@
 #include <QScrollBar>
 #include <QDir>
 
-static int BLINKTIMETX = 200;
-static int BLINKTIMERX = 200;
+static unsigned short int BLINKTIMETX = 200;
+static unsigned short int BLINKTIMERX = 200;
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
@@ -50,6 +50,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_abSendPackage(new QPushButton("Send", this))
     , m_lTx(new QLabel("        Tx", this))
     , m_lRx(new QLabel("        Rx", this))
+    , m_lTxCount(new QLabel("Tx: 0", this))
+    , m_lRxCount(new QLabel("Rx: 0", this))
     , m_eLogRead(new QListWidget(this))
     , m_eLogWrite(new QListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
@@ -83,6 +85,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     toolBar->setMovable(false);
     addToolBar(Qt::TopToolBarArea, toolBar);
 
+    txCount = 0;
+    rxCount = 0;
     logReadRowsCount = 0;
     logWriteRowsCount = 0;
     logWrite = false;
@@ -102,6 +106,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_sbEchoInterval->setRange(0, 100000);
     m_sbDelay->setRange(1, 100000);
     m_sbDelay->setValue(10);
+
+    m_lTxCount->setStyleSheet("border-style: outset; border-width: 1px; border-color: black;");
+    m_lRxCount->setStyleSheet("border-style: outset; border-width: 1px; border-color: black;");
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
@@ -168,6 +175,8 @@ void MainWindow::view()
     configLayout->addWidget(m_sbDelay, 9, 1);
     configLayout->addWidget(m_bStart, 10, 0);
     configLayout->addWidget(m_bStop, 10, 1);
+    configLayout->addWidget(m_lTxCount, 12, 0);
+    configLayout->addWidget(m_lRxCount, 12, 1);
     configLayout->addItem(spacer, 11, 0);
     configLayout->setSpacing(5);
 
@@ -281,7 +290,7 @@ void MainWindow::connections()
 
 void MainWindow::sendInterval()
 {
-    int index = intervalSendingIndexes.takeFirst();
+    unsigned short int index = intervalSendingIndexes.takeFirst();
     intervalSendingIndexes.append(index);
     m_tIntervalSending->setInterval(MiniMacrosList[intervalSendingIndexes[0]]->time->value());
     sendPackage(MiniMacrosList[index]->editing->package->text(), MiniMacrosList[index]->mode);
@@ -633,6 +642,8 @@ void MainWindow::received()
 {
     m_tDelay->start(m_sbDelay->value());
     readBuffer += m_Port->readAll();
+    rxCount++;
+    m_lRxCount->setText("Rx: " + QString::number(rxCount));
 }
 
 void MainWindow::sendSingle()
@@ -691,7 +702,7 @@ void MainWindow::sendPackage(QString string, int mode)
                     if (byteList.last().length() == 1)
                         string.insert(string.length()-1, "0");
 
-                    int count = byteList.length();
+                    unsigned short int count = byteList.length();
                     for (int i = 0; i < count; i++)
                     {
                         bool ok;
@@ -703,7 +714,7 @@ void MainWindow::sendPackage(QString string, int mode)
                 }
                 case 1:
                 {
-                    int count = string.length();
+                    unsigned short int count = string.length();
                     for (int i = 0; i < count; i++)
                     {
                         int ascii = string[i].toLatin1();
@@ -715,7 +726,7 @@ void MainWindow::sendPackage(QString string, int mode)
                 case 2:
                 {
                     QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-                    int count = byteList.length();
+                    unsigned short int count = byteList.length();
                     for (int i = 0; i < count; i++)
                     {
                         bool ok;
@@ -733,7 +744,9 @@ void MainWindow::sendPackage(QString string, int mode)
                 echoBuffer = out;
                 echoWaiting = true;
             }
-        }
+            txCount += out.count();
+            m_lTxCount->setText("Tx: " + QString::number(txCount));
+       }
     }
 }
 
@@ -741,7 +754,7 @@ void MainWindow::displayWriteData(QStringList list)
 {   
     QTextStream writeStream (&writeLog);
     QString out;
-    int count = list.length();
+    unsigned short int count = list.length();
     for (int i = 0; i < count; i++)
     {
         int num = list[i].toInt();
@@ -799,7 +812,7 @@ void MainWindow::breakLine()
         in.insert(i, " ");
     QStringList list = in.split(" ", QString::SkipEmptyParts);
     QString outDEC;
-    int count = list.length();
+    unsigned short int count = list.length();
     for (int i = 0; i < count; i++)
     {
         bool ok;
@@ -945,7 +958,7 @@ void MainWindow::loadSession()
         m_bHiddenGroup->setText("<");
     m_cbSendMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
 
-    int size = settings->value("macros/size", 0).toInt();
+    unsigned short int size = settings->value("macros/size", 0).toInt();
     if (!size)
     {
         addMacros();

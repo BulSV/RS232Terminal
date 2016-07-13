@@ -54,6 +54,8 @@ class MainWindow : public QMainWindow
     QAbstractButton *m_abSendPackage;
     QLabel *m_lTx;
     QLabel *m_lRx;
+    QLabel *m_lTxCount;
+    QLabel *m_lRxCount;
     QListWidget *m_eLogRead;
     QListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
@@ -77,19 +79,21 @@ class MainWindow : public QMainWindow
 
     QFile writeLog;
     QFile readLog;
-    int maxWriteLogRows;
-    int maxReadLogRows;
-    int logReadRowsCount;
-    int logWriteRowsCount;
+    unsigned short int maxWriteLogRows;
+    unsigned short int maxReadLogRows;
+    unsigned short int logReadRowsCount;
+    unsigned short int logWriteRowsCount;
+    qint32 txCount;
+    qint32 rxCount;
     bool logWrite;
     bool logRead;
 
     bool echoWaiting;
     QStringList echoBuffer;
     QByteArray readBuffer;
-    int index;
-    QMap<int, MiniMacros *> MiniMacrosList;
-    QList<int> intervalSendingIndexes;
+    unsigned short int index;
+    QMap<unsigned short int, MiniMacros *> MiniMacrosList;
+    QList<unsigned short int> intervalSendingIndexes;
 
     void view();
     void saveSession();
