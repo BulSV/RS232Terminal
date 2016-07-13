@@ -1,5 +1,3 @@
-//Режим эхо должен делать интервалы и периоды неактивными; в многократном режиме работать как период
-
 #include <QDebug>
 #include "MainWindow.h"
 #include "rs232terminalprotocol.h"
@@ -19,8 +17,8 @@
 #include <QScrollBar>
 #include <QDir>
 
-#define BLINKTIMETX 100
-#define BLINKTIMERX 100
+static int BLINKTIMETX = 200;
+static int BLINKTIMERX = 200;
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
@@ -33,16 +31,14 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbSendMode(new QComboBox(this))
     , m_cbReadMode(new QComboBox(this))
     , m_cbWriteMode(new QComboBox(this))
-    , m_BlinkTimeTxNone(new QTimer(this))
-    , m_BlinkTimeRxNone(new QTimer(this))
-    , m_BlinkTimeTxColor(new QTimer(this))
-    , m_BlinkTimeRxColor(new QTimer(this))
     , m_tSend(new QTimer(this))
     , m_tEcho(new QTimer(this))
     , m_tWriteLog(new QTimer(this))
     , m_tReadLog(new QTimer(this))
     , m_tIntervalSending(new QTimer(this))
     , m_tDelay(new QTimer(this))
+    , m_tTx(new QTimer(this))
+    , m_tRx(new QTimer(this))
     , m_bStart(new QPushButton("Start", this))
     , m_bStop(new QPushButton("Stop", this))
     , m_bWriteLogClear(new QPushButton("Clear", this))
@@ -110,10 +106,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
-    m_BlinkTimeTxNone->setInterval(BLINKTIMETX);
-    m_BlinkTimeRxNone->setInterval(BLINKTIMERX);
-    m_BlinkTimeTxColor->setInterval(BLINKTIMETX);
-    m_BlinkTimeRxColor->setInterval(BLINKTIMERX);
 
     m_eLogRead->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
     m_eLogWrite->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
@@ -285,11 +277,6 @@ void MainWindow::connections()
     connect(m_tDelay, SIGNAL(timeout()), this, SLOT(breakLine()));
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
-
-    connect(m_BlinkTimeTxColor, SIGNAL(timeout()), this, SLOT(colorIsTx()));
-    connect(m_BlinkTimeRxColor, SIGNAL(timeout()), this, SLOT(colorIsRx()));
-    connect(m_BlinkTimeTxNone, SIGNAL(timeout()), this, SLOT(colorTxNone()));
-    connect(m_BlinkTimeRxNone, SIGNAL(timeout()), this, SLOT(colorRxNone()));
 }
 
 void MainWindow::sendInterval()
@@ -626,10 +613,6 @@ void MainWindow::start()
 void MainWindow::stop()
 {
     m_Port->close();
-    m_BlinkTimeTxNone->stop();
-    m_BlinkTimeTxColor->stop();
-    m_BlinkTimeRxNone->stop();
-    m_BlinkTimeRxColor->stop();
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_bStop->setEnabled(false);
@@ -652,18 +635,6 @@ void MainWindow::received(bool isReceived)
         m_tDelay->start(m_sbDelay->value());
         readBuffer += m_Protocol->getReadedData();
     }
-}
-
-void MainWindow::colorIsRx()
-{
-    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_BlinkTimeRxColor->stop();
-    m_BlinkTimeRxNone->start();
-}
-
-void MainWindow::colorRxNone()
-{
-    m_BlinkTimeRxNone->stop();
 }
 
 void MainWindow::sendSingle()
@@ -705,11 +676,15 @@ void MainWindow::sendPackage(QString string, int mode)
     {
         if (!string.isEmpty())
         {
-            if(!m_BlinkTimeTxColor->isActive() && !m_BlinkTimeTxNone->isActive()) {
-                m_BlinkTimeTxColor->start();
-                m_lTx->setStyleSheet("background: red; font: bold; font-size: 10pt");
-            }
             m_tSend->setInterval(m_sbRepeatSendInterval->value());
+
+            if (!m_tTx->isSingleShot())
+            {
+                m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
+                m_tTx->singleShot(BLINKTIMETX, this, SLOT(txNone()));
+                m_tTx->setSingleShot(true);
+            }
+
             QStringList out;
             switch (mode) {
                 case 0:
@@ -816,9 +791,12 @@ void MainWindow::displayWriteData(QStringList list)
 void MainWindow::breakLine()
 {
     m_tDelay->stop();
-    if(!m_BlinkTimeRxColor->isActive() && !m_BlinkTimeRxNone->isActive()) {
-        m_BlinkTimeRxColor->start();
-        m_lRx->setStyleSheet("background: green; font: bold; font-size: 10pt");
+
+    if (!m_tRx->isSingleShot())
+    {
+        m_lRx->setStyleSheet("background: red; font: bold; font-size: 10pt");
+        m_tRx->singleShot(BLINKTIMERX, this, SLOT(rxNone()));
+        m_tRx->setSingleShot(true);
     }
 
     QTextStream readStream(&readLog);
@@ -901,18 +879,6 @@ void MainWindow::clearWriteLog()
 {
     m_eLogWrite->clear();
     logWriteRowsCount = 0;
-}
-
-void MainWindow::colorIsTx()
-{
-    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_BlinkTimeTxColor->stop();
-    m_BlinkTimeTxNone->start();
-}
-
-void MainWindow::colorTxNone()
-{
-    m_BlinkTimeTxNone->stop();
 }
 
 void MainWindow::saveSession()
@@ -1008,6 +974,28 @@ void MainWindow::loadSession()
          MiniMacrosList.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
          MiniMacrosList.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
     }
+}
+
+void MainWindow::rxNone()
+{
+    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_tRx->singleShot(BLINKTIMERX, this, SLOT(rxHold()));
+}
+
+void MainWindow::txNone()
+{
+    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_tTx->singleShot(BLINKTIMETX, this, SLOT(txHold()));
+}
+
+void MainWindow::rxHold()
+{
+    m_tRx->setSingleShot(false);
+}
+
+void MainWindow::txHold()
+{
+    m_tTx->setSingleShot(false);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)

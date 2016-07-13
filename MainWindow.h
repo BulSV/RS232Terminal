@@ -36,16 +36,14 @@ class MainWindow : public QMainWindow
     QComboBox *m_cbSendMode;
     QComboBox *m_cbReadMode;
     QComboBox *m_cbWriteMode;
-    QTimer *m_BlinkTimeTxNone;
-    QTimer *m_BlinkTimeRxNone;
-    QTimer *m_BlinkTimeTxColor;
-    QTimer *m_BlinkTimeRxColor;
     QTimer *m_tSend;
     QTimer *m_tEcho;
     QTimer *m_tWriteLog;
     QTimer *m_tReadLog;
     QTimer *m_tIntervalSending;
     QTimer *m_tDelay;
+    QTimer *m_tTx;
+    QTimer *m_tRx;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
     QPushButton *m_bWriteLogClear;
@@ -106,6 +104,10 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
+    void rxNone();
+    void txNone();
+    void rxHold();
+    void txHold();
     void breakLine();
     void sendInterval();
     void intervalSendAdded(int index, bool check);
@@ -125,10 +127,6 @@ private slots:
     void clearWriteLog();
     void received(bool isReceived);
     void sendSingle();
-    void colorIsRx();
-    void colorRxNone();
-    void colorIsTx();
-    void colorTxNone();
     void startSending(bool checked);
     void addMacros();
     void openDialog();
