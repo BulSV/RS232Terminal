@@ -24,8 +24,8 @@ public:
     MyPushButton *send;
     Macros *editing;
     QTimer *tPeriod;
-    int index;
-    int mode;
+    unsigned short int index;
+    unsigned short int mode;
 
 public slots:
     void intervalToggled(bool);

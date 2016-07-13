@@ -72,7 +72,7 @@ void Macros::compute(QString str)
         QString outASCII;
         QStringList list = str.split(" ", QString::SkipEmptyParts);
         bool ok;
-        int count = list.count();
+        unsigned short int count = list.count();
         for (int i = 0; i < count; i++)
         {
             int hex = list[i].toInt(&ok, 16);
@@ -91,7 +91,7 @@ void Macros::compute(QString str)
     {
         QString outDEC;
         QString outHEX;
-        int count = str.length();
+        unsigned short int count = str.length();
         for (int i = 0; i < count; i++)
         {
             int ascii = str[i].toLatin1();
@@ -107,7 +107,7 @@ void Macros::compute(QString str)
         QString outASCII;
         QString outHEX;
         QStringList list = str.split(" ", QString::SkipEmptyParts);
-        int count = list.count();
+        unsigned short int count = list.count();
         for (int i = 0; i < count; i++)
         {
             int dec = list[i].toInt();
@@ -125,7 +125,7 @@ void Macros::compute(QString str)
     emit act(true);
 }
 
-void Macros::update(int t)
+void Macros::update(unsigned short int t)
 {
     time = t;
 }

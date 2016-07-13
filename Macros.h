@@ -26,7 +26,7 @@ class Macros : public QMainWindow
     QRadioButton *rbASCII;
 
     explicit Macros(QWidget *parent = 0);
-    void update(int t);
+    void update(unsigned short t);
     bool isFromFile;
     QString path;
 
@@ -47,7 +47,7 @@ public slots:
     bool openPath(QString fileName);
 
 private:
-    int time;
+    unsigned short int time;
 };
 
 #endif // MACROSEDITING_H
