@@ -92,8 +92,8 @@ class MainWindow : public QMainWindow
     QStringList echoBuffer;
     QByteArray readBuffer;
     unsigned short int index;
-    QMap<unsigned short int, MiniMacros *> MiniMacrosList;
-    QList<unsigned short int> intervalSendingIndexes;
+    QMap<int, MiniMacros *> MiniMacrosList;
+    QList<int> intervalSendingIndexes;
 
     void view();
     void saveSession();

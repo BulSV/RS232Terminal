@@ -699,26 +699,26 @@ void MainWindow::sendPackage(QString string, int mode)
                 case 0:
                 {
                     QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-                    if (byteList.last().length() == 1)
-                        string.insert(string.length()-1, "0");
-
+                    QString hex = string.remove(" ", Qt::CaseSensitive);
+                    QByteArray writeArray;
+                    writeArray.append(hex);
+                    m_Port->write(QByteArray::fromHex(writeArray));
                     unsigned short int count = byteList.length();
                     for (int i = 0; i < count; i++)
                     {
                         bool ok;
                         int n = byteList[i].toInt(&ok, 16);
-                        m_Port->write(QByteArray::number(n));
                         out.append(QString::number(n));
                     }
                     break;
                 }
                 case 1:
                 {
+                    m_Port->write(string.toLocal8Bit());
                     unsigned short int count = string.length();
                     for (int i = 0; i < count; i++)
                     {
                         int ascii = string[i].toLatin1();
-                        m_Port->write(QByteArray::number(ascii));
                         out.append(QString::number(ascii, 10));
                     }
                     break;
@@ -726,14 +726,16 @@ void MainWindow::sendPackage(QString string, int mode)
                 case 2:
                 {
                     QStringList byteList = string.split(" ", QString::SkipEmptyParts);
+                    QByteArray writeArray;
                     unsigned short int count = byteList.length();
                     for (int i = 0; i < count; i++)
                     {
                         bool ok;
                         int n = byteList[i].toInt(&ok, 10);
-                        m_Port->write(QByteArray::number(n));
+                        writeArray.append(QChar(n));
                         out.append(QString::number(n));
                     }
+                    m_Port->write(writeArray);
                     break;
                 }
 

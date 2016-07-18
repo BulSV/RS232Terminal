@@ -26,7 +26,7 @@ class Macros : public QMainWindow
     QRadioButton *rbASCII;
 
     explicit Macros(QWidget *parent = 0);
-    void update(unsigned short t);
+    void update(unsigned short int t);
     bool isFromFile;
     QString path;
 
