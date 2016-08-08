@@ -33,7 +33,7 @@ public slots:
     void timeChanged();
     void update(bool enabled, QString buttonText, int t);
     void activate(bool enabled);
-    void delMac() { emit deleteSignal(index); }
+    void delMac();
     void sendPeriod();
 
 signals:

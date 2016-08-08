@@ -21,7 +21,7 @@ static unsigned short int BLINKTIMERX = 200;
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
-    , widget(new QWidget(this))    
+    , widget(new QWidget(this))
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
     , m_cbBits(new QComboBox(this))
@@ -45,6 +45,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_bSaveWriteLog(new QPushButton("Save", this))
     , m_bSaveReadLog(new QPushButton("Save", this))
     , m_bHiddenGroup(new QPushButton(">", this))
+    , m_bDeleteAllMacroses(new QPushButton(this))
     , m_abSaveWriteLog(new QPushButton(this))
     , m_abSaveReadLog(new QPushButton(this))
     , m_abSendPackage(new QPushButton("Send", this))
@@ -61,6 +62,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
+    , m_cbAllIntervals(new QCheckBox("Interval", this))
+    , m_cbAllPeriods(new QCheckBox("Period", this))
     , m_Port(new QSerialPort(this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
@@ -73,15 +76,19 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , toolBar(new QToolBar(this))
 {
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
-    setWindowTitle(title);    
-    resize(settings->value("config/width").toInt(), settings->value("config/height").toInt());
+    setWindowTitle(title);
+    resize(settings->value("config/width").toInt(),
+           settings->value("config/height").toInt());
     view();
     connections();
+    setMinimumWidth(540);
 
     m_Port->setReadBufferSize(1);
 
-    toolBar->addAction(QIcon(":/Resources/add.png"), "Add Macros", this, SLOT(addMacros()));
-    toolBar->addAction(QIcon(":/Resources/open.png"), "Load Macroses", this, SLOT(openDialog()));
+    toolBar->addAction(QIcon(":/Resources/add.png"), "Add Macros",
+                       this, SLOT(addMacros()));
+    toolBar->addAction(QIcon(":/Resources/open.png"), "Load Macroses",
+                       this, SLOT(openDialog()));
     toolBar->setMovable(false);
     addToolBar(Qt::TopToolBarArea, toolBar);
 
@@ -125,7 +132,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbPort->setEditable(true);
 
     buffer.clear();
-    buffer << "921600" << "115200" << "57600" << "38400" << "19200" << "9600" << "4800" << "2400" << "1200";
+    buffer << "921600" << "115200" << "57600" << "38400" << "19200"
+           << "9600" << "4800" << "2400" << "1200";
     m_cbBaud->addItems(buffer);
     buffer.clear();
     buffer << "8" << "7" << "6" << "5";
@@ -153,8 +161,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 }
 
 void MainWindow::view()
-{   
-    QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding);
+{
+    QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum,
+                                          QSizePolicy::Expanding);
     QGridLayout *configLayout = new QGridLayout;
     configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='160'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
     configLayout->addWidget(m_lTx, 2, 0);
@@ -194,12 +203,12 @@ void MainWindow::view()
     m_cbWriteScroll->setFixedWidth(65);
     WriteLayout->addWidget(m_cbWriteScroll, 0, 2);
     m_abSaveWriteLog->setFixedWidth(35);
-    WriteLayout->addWidget(m_abSaveWriteLog, 0, 3);
+    WriteLayout->addWidget(m_abSaveWriteLog, 1, 0);
     m_bSaveWriteLog->setFixedWidth(50);
-    WriteLayout->addWidget(m_bSaveWriteLog, 0, 4);
+    WriteLayout->addWidget(m_bSaveWriteLog, 1, 1);
     m_bWriteLogClear->setFixedWidth(50);
-    WriteLayout->addWidget(m_bWriteLogClear, 0, 5);
-    WriteLayout->addWidget(m_eLogWrite, 1, 0, 1, 6);
+    WriteLayout->addWidget(m_bWriteLogClear, 1, 2);
+    WriteLayout->addWidget(m_eLogWrite, 2, 0, 1, 6);
     WriteLayout->setSpacing(5);
     WriteLayout->setMargin(5);
 
@@ -210,12 +219,12 @@ void MainWindow::view()
     m_cbReadScroll->setFixedWidth(65);
     ReadLayout->addWidget(m_cbReadScroll, 0, 2);
     m_abSaveReadLog->setFixedWidth(35);
-    ReadLayout->addWidget(m_abSaveReadLog, 0, 3);
+    ReadLayout->addWidget(m_abSaveReadLog, 1, 0);
     m_bSaveReadLog->setFixedWidth(50);
-    ReadLayout->addWidget(m_bSaveReadLog, 0, 4);
+    ReadLayout->addWidget(m_bSaveReadLog, 1, 1);
     m_bReadLogClear->setFixedWidth(50);
-    ReadLayout->addWidget(m_bReadLogClear, 0, 5);
-    ReadLayout->addWidget(m_eLogRead, 1, 0, 1, 6);
+    ReadLayout->addWidget(m_bReadLogClear, 1, 2);
+    ReadLayout->addWidget(m_eLogRead, 2, 0, 1, 6);
     ReadLayout->setSpacing(5);
     ReadLayout->setMargin(5);
 
@@ -235,6 +244,14 @@ void MainWindow::view()
     dataLayout->setSpacing(0);
     dataLayout->setMargin(0);
 
+    QHBoxLayout *hiddenAllCheck = new QHBoxLayout;
+    m_bDeleteAllMacroses->setFixedSize(15, 15);
+    m_bDeleteAllMacroses->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
+    hiddenAllCheck->addWidget(m_bDeleteAllMacroses);
+    hiddenAllCheck->addWidget(m_cbAllIntervals);
+    hiddenAllCheck->addWidget(m_cbAllPeriods);
+    scrollAreaLayout->addLayout(hiddenAllCheck);
+
     scrollArea->setWidget(widgetScroll);
     scrollArea->show();
     scrollArea->setVisible(true);
@@ -246,7 +263,7 @@ void MainWindow::view()
     HiddenLayout->setSpacing(0);
     HiddenLayout->setMargin(2);
     m_gbHiddenGroup->setLayout(scrollAreaLayout);
-    m_gbHiddenGroup->setFixedWidth(320);
+    m_gbHiddenGroup->setFixedWidth(250);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
@@ -258,7 +275,7 @@ void MainWindow::view()
     allLayouts->addWidget(m_bHiddenGroup, 0, 2);
     allLayouts->addWidget(m_gbHiddenGroup, 0, 3);
     widget->setLayout(allLayouts);
-    setCentralWidget(widget);    
+    setCentralWidget(widget);
 }
 
 void MainWindow::connections()
@@ -272,11 +289,14 @@ void MainWindow::connections()
     connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClick()));
     connect(m_abSaveWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
     connect(m_abSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
-
+    connect(m_bDeleteAllMacroses, SIGNAL(clicked()), this, SLOT(deleteAllMacroses()));
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(echoCheck(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_leSendPackage, SIGNAL(returnPressed()), m_abSendPackage, SLOT(click()));
+
+    connect(m_cbAllIntervals, SIGNAL(toggled(bool)), this, SLOT(checkAllIntervals(bool)));
+    connect(m_cbAllPeriods, SIGNAL(toggled(bool)), this, SLOT(checkAllPeriods(bool)));
 
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
@@ -288,12 +308,45 @@ void MainWindow::connections()
     connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
 }
 
+void MainWindow::checkAllIntervals(bool check)
+{
+    m_cbAllPeriods->setChecked(false);
+    m_cbAllIntervals->setChecked(check);
+    foreach (MiniMacros *m, MiniMacrosList) {
+        m->period->setChecked(false);
+        m->interval->setChecked(check);
+    }
+}
+
+void MainWindow::checkAllPeriods(bool check)
+{
+    m_cbAllIntervals->setChecked(false);
+    m_cbAllPeriods->setChecked(check);
+    foreach (MiniMacros *m, MiniMacrosList) {
+        m->interval->setChecked(false);
+        m->period->setChecked(check);
+    }
+}
+
+void MainWindow::deleteAllMacroses()
+{
+    int button = QMessageBox::question(this, "Warning",
+                                       "Delete ALL macroses?",
+                                       QMessageBox::Yes | QMessageBox::No);
+    if (button == QMessageBox::Yes) {
+        foreach (MiniMacros *m, MiniMacrosList) {
+            delMacros(m->index);
+        }
+    }
+}
+
 void MainWindow::sendInterval()
 {
     unsigned short int index = intervalSendingIndexes.takeFirst();
     intervalSendingIndexes.append(index);
     m_tIntervalSending->setInterval(MiniMacrosList[intervalSendingIndexes[0]]->time->value());
-    sendPackage(MiniMacrosList[index]->editing->package->text(), MiniMacrosList[index]->mode);
+    sendPackage(MiniMacrosList[index]->editing->package->text(),
+                MiniMacrosList[index]->mode);
 }
 
 void MainWindow::hiddenClick()
@@ -303,9 +356,11 @@ void MainWindow::hiddenClick()
         m_gbHiddenGroup->show();
         m_bHiddenGroup->setText("<");
         resize(width() + m_gbHiddenGroup->width() + 5, height());
+        setMinimumWidth(540 + m_gbHiddenGroup->width() + 5);
     }
     else
     {
+        setMinimumWidth(540);
         m_gbHiddenGroup->hide();
         m_bHiddenGroup->setText(">");
         resize(width() - m_gbHiddenGroup->width() - 5, height());
@@ -325,15 +380,18 @@ void MainWindow::openDialog()
 }
 
 void MainWindow::addMacros()
-{    
+{
     HiddenLayout->removeItem(spacer);
     MiniMacrosList.insert(index, new MiniMacros(index, this));
     HiddenLayout->addWidget(MiniMacrosList[index]);
     HiddenLayout->addSpacerItem(spacer);
 
-    connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
-    connect(MiniMacrosList[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
-    connect(MiniMacrosList[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
+    connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)),
+            this, SLOT(delMacros(int)));
+    connect(MiniMacrosList[index], SIGNAL(setSend(QString, int)),
+            this, SLOT(sendPackage(QString, int)));
+    connect(MiniMacrosList[index], SIGNAL(setIntervalSend(int, bool)),
+            this, SLOT(intervalSendAdded(int, bool)));
     index++;
 }
 
@@ -519,7 +577,7 @@ void MainWindow::start()
     m_Port->setPortName(m_cbPort->currentText());
 
     if(m_Port->open(QSerialPort::ReadWrite))
-    {       
+    {
         switch (m_cbBaud->currentIndex()) {
         case 0:
             m_Port->setBaudRate(QSerialPort::Baud921600);
@@ -753,7 +811,7 @@ void MainWindow::sendPackage(QString string, int mode)
 }
 
 void MainWindow::displayWriteData(QStringList list)
-{   
+{
     QTextStream writeStream (&writeLog);
     QString out;
     unsigned short int count = list.length();

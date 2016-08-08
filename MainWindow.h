@@ -49,6 +49,7 @@ class MainWindow : public QMainWindow
     QPushButton *m_bSaveWriteLog;
     QPushButton *m_bSaveReadLog;
     QPushButton *m_bHiddenGroup;
+    QPushButton *m_bDeleteAllMacroses;
     QAbstractButton *m_abSaveWriteLog;
     QAbstractButton *m_abSaveReadLog;
     QAbstractButton *m_abSendPackage;
@@ -62,9 +63,11 @@ class MainWindow : public QMainWindow
     QSpinBox *m_sbEchoInterval;
     QSpinBox *m_sbDelay;
     QLineEdit *m_leSendPackage;
-    QCheckBox *m_cbEchoMode;  
+    QCheckBox *m_cbEchoMode;
     QCheckBox *m_cbReadScroll;
-    QCheckBox *m_cbWriteScroll;   
+    QCheckBox *m_cbWriteScroll;
+    QCheckBox *m_cbAllIntervals;
+    QCheckBox *m_cbAllPeriods;
 
     QSerialPort *m_Port;
     QSettings *settings;
@@ -132,6 +135,9 @@ private slots:
     void openDialog();
     void delMacros(int index);
     void sendPackage(QString string, int mode);
+    void deleteAllMacroses();
+    void checkAllIntervals(bool check);
+    void checkAllPeriods(bool check);
 
 public:
     void displayWriteData(QStringList list);

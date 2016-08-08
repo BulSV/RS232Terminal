@@ -1,11 +1,12 @@
 #include "MiniMacros.h"
+#include <QMessageBox>
 
 MiniMacros::MiniMacros(int i, QWidget *parent)
     :QWidget(parent)
     , layout(new QHBoxLayout(this))
     , del(new QPushButton(this))
-    , interval(new QCheckBox("Interval", this))
-    , period(new QCheckBox("Period", this))
+    , interval(new QCheckBox(this))
+    , period(new QCheckBox(this))
     , time(new QSpinBox(this))
     , send(new MyPushButton("Empty", this))
     , editing(new Macros(this))
@@ -28,9 +29,9 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     layout->addWidget(send);
 
     send->setStyleSheet("font-weight: bold");
-    interval->setFixedWidth(57);
-    period->setFixedWidth(50);
-    send->setFixedWidth(70);
+    interval->setFixedWidth(15);
+    period->setFixedWidth(15);
+    send->setFixedWidth(80);
     del->setFixedSize(15, 15);
     del->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
 
@@ -62,7 +63,7 @@ void MiniMacros::intervalToggled(bool check)
 void MiniMacros::periodToggled(bool check)
 {
     interval->setChecked(false);
-    interval->setEnabled(!check);   
+    interval->setEnabled(!check);
     editing->update(time->value());
     if (check)
         tPeriod->start();
@@ -100,4 +101,14 @@ void MiniMacros::activate(bool enabled)
         mode = 1;
     if (editing->rbDEC->isChecked())
         mode = 2;
+}
+
+void MiniMacros::delMac()
+{
+    int button = QMessageBox::question(this, "Warning",
+                                       "Delete macros " + send->text() + " ?",
+                                       QMessageBox::Yes | QMessageBox::No);
+    if (button == QMessageBox::Yes) {
+        emit deleteSignal(index);
+    }
 }
