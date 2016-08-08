@@ -31,7 +31,7 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     send->setStyleSheet("font-weight: bold");
     interval->setFixedWidth(15);
     period->setFixedWidth(15);
-    send->setFixedWidth(80);
+    send->setFixedWidth(85);
     del->setFixedSize(15, 15);
     del->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
 

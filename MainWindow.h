@@ -20,7 +20,6 @@
 #include <QSpacerItem>
 #include <QListWidget>
 #include <QScrollArea>
-#include <QToolBar>
 
 class MainWindow : public QMainWindow
 {
@@ -50,6 +49,8 @@ class MainWindow : public QMainWindow
     QPushButton *m_bSaveReadLog;
     QPushButton *m_bHiddenGroup;
     QPushButton *m_bDeleteAllMacroses;
+    QPushButton *m_bAddMacros;
+    QPushButton *m_bLoadMacroses;
     QAbstractButton *m_abSaveWriteLog;
     QAbstractButton *m_abSaveReadLog;
     QAbstractButton *m_abSendPackage;
@@ -62,12 +63,15 @@ class MainWindow : public QMainWindow
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbEchoInterval;
     QSpinBox *m_sbDelay;
+    QSpinBox *m_sbAllDelay;
     QLineEdit *m_leSendPackage;
     QCheckBox *m_cbEchoMode;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
     QCheckBox *m_cbAllIntervals;
     QCheckBox *m_cbAllPeriods;
+    QCheckBox *m_cbDisplayWrite;
+    QCheckBox *m_cbDisplayRead;
 
     QSerialPort *m_Port;
     QSettings *settings;
@@ -78,7 +82,6 @@ class MainWindow : public QMainWindow
     QScrollArea *scrollArea;
     QWidget *widgetScroll;
     QVBoxLayout *HiddenLayout;
-    QToolBar *toolBar;
 
     QFile writeLog;
     QFile readLog;
@@ -138,6 +141,7 @@ private slots:
     void deleteAllMacroses();
     void checkAllIntervals(bool check);
     void checkAllPeriods(bool check);
+    void changeAllDelays(int n);
 
 public:
     void displayWriteData(QStringList list);

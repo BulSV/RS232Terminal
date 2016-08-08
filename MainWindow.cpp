@@ -46,6 +46,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_bSaveReadLog(new QPushButton("Save", this))
     , m_bHiddenGroup(new QPushButton(">", this))
     , m_bDeleteAllMacroses(new QPushButton(this))
+    , m_bAddMacros(new QPushButton(this))
+    , m_bLoadMacroses(new QPushButton(this))
     , m_abSaveWriteLog(new QPushButton(this))
     , m_abSaveReadLog(new QPushButton(this))
     , m_abSendPackage(new QPushButton("Send", this))
@@ -58,12 +60,15 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbEchoInterval(new QSpinBox(this))
     , m_sbDelay(new QSpinBox(this))
+    , m_sbAllDelay(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
     , m_cbEchoMode(new QCheckBox("Echo mode", this))
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
     , m_cbAllIntervals(new QCheckBox("Interval", this))
     , m_cbAllPeriods(new QCheckBox("Period", this))
+    , m_cbDisplayWrite(new QCheckBox("Display", this))
+    , m_cbDisplayRead(new QCheckBox("Display", this))
     , m_Port(new QSerialPort(this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
@@ -73,7 +78,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , scrollArea(new QScrollArea(m_gbHiddenGroup))
     , widgetScroll(new QWidget(scrollArea))
     , HiddenLayout(new QVBoxLayout(widgetScroll))
-    , toolBar(new QToolBar(this))
 {
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
     setWindowTitle(title);
@@ -85,13 +89,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     m_Port->setReadBufferSize(1);
 
-    toolBar->addAction(QIcon(":/Resources/add.png"), "Add Macros",
-                       this, SLOT(addMacros()));
-    toolBar->addAction(QIcon(":/Resources/open.png"), "Load Macroses",
-                       this, SLOT(openDialog()));
-    toolBar->setMovable(false);
-    addToolBar(Qt::TopToolBarArea, toolBar);
-
     txCount = 0;
     rxCount = 0;
     logReadRowsCount = 0;
@@ -101,6 +98,11 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     index = 0;
     echoWaiting = false;
 
+    m_bAddMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
+    m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
+    m_bAddMacros->setFixedSize(20, 20);
+    m_bLoadMacroses->setFixedSize(20, 20);
+    m_sbAllDelay->setValue(50);
     m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     m_abSaveWriteLog->setCheckable(true);
@@ -202,6 +204,7 @@ void MainWindow::view()
     WriteLayout->addWidget(m_cbWriteMode, 0, 1);
     m_cbWriteScroll->setFixedWidth(65);
     WriteLayout->addWidget(m_cbWriteScroll, 0, 2);
+    WriteLayout->addWidget(m_cbDisplayWrite, 0, 3);
     m_abSaveWriteLog->setFixedWidth(35);
     WriteLayout->addWidget(m_abSaveWriteLog, 1, 0);
     m_bSaveWriteLog->setFixedWidth(50);
@@ -218,6 +221,7 @@ void MainWindow::view()
     ReadLayout->addWidget(m_cbReadMode, 0, 1);
     m_cbReadScroll->setFixedWidth(65);
     ReadLayout->addWidget(m_cbReadScroll, 0, 2);
+    ReadLayout->addWidget(m_cbDisplayRead);
     m_abSaveReadLog->setFixedWidth(35);
     ReadLayout->addWidget(m_abSaveReadLog, 1, 0);
     m_bSaveReadLog->setFixedWidth(50);
@@ -248,8 +252,13 @@ void MainWindow::view()
     m_bDeleteAllMacroses->setFixedSize(15, 15);
     m_bDeleteAllMacroses->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
     hiddenAllCheck->addWidget(m_bDeleteAllMacroses);
+    m_cbAllIntervals->setFixedWidth(58);
     hiddenAllCheck->addWidget(m_cbAllIntervals);
+    m_cbAllPeriods->setFixedWidth(50);
     hiddenAllCheck->addWidget(m_cbAllPeriods);
+    hiddenAllCheck->addWidget(m_sbAllDelay);
+    hiddenAllCheck->addWidget(m_bAddMacros);
+    hiddenAllCheck->addWidget(m_bLoadMacroses);
     scrollAreaLayout->addLayout(hiddenAllCheck);
 
     scrollArea->setWidget(widgetScroll);
@@ -263,7 +272,7 @@ void MainWindow::view()
     HiddenLayout->setSpacing(0);
     HiddenLayout->setMargin(2);
     m_gbHiddenGroup->setLayout(scrollAreaLayout);
-    m_gbHiddenGroup->setFixedWidth(250);
+    m_gbHiddenGroup->setFixedWidth(270);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
@@ -294,10 +303,11 @@ void MainWindow::connections()
     connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(echoCheck(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_leSendPackage, SIGNAL(returnPressed()), m_abSendPackage, SLOT(click()));
-
+    connect(m_bAddMacros, SIGNAL(clicked()), this, SLOT(addMacros()));
+    connect(m_bLoadMacroses, SIGNAL(clicked()), this, SLOT(openDialog()));
     connect(m_cbAllIntervals, SIGNAL(toggled(bool)), this, SLOT(checkAllIntervals(bool)));
     connect(m_cbAllPeriods, SIGNAL(toggled(bool)), this, SLOT(checkAllPeriods(bool)));
-
+    connect(m_sbAllDelay, SIGNAL(valueChanged(int)), this, SLOT(changeAllDelays(int)));
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
     connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
@@ -306,6 +316,13 @@ void MainWindow::connections()
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
 
     connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
+}
+
+void MainWindow::changeAllDelays(int n)
+{
+    foreach (MiniMacros *m, MiniMacrosList) {
+        m->time->setValue(n);
+    }
 }
 
 void MainWindow::checkAllIntervals(bool check)
