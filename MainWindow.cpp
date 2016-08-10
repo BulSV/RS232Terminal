@@ -79,6 +79,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , widgetScroll(new QWidget(scrollArea))
     , HiddenLayout(new QVBoxLayout(widgetScroll))
 {
+    m_Port->setSettingsRestoredOnClose(false);
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
     setWindowTitle(title);
     resize(settings->value("config/width").toInt(),
@@ -221,7 +222,7 @@ void MainWindow::view()
     ReadLayout->addWidget(m_cbReadMode, 0, 1);
     m_cbReadScroll->setFixedWidth(65);
     ReadLayout->addWidget(m_cbReadScroll, 0, 2);
-    ReadLayout->addWidget(m_cbDisplayRead);
+    ReadLayout->addWidget(m_cbDisplayRead, 0, 3);
     m_abSaveReadLog->setFixedWidth(35);
     ReadLayout->addWidget(m_abSaveReadLog, 1, 0);
     m_bSaveReadLog->setFixedWidth(50);
@@ -829,6 +830,9 @@ void MainWindow::sendPackage(QString string, int mode)
 
 void MainWindow::displayWriteData(QStringList list)
 {
+    if (!m_cbDisplayWrite->isChecked())
+        return;
+
     QTextStream writeStream (&writeLog);
     QString out;
     unsigned short int count = list.length();
@@ -897,29 +901,32 @@ void MainWindow::breakLine()
         if (ok)
             outDEC.append(QString::number(dec) + " ");
     }
-    switch (m_cbReadMode->currentIndex())
+    if (m_cbDisplayRead->isChecked())
     {
-    case 0:
-    {
-        m_eLogRead->addItem(in);
-        if (logRead)
-            readStream << in + "\n";
-        break;
-    }
-    case 1:
-    {
-        m_eLogRead->addItem(QString(readBuffer));
-        if (logRead)
-            readStream << QString(readBuffer) + "\n";
-        break;
-    }
-    case 2:
-    {
-        m_eLogRead->addItem(outDEC);
-        if (logRead)
-            readStream << outDEC + "\n";
-        break;
-    }
+        switch (m_cbReadMode->currentIndex())
+        {
+        case 0:
+        {
+            m_eLogRead->addItem(in);
+            if (logRead)
+                readStream << in + "\n";
+            break;
+        }
+        case 1:
+        {
+            m_eLogRead->addItem(QString(readBuffer));
+            if (logRead)
+                readStream << QString(readBuffer) + "\n";
+            break;
+        }
+        case 2:
+        {
+            m_eLogRead->addItem(outDEC);
+            if (logRead)
+                readStream << outDEC + "\n";
+            break;
+        }
+        }
     }
     if (m_cbEchoMode->isChecked() && echoWaiting)
     {
