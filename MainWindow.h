@@ -6,7 +6,6 @@
 #include <QLabel>
 #include <QComboBox>
 #include <MyPushButton.h>
-#include <QPlainTextEdit>
 #include <QTimer>
 #include <QTime>
 #include <QSerialPort>

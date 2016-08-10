@@ -99,6 +99,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     index = 0;
     echoWaiting = false;
 
+    m_eLogWrite->setUniformItemSizes(true);
+    m_eLogRead->setUniformItemSizes(true);
     m_bAddMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
     m_bAddMacros->setFixedSize(20, 20);
@@ -116,6 +118,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_sbEchoInterval->setRange(0, 100000);
     m_sbDelay->setRange(1, 100000);
     m_sbDelay->setValue(10);
+    m_sbAllDelay->setRange(0, 999999);
 
     m_lTxCount->setStyleSheet("border-style: outset; border-width: 1px; border-color: black;");
     m_lRxCount->setStyleSheet("border-style: outset; border-width: 1px; border-color: black;");
