@@ -998,6 +998,8 @@ void MainWindow::saveSession()
     settings->setValue("config/read_log_timeout", m_tReadLog->interval());
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
     settings->setValue("config/mode", m_cbSendMode->currentIndex());
+    settings->setValue("config/write_display", m_cbDisplayWrite->isChecked());
+    settings->setValue("config/read_display", m_cbDisplayRead->isChecked());
 
     settings->remove("macros");
     int i = 1;
@@ -1046,6 +1048,8 @@ void MainWindow::loadSession()
     if (!m_gbHiddenGroup->isHidden())
         m_bHiddenGroup->setText("<");
     m_cbSendMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
+    m_cbDisplayWrite->setChecked(settings->value("config/write_display", true).toBool());
+    m_cbDisplayRead->setChecked(settings->value("config/read_display", true).toBool());
 
     unsigned short int size = settings->value("macros/size", 0).toInt();
     if (!size)
