@@ -86,8 +86,6 @@ class MainWindow : public QMainWindow
     QFile readLog;
     unsigned short int maxWriteLogRows;
     unsigned short int maxReadLogRows;
-    unsigned short int logReadRowsCount;
-    unsigned short int logWriteRowsCount;
     qint32 txCount;
     qint32 rxCount;
     bool logWrite;
@@ -128,8 +126,6 @@ private slots:
     void startReadLog(bool check);
     void textChanged(QString text);
     void echoCheck(bool check);
-    void clearReadLog();
-    void clearWriteLog();
     void received();
     void sendSingle();
     void startSending(bool checked);

@@ -2,14 +2,9 @@
 #include "MainWindow.h"
 #include "MiniMacros.h"
 #include <QGridLayout>
-#include <QString>
-#include <QApplication>
-#include <QLineEdit>
 #include <QSerialPortInfo>
 #include <QCloseEvent>
-#include <QMouseEvent>
 #include <QSplitter>
-#include <QSpacerItem>
 #include <QTextStream>
 #include <QMessageBox>
 #include <QDateTime>
@@ -21,7 +16,6 @@ static unsigned short int BLINKTIMERX = 200;
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
-    , widget(new QWidget(this))
     , m_cbPort(new QComboBox(this))
     , m_cbBaud(new QComboBox(this))
     , m_cbBits(new QComboBox(this))
@@ -92,8 +86,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     txCount = 0;
     rxCount = 0;
-    logReadRowsCount = 0;
-    logWriteRowsCount = 0;
     logWrite = false;
     logRead = false;
     index = 0;
@@ -287,14 +279,15 @@ void MainWindow::view()
     m_bHiddenGroup->setFixedWidth(15);
     allLayouts->addWidget(m_bHiddenGroup, 0, 2);
     allLayouts->addWidget(m_gbHiddenGroup, 0, 3);
+    widget = new QWidget(this);
     widget->setLayout(allLayouts);
     setCentralWidget(widget);
 }
 
 void MainWindow::connections()
 {
-    connect(m_bReadLogClear, SIGNAL(clicked()), this, SLOT(clearReadLog()));
-    connect(m_bWriteLogClear, SIGNAL(clicked()), this, SLOT(clearWriteLog()));
+    connect(m_bReadLogClear, SIGNAL(clicked()), m_eLogRead, SLOT(clear()));
+    connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
@@ -318,7 +311,6 @@ void MainWindow::connections()
     connect(m_tDelay, SIGNAL(timeout()), this, SLOT(breakLine()));
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
-
     connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
 }
 
@@ -439,6 +431,8 @@ void MainWindow::intervalSendAdded(int index, bool check)
 
 void MainWindow::delMacros(int index)
 {
+    MiniMacrosList[index]->interval->setChecked(false);
+    MiniMacrosList[index]->period->setChecked(false);
     delete MiniMacrosList[index];
     MiniMacrosList.remove(index);
 }
@@ -871,12 +865,9 @@ void MainWindow::displayWriteData(QStringList list)
     if (logWrite)
         writeStream << out + "\n";
 
-    logWriteRowsCount++;
-    if (logWriteRowsCount >= maxWriteLogRows)
-    {
+    if (m_eLogWrite->count() >= maxWriteLogRows)
         delete m_eLogWrite->takeItem(0);
-        logWriteRowsCount--;
-    }
+
     if (m_cbWriteScroll->isChecked())
         m_eLogWrite->scrollToBottom();
 }
@@ -955,26 +946,33 @@ void MainWindow::breakLine()
     }
     readBuffer.clear();
 
-    logReadRowsCount++;
-    if (logReadRowsCount >= maxReadLogRows)
-    {
+    if (m_eLogRead->count() >= maxReadLogRows)
         delete m_eLogRead->takeItem(0);
-        logReadRowsCount--;
-    }
+
     if (m_cbReadScroll->isChecked())
         m_eLogRead->scrollToBottom();
 }
 
-void MainWindow::clearReadLog()
+void MainWindow::rxNone()
 {
-    m_eLogRead->clear();
-    logReadRowsCount = 0;
+    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_tRx->singleShot(BLINKTIMERX, this, SLOT(rxHold()));
 }
 
-void MainWindow::clearWriteLog()
+void MainWindow::txNone()
 {
-    m_eLogWrite->clear();
-    logWriteRowsCount = 0;
+    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_tTx->singleShot(BLINKTIMETX, this, SLOT(txHold()));
+}
+
+void MainWindow::rxHold()
+{
+    m_tRx->setSingleShot(false);
+}
+
+void MainWindow::txHold()
+{
+    m_tTx->setSingleShot(false);
 }
 
 void MainWindow::saveSession()
@@ -1074,28 +1072,6 @@ void MainWindow::loadSession()
          MiniMacrosList.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
          MiniMacrosList.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
     }
-}
-
-void MainWindow::rxNone()
-{
-    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_tRx->singleShot(BLINKTIMERX, this, SLOT(rxHold()));
-}
-
-void MainWindow::txNone()
-{
-    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_tTx->singleShot(BLINKTIMETX, this, SLOT(txHold()));
-}
-
-void MainWindow::rxHold()
-{
-    m_tRx->setSingleShot(false);
-}
-
-void MainWindow::txHold()
-{
-    m_tTx->setSingleShot(false);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
