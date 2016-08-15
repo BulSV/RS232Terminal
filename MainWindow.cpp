@@ -355,6 +355,8 @@ void MainWindow::deleteAllMacroses()
                                        "Delete ALL macroses?",
                                        QMessageBox::Yes | QMessageBox::No);
     if (button == QMessageBox::Yes) {
+        checkAllIntervals(false);
+        checkAllPeriods(false);
         foreach (MiniMacros *m, MiniMacrosList) {
             delMacros(m->index);
         }
