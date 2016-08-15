@@ -16,8 +16,7 @@ HEADERS  += \
     MainWindow.h \
     MyPushButton.h \
     Macros.h \
-    MiniMacros.h \
-    CircularArray.h
+    MiniMacros.h
 
 RESOURCES += \
     RS232Terminal.qrc

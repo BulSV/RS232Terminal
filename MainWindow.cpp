@@ -86,7 +86,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
            settings->value("config/height").toInt());
     view();
     connections();
-    setMinimumWidth(540);
+    setMinimumWidth(665);
 
     m_Port->setReadBufferSize(1);
 
