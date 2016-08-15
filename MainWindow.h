@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <mylistwidget.h>
 #include "MiniMacros.h"
 #include <QMainWindow>
 #include <QLabel>
@@ -17,7 +18,6 @@
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QSpacerItem>
-#include <QListWidget>
 #include <QScrollArea>
 
 class MainWindow : public QMainWindow
@@ -57,8 +57,8 @@ class MainWindow : public QMainWindow
     QLabel *m_lRx;
     QLabel *m_lTxCount;
     QLabel *m_lRxCount;
-    QListWidget *m_eLogRead;
-    QListWidget *m_eLogWrite;
+    MyListWidget *m_eLogRead;
+    MyListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbEchoInterval;
     QSpinBox *m_sbDelay;
@@ -84,8 +84,6 @@ class MainWindow : public QMainWindow
 
     QFile writeLog;
     QFile readLog;
-    unsigned short int maxWriteLogRows;
-    unsigned short int maxReadLogRows;
     qint32 txCount;
     qint32 rxCount;
     bool logWrite;

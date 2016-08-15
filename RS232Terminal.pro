@@ -10,13 +10,15 @@ win32:RC_FILE = RS232Terminal.rc
 SOURCES += main.cpp\
     MainWindow.cpp \
     Macros.cpp \
-    MiniMacros.cpp
+    MiniMacros.cpp \
+    mylistwidget.cpp
 
 HEADERS  += \
     MainWindow.h \
     MyPushButton.h \
     Macros.h \
-    MiniMacros.h
+    MiniMacros.h \
+    mylistwidget.h
 
 RESOURCES += \
     RS232Terminal.qrc

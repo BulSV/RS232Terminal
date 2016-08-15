@@ -49,8 +49,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_lRx(new QLabel("        Rx", this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
-    , m_eLogRead(new QListWidget(this))
-    , m_eLogWrite(new QListWidget(this))
+    , m_eLogRead(new MyListWidget(this))
+    , m_eLogWrite(new MyListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbEchoInterval(new QSpinBox(this))
     , m_sbDelay(new QSpinBox(this))
@@ -91,8 +91,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     index = 0;
     echoWaiting = false;
 
-    m_eLogWrite->setUniformItemSizes(true);
-    m_eLogRead->setUniformItemSizes(true);
     m_bAddMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
     m_bAddMacros->setFixedSize(20, 20);
@@ -117,9 +115,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
-
-    m_eLogRead->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
-    m_eLogWrite->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
 
     QStringList buffer;
     foreach(QSerialPortInfo portsAvailable, QSerialPortInfo::availablePorts())
@@ -371,11 +366,11 @@ void MainWindow::hiddenClick()
         m_gbHiddenGroup->show();
         m_bHiddenGroup->setText("<");
         resize(width() + m_gbHiddenGroup->width() + 5, height());
-        setMinimumWidth(540 + m_gbHiddenGroup->width() + 5);
+        setMinimumWidth(665 + m_gbHiddenGroup->width() + 5);
     }
     else
     {
-        setMinimumWidth(540);
+        setMinimumWidth(665);
         m_gbHiddenGroup->hide();
         m_bHiddenGroup->setText(">");
         resize(width() - m_gbHiddenGroup->width() - 5, height());
@@ -861,12 +856,9 @@ void MainWindow::displayWriteData(QStringList list)
         }
     }
 
-    m_eLogWrite->addItem(out);
+    m_eLogWrite->addPackage(out);
     if (logWrite)
         writeStream << out + "\n";
-
-    if (m_eLogWrite->count() >= maxWriteLogRows)
-        delete m_eLogWrite->takeItem(0);
 
     if (m_cbWriteScroll->isChecked())
         m_eLogWrite->scrollToBottom();
@@ -903,21 +895,21 @@ void MainWindow::breakLine()
         {
         case 0:
         {
-            m_eLogRead->addItem(in);
+            m_eLogRead->addPackage(in);
             if (logRead)
                 readStream << in + "\n";
             break;
         }
         case 1:
         {
-            m_eLogRead->addItem(QString(readBuffer));
+            m_eLogRead->addPackage(QString(readBuffer));
             if (logRead)
                 readStream << QString(readBuffer) + "\n";
             break;
         }
         case 2:
         {
-            m_eLogRead->addItem(outDEC);
+            m_eLogRead->addPackage(outDEC);
             if (logRead)
                 readStream << outDEC + "\n";
             break;
@@ -928,26 +920,19 @@ void MainWindow::breakLine()
     {
         if (QString::compare(echoBuffer.join(" "), outDEC.remove(outDEC.length() - 1, 1), Qt::CaseInsensitive) == 0)
         {
-            m_eLogWrite->item(m_eLogWrite->count() - 1)->setBackgroundColor(Qt::green);
-            m_eLogWrite->item(m_eLogWrite->count() - 1)->setTextColor(Qt::white);
-            m_eLogRead->item(m_eLogRead->count() - 1)->setBackgroundColor(Qt::green);
-            m_eLogRead->item(m_eLogRead->count() - 1)->setTextColor(Qt::white);
+            m_eLogWrite->setItemColor(m_eLogWrite->count() - 1, Qt::green);
+            m_eLogRead->setItemColor(m_eLogWrite->count() - 1, Qt::green);
         }
         else
         {
-            m_eLogWrite->item(m_eLogWrite->count() - 1)->setBackgroundColor(Qt::red);
-            m_eLogWrite->item(m_eLogWrite->count() - 1)->setTextColor(Qt::white);
-            m_eLogRead->item(m_eLogRead->count() - 1)->setBackgroundColor(Qt::red);
-            m_eLogRead->item(m_eLogRead->count() - 1)->setTextColor(Qt::white);
+            m_eLogWrite->setItemColor(m_eLogWrite->count() - 1, Qt::red);
+            m_eLogRead->setItemColor(m_eLogWrite->count() - 1, Qt::red);
         }
         if (m_sbEchoInterval->value() != 0)
             m_tEcho->singleShot(m_sbEchoInterval->value(), this, SLOT(echo()));
         echoWaiting = false;
     }
     readBuffer.clear();
-
-    if (m_eLogRead->count() >= maxReadLogRows)
-        delete m_eLogRead->takeItem(0);
 
     if (m_cbReadScroll->isChecked())
         m_eLogRead->scrollToBottom();
@@ -981,8 +966,8 @@ void MainWindow::saveSession()
     settings->setValue("config/width", width());
     settings->setValue("config/position", pos());
 
-    settings->setValue("config/max_write_log_rows", maxWriteLogRows);
-    settings->setValue("config/max_read_log_rows", maxReadLogRows);
+    settings->setValue("config/max_write_log_rows", m_eLogWrite->getMaxCount());
+    settings->setValue("config/max_read_log_rows", m_eLogRead->getMaxCount());
     settings->setValue("config/port", m_cbPort->currentText());
     settings->setValue("config/baud", m_cbBaud->currentIndex());
     settings->setValue("config/data_bits", m_cbBits->currentIndex());
@@ -1029,8 +1014,8 @@ void MainWindow::loadSession()
         if (!pos.isNull())
             move (pos);
 
-    maxWriteLogRows = settings->value("config/max_write_log_rows", 1000).toInt();
-    maxReadLogRows = settings->value("config/max_read_log_rows", 1000).toInt();
+    m_eLogRead->setMaxCount(settings->value("config/max_write_log_rows", 1000).toInt());
+    m_eLogWrite->setMaxCount(settings->value("config/max_read_log_rows", 1000).toInt());
     m_cbPort->setCurrentText(settings->value("config/port").toString());
     m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
