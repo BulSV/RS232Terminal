@@ -42,6 +42,7 @@ class MainWindow : public QMainWindow
     QTimer *m_tRx;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
+    QPushButton *m_bPause;
     QPushButton *m_bWriteLogClear;
     QPushButton *m_bReadLogClear;
     QPushButton *m_bSaveWriteLog;
@@ -94,12 +95,14 @@ class MainWindow : public QMainWindow
     QByteArray readBuffer;
     unsigned short int index;
     QMap<int, MiniMacros *> MiniMacrosList;
-    QList<int> intervalSendingIndexes;
+    short int sendCount;
+    short int sendIndex;
 
     void view();
     void saveSession();
     void loadSession();
     void connections();
+    int findIntervalItem(int start);
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
@@ -115,6 +118,7 @@ private slots:
     void hiddenClick();
     void start();
     void stop();
+    void pause();
     void echo();
     void saveWrite();
     void saveRead();

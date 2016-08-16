@@ -34,6 +34,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tRx(new QTimer(this))
     , m_bStart(new QPushButton("Start", this))
     , m_bStop(new QPushButton("Stop", this))
+    , m_bPause(new QPushButton("Pause", this))
     , m_bWriteLogClear(new QPushButton("Clear", this))
     , m_bReadLogClear(new QPushButton("Clear", this))
     , m_bSaveWriteLog(new QPushButton("Save", this))
@@ -90,6 +91,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     logRead = false;
     index = 0;
     echoWaiting = false;
+    sendCount = 0;
+    sendIndex = 0;
 
     m_bAddMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
@@ -103,6 +106,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_abSendPackage->setCheckable(true);
     m_abSendPackage->setEnabled(false);
     m_bStop->setEnabled(false);
+    m_bPause->setEnabled(false);
     m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
     m_sbEchoInterval->setRange(0, 100000);
@@ -177,9 +181,10 @@ void MainWindow::view()
     configLayout->addWidget(m_sbDelay, 9, 1);
     configLayout->addWidget(m_bStart, 10, 0);
     configLayout->addWidget(m_bStop, 10, 1);
-    configLayout->addWidget(m_lTxCount, 12, 0);
-    configLayout->addWidget(m_lRxCount, 12, 1);
-    configLayout->addItem(spacer, 11, 0);
+    configLayout->addWidget(m_bPause, 11, 1);
+    configLayout->addWidget(m_lTxCount, 13, 0);
+    configLayout->addWidget(m_lRxCount, 13, 1);
+    configLayout->addItem(spacer, 12, 0);
     configLayout->setSpacing(5);
 
     QHBoxLayout *sendPackageLayout = new QHBoxLayout;
@@ -285,6 +290,7 @@ void MainWindow::connections()
     connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
     connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
+    connect(m_bPause, SIGNAL(clicked()), this, SLOT(pause()));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
     connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClick()));
@@ -350,13 +356,28 @@ void MainWindow::deleteAllMacroses()
     }
 }
 
+int MainWindow::findIntervalItem(int start)
+{
+    foreach (MiniMacros *m, MiniMacrosList) {
+        if (m->interval->isChecked() && sendIndex <= m->index)
+            return m->index;
+    }
+    if (start == sendIndex && start != 0)
+    {
+        sendIndex = 0;
+        return findIntervalItem(0);
+    }
+    return start;
+}
+
 void MainWindow::sendInterval()
 {
-    unsigned short int index = intervalSendingIndexes.takeFirst();
-    intervalSendingIndexes.append(index);
-    m_tIntervalSending->setInterval(MiniMacrosList[intervalSendingIndexes[0]]->time->value());
-    sendPackage(MiniMacrosList[index]->editing->package->text(),
-                MiniMacrosList[index]->mode);
+    sendIndex = findIntervalItem(sendIndex);
+
+    m_tIntervalSending->setInterval(MiniMacrosList[sendIndex]->time->value());
+    sendPackage(MiniMacrosList[sendIndex]->editing->package->text(),
+                MiniMacrosList[sendIndex]->mode);
+    sendIndex++;
 }
 
 void MainWindow::hiddenClick()
@@ -409,17 +430,18 @@ void MainWindow::intervalSendAdded(int index, bool check)
 {
     if (check)
     {
-        intervalSendingIndexes.append(index);
-        if (intervalSendingIndexes.count() == 1)
+        sendCount++;
+        if (sendCount == 1)
         {
             m_tIntervalSending->setInterval(MiniMacrosList[index]->time->value());
-            m_tIntervalSending->start();
+            if (m_Port->isOpen())
+                m_tIntervalSending->start();
         }
     }
     else
     {
-        intervalSendingIndexes.removeAt(intervalSendingIndexes.indexOf(index));
-        if (intervalSendingIndexes.isEmpty())
+        sendCount--;
+        if (sendCount == 0)
             m_tIntervalSending->stop();
     }
 }
@@ -428,8 +450,7 @@ void MainWindow::delMacros(int index)
 {
     MiniMacrosList[index]->interval->setChecked(false);
     MiniMacrosList[index]->period->setChecked(false);
-    delete MiniMacrosList[index];
-    MiniMacrosList.remove(index);
+    delete MiniMacrosList.take(index);
 }
 
 void MainWindow::writeLogTimeout()
@@ -672,6 +693,7 @@ void MainWindow::start()
 
         m_bStart->setEnabled(false);
         m_bStop->setEnabled(true);
+        m_bPause->setEnabled(true);
         m_cbPort->setEnabled(false);
         m_cbBaud->setEnabled(false);
         m_cbBits->setEnabled(false);
@@ -681,6 +703,8 @@ void MainWindow::start()
         m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
         if (!m_leSendPackage->text().isEmpty())
             m_abSendPackage->setEnabled(true);
+        if (sendCount)
+            m_tIntervalSending->start();
     }
     else
     {
@@ -692,9 +716,10 @@ void MainWindow::start()
 void MainWindow::stop()
 {
     m_Port->close();
-    m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
-    m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
+    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_bStop->setEnabled(false);
+    m_bPause->setEnabled(false);
     m_bStart->setEnabled(true);
     m_cbPort->setEnabled(true);
     m_cbBaud->setEnabled(true);
@@ -706,6 +731,32 @@ void MainWindow::stop()
     m_tSend->stop();
     m_tEcho->stop();
     m_tDelay->stop();
+    m_tIntervalSending->stop();
+    sendIndex = 0;
+    txCount = 0;
+    m_lTxCount->setText("Tx: 0");
+    rxCount = 0;
+    m_lRxCount->setText("Rx: 0");
+}
+
+void MainWindow::pause()
+{
+    m_Port->close();
+    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_bPause->setEnabled(false);
+    m_bStart->setEnabled(true);
+    m_cbPort->setEnabled(true);
+    m_cbBaud->setEnabled(true);
+    m_cbBits->setEnabled(true);
+    m_cbParity->setEnabled(true);
+    m_cbStopBits->setEnabled(true);
+    m_abSendPackage->setEnabled(false);
+    m_abSendPackage->setChecked(false);
+    m_tSend->stop();
+    m_tEcho->stop();
+    m_tDelay->stop();
+    m_tIntervalSending->stop();
 }
 
 void MainWindow::received()
