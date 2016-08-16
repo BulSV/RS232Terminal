@@ -42,7 +42,7 @@ class MainWindow : public QMainWindow
     QTimer *m_tRx;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
-    QPushButton *m_bPause;
+    QAbstractButton *m_abPause;
     QPushButton *m_bWriteLogClear;
     QPushButton *m_bReadLogClear;
     QPushButton *m_bSaveWriteLog;
@@ -118,7 +118,7 @@ private slots:
     void hiddenClick();
     void start();
     void stop();
-    void pause();
+    void pause(bool check);
     void echo();
     void saveWrite();
     void saveRead();
