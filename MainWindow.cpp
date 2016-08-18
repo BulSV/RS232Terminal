@@ -358,28 +358,29 @@ void MainWindow::deleteAllMacroses()
     }
 }
 
-int MainWindow::findIntervalItem(int start)
+int MainWindow::findIntervalItem(unsigned short int start)
 {
-    foreach (MiniMacros *m, MiniMacrosList) {
-        if (m->interval->isChecked() && start <= m->index)
+    foreach (MiniMacros *m, MiniMacrosList)
+    {
+        if (m->interval->isChecked() && m->index >= start)
             return m->index;
     }
-    if (start == sendIndex && start != 0)
+    start = 0;
+    foreach (MiniMacros *m, MiniMacrosList)
     {
-        sendIndex = 0;
-        return findIntervalItem(0);
+        if (m->interval->isChecked() && m->index >= start)
+            return m->index;
     }
     return start;
 }
 
 void MainWindow::sendInterval()
 {
-    sendIndex = findIntervalItem(sendIndex);
-
-    m_tIntervalSending->setInterval(MiniMacrosList[sendIndex]->time->value());
     sendPackage(MiniMacrosList[sendIndex]->editing->package->text(),
                 MiniMacrosList[sendIndex]->mode);
     sendIndex++;
+    sendIndex = findIntervalItem(sendIndex);
+    m_tIntervalSending->setInterval(MiniMacrosList[sendIndex]->time->value());
 }
 
 void MainWindow::hiddenClick()
@@ -435,6 +436,7 @@ void MainWindow::intervalSendAdded(int index, bool check)
         sendCount++;
         if (sendCount == 1)
         {
+            sendIndex = index;
             m_tIntervalSending->setInterval(MiniMacrosList[index]->time->value());
             if (m_Port->isOpen())
                 m_tIntervalSending->start();

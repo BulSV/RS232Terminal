@@ -95,14 +95,14 @@ class MainWindow : public QMainWindow
     QByteArray readBuffer;
     unsigned short int index;
     QMap<int, MiniMacros *> MiniMacrosList;
-    short int sendCount;
-    short int sendIndex;
+    unsigned short int sendCount;
+    unsigned short int sendIndex;
 
     void view();
     void saveSession();
     void loadSession();
     void connections();
-    int findIntervalItem(int start);
+    int findIntervalItem(unsigned short start);
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
