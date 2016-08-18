@@ -103,6 +103,7 @@ class MainWindow : public QMainWindow
     void loadSession();
     void connections();
     int findIntervalItem(unsigned short start);
+    enum MoveDirection { MoveUp, MoveDown };
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
@@ -139,6 +140,9 @@ private slots:
     void checkAllIntervals(bool check);
     void checkAllPeriods(bool check);
     void changeAllDelays(int n);
+    void moveMacUp(int index);
+    void moveMacDown(int index);
+    bool moveMacros(QWidget *widget, MoveDirection direction);
 
 public:
     void displayWriteData(QStringList list);

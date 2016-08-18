@@ -420,13 +420,66 @@ void MainWindow::addMacros()
     HiddenLayout->addWidget(MiniMacrosList[index]);
     HiddenLayout->addSpacerItem(spacer);
 
-    connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)),
-            this, SLOT(delMacros(int)));
-    connect(MiniMacrosList[index], SIGNAL(setSend(QString, int)),
-            this, SLOT(sendPackage(QString, int)));
-    connect(MiniMacrosList[index], SIGNAL(setIntervalSend(int, bool)),
-            this, SLOT(intervalSendAdded(int, bool)));
+    connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
+    connect(MiniMacrosList[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
+    connect(MiniMacrosList[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
+    connect(MiniMacrosList[index], SIGNAL(moveUp(int)), this, SLOT(moveMacUp(int)));
+    connect(MiniMacrosList[index], SIGNAL(moveDown(int)),this, SLOT(moveMacDown(int)));
     index++;
+}
+
+bool MainWindow::moveMacros(QWidget *widget, MoveDirection direction)
+{
+  QVBoxLayout* myLayout = qobject_cast<QVBoxLayout*>(widget->parentWidget()->layout());
+  const int index = myLayout->indexOf(widget);
+
+  if (direction == MoveUp && index == 0) {
+    return false;
+  }
+
+  if (direction == MoveDown && index == myLayout->count()-1 ) {
+    return false;
+  }
+
+  const int newIndex = direction == MoveUp ? index - 1 : index + 1;
+  HiddenLayout->removeItem(spacer);
+  myLayout->removeWidget(widget);
+  myLayout->insertWidget(newIndex , widget);
+  HiddenLayout->addSpacerItem(spacer);
+
+  return true;
+}
+
+void MainWindow::moveMacUp(int index)
+{
+   if (moveMacros(MiniMacrosList[index], MoveUp))
+   {
+       for (int i = index - 1; i >= MiniMacrosList.first()->index; i--)
+           if (MiniMacrosList.contains(i))
+           {
+               MiniMacrosList[index]->index = i;
+               MiniMacrosList[i]->index = index;
+               MiniMacros *temp = MiniMacrosList[index];
+               MiniMacrosList[index] = MiniMacrosList[i];
+               MiniMacrosList[i] = temp;
+               break;
+           }
+   }
+}
+
+void MainWindow::moveMacDown(int index)
+{
+   if (moveMacros(MiniMacrosList[index], MoveDown))
+       for (int i = index + 1; i <= MiniMacrosList.last()->index; i++)
+           if (MiniMacrosList.contains(i))
+           {
+               MiniMacrosList[index]->index = i;
+               MiniMacrosList[i]->index = index;
+               MiniMacros *temp = MiniMacrosList[index];
+               MiniMacrosList[index] = MiniMacrosList[i];
+               MiniMacrosList[i] = temp;
+               break;
+           }
 }
 
 void MainWindow::intervalSendAdded(int index, bool check)

@@ -35,11 +35,15 @@ public slots:
     void activate(bool enabled);
     void delMac();
     void sendPeriod();
+    void sendMoveUp() { emit moveUp(index); }
+    void sendMoveDown() { emit moveDown(index); }
 
 signals:
     void deleteSignal(int);
     void setSend(QString, int);
     void setIntervalSend(int, bool);
+    void moveUp(int);
+    void moveDown(int);
 };
 
 #endif // MINIMACROS_H

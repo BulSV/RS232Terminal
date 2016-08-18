@@ -8,5 +8,7 @@
 		<file>Resources/startRecToFile.png</file>
 		<file>Resources/startRecToFileBlink.png</file>
 		<file>Resources/terminal.ico</file>
+		<file>Resources/arrow-up.png</file>
+		<file>Resources/arrow-down.png</file>
     </qresource>
 </RCC>
