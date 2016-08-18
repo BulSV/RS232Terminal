@@ -65,7 +65,8 @@ class MainWindow : public QMainWindow
     QSpinBox *m_sbDelay;
     QSpinBox *m_sbAllDelay;
     QLineEdit *m_leSendPackage;
-    QCheckBox *m_cbEchoMode;
+    QCheckBox *m_cbEchoMaster;
+    QCheckBox *m_cbEchoSlave;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
     QCheckBox *m_cbAllIntervals;
@@ -97,6 +98,7 @@ class MainWindow : public QMainWindow
     QMap<int, MiniMacros *> MiniMacrosList;
     unsigned short int sendCount;
     unsigned short int sendIndex;
+    QStringList echoSlave;
 
     void view();
     void saveSession();
@@ -128,7 +130,8 @@ private slots:
     void startWriteLog(bool check);
     void startReadLog(bool check);
     void textChanged(QString text);
-    void echoCheck(bool check);
+    void echoCheckMaster(bool check);
+    void echoCheckSlave(bool check);
     void received();
     void sendSingle();
     void startSending(bool checked);

@@ -57,7 +57,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_sbDelay(new QSpinBox(this))
     , m_sbAllDelay(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , m_cbEchoMode(new QCheckBox("Echo mode", this))
+    , m_cbEchoMaster(new QCheckBox("Echo master", this))
+    , m_cbEchoSlave(new QCheckBox("Echo slave", this))
     , m_cbReadScroll(new QCheckBox("Scrolling", this))
     , m_cbWriteScroll(new QCheckBox("Scrolling", this))
     , m_cbAllIntervals(new QCheckBox("Interval", this))
@@ -176,15 +177,16 @@ void MainWindow::view()
     configLayout->addWidget(m_cbParity, 6, 1);
     configLayout->addWidget(new QLabel("Stop bits:", this), 7, 0);
     configLayout->addWidget(m_cbStopBits, 7, 1);
-    configLayout->addWidget(m_cbEchoMode, 8, 0);
+    configLayout->addWidget(m_cbEchoMaster, 8, 0);
     configLayout->addWidget(m_sbEchoInterval, 8, 1);
-    configLayout->addWidget(new QLabel("Delay:", this), 9, 0);
-    configLayout->addWidget(m_sbDelay, 9, 1);
-    configLayout->addWidget(m_bStart, 10, 0);
-    configLayout->addWidget(m_bStop, 10, 1);
-    configLayout->addWidget(m_lTxCount, 12, 0);
-    configLayout->addWidget(m_lRxCount, 12, 1);
-    configLayout->addItem(spacer, 11, 0);
+    configLayout->addWidget(m_cbEchoSlave, 9, 0);
+    configLayout->addWidget(new QLabel("Delay:", this), 10, 0);
+    configLayout->addWidget(m_sbDelay, 10, 1);
+    configLayout->addWidget(m_bStart, 11, 0);
+    configLayout->addWidget(m_bStop, 11, 1);
+    configLayout->addWidget(m_lTxCount, 13, 0);
+    configLayout->addWidget(m_lRxCount, 13, 1);
+    configLayout->addItem(spacer, 12, 0);
     configLayout->setSpacing(5);
 
     QHBoxLayout *sendPackageLayout = new QHBoxLayout;
@@ -300,7 +302,8 @@ void MainWindow::connections()
     connect(m_abSaveReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
     connect(m_bDeleteAllMacroses, SIGNAL(clicked()), this, SLOT(deleteAllMacroses()));
     connect(m_abSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
-    connect(m_cbEchoMode, SIGNAL(toggled(bool)), this, SLOT(echoCheck(bool)));
+    connect(m_cbEchoMaster, SIGNAL(toggled(bool)), this, SLOT(echoCheckMaster(bool)));
+    connect(m_cbEchoSlave, SIGNAL(toggled(bool)), this, SLOT(echoCheckSlave(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_leSendPackage, SIGNAL(returnPressed()), m_abSendPackage, SLOT(click()));
     connect(m_bAddMacros, SIGNAL(clicked()), this, SLOT(addMacros()));
@@ -640,8 +643,10 @@ void MainWindow::textChanged(QString text)
     }
 }
 
-void MainWindow::echoCheck(bool check)
+void MainWindow::echoCheckMaster(bool check)
 {
+    m_cbEchoSlave->setChecked(false);
+    m_cbEchoMaster->setChecked(check);
     if (check)
     {
         m_abSendPackage->setChecked(false);
@@ -659,6 +664,12 @@ void MainWindow::echoCheck(bool check)
             m->period->setEnabled(true);
         }
     }
+}
+
+void MainWindow::echoCheckSlave(bool check)
+{
+    m_cbEchoMaster->setChecked(false);
+    m_cbEchoSlave->setChecked(check);
 }
 
 void MainWindow::start()
@@ -838,7 +849,15 @@ void MainWindow::sendSingle()
 
 void MainWindow::echo()
 {
-    sendPackage(echoBuffer.join(" "), 2);
+    if (m_cbEchoMaster->isChecked())
+        sendPackage(echoBuffer.join(" "), 2);
+    if (m_cbEchoSlave->isChecked())
+    {
+        sendPackage(echoSlave.takeFirst(), 2);
+        m_tEcho->setInterval(m_sbEchoInterval->value());
+        if (echoSlave.isEmpty())
+            m_tEcho->stop();
+    }
 }
 
 void MainWindow::startSending(bool checked)
@@ -847,7 +866,7 @@ void MainWindow::startSending(bool checked)
         {
             if (m_Port->isOpen())
             {
-                if (m_sbRepeatSendInterval->value() != 0 && !m_cbEchoMode->isChecked())
+                if (m_sbRepeatSendInterval->value() != 0 && !m_cbEchoMaster->isChecked())
                 {
                     m_tSend->setInterval(m_sbRepeatSendInterval->value());
                     m_tSend->start();
@@ -926,7 +945,7 @@ void MainWindow::sendPackage(QString string, int mode)
 
             }
             displayWriteData(out);
-            if (m_cbEchoMode->isChecked())
+            if (m_cbEchoMaster->isChecked())
             {
                 echoBuffer = out;
                 echoWaiting = true;
@@ -1031,7 +1050,7 @@ void MainWindow::breakLine()
         }
         }
     }
-    if (m_cbEchoMode->isChecked() && echoWaiting)
+    if (m_cbEchoMaster->isChecked() && echoWaiting)
     {
         if (QString::compare(echoBuffer.join(" "), outDEC.remove(outDEC.length() - 1, 1), Qt::CaseInsensitive) == 0)
         {
@@ -1046,6 +1065,15 @@ void MainWindow::breakLine()
         if (m_sbEchoInterval->value() != 0)
             m_tEcho->singleShot(m_sbEchoInterval->value(), this, SLOT(echo()));
         echoWaiting = false;
+    }
+    if (m_cbEchoSlave->isChecked())
+    {
+        echoSlave.append(outDEC);
+        if (!m_tEcho->isActive())
+        {
+            m_tEcho->setInterval(m_sbEchoInterval->value());
+            m_tEcho->start();
+        }
     }
     readBuffer.clear();
 
