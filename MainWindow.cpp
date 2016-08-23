@@ -76,7 +76,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , HiddenLayout(new QVBoxLayout(widgetScroll))
 {
     m_Port->setSettingsRestoredOnClose(false);
-    //setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint | Qt::WindowFullscreenButtonHint);
     setWindowTitle(title);
     resize(settings->value("config/width").toInt(),
            settings->value("config/height").toInt());
