@@ -4,8 +4,6 @@ MyListWidget::MyListWidget(QWidget *parent) :
     QListWidget(parent)
 {
     maxCount = 1000;
-    //setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    //setUniformItemSizes(true);
     setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 10pt");
 }
 

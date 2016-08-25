@@ -65,6 +65,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbAllPeriods(new QCheckBox("Period", this))
     , m_cbDisplayWrite(new QCheckBox("Display", this))
     , m_cbDisplayRead(new QCheckBox("Display", this))
+    , m_cbUniformSizes(new QCheckBox("Uniform sizes", this))
     , m_Port(new QSerialPort(this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
@@ -183,8 +184,9 @@ void MainWindow::view()
     configLayout->addWidget(m_sbDelay, 10, 1);
     configLayout->addWidget(m_bStart, 11, 0);
     configLayout->addWidget(m_bStop, 11, 1);
-    configLayout->addWidget(m_lTxCount, 13, 0);
-    configLayout->addWidget(m_lRxCount, 13, 1);
+    configLayout->addWidget(m_cbUniformSizes, 13, 0, 1, 2);
+    configLayout->addWidget(m_lTxCount, 14, 0);
+    configLayout->addWidget(m_lRxCount, 14, 1);
     configLayout->addItem(spacer, 12, 0);
     configLayout->setSpacing(5);
 
@@ -317,6 +319,13 @@ void MainWindow::connections()
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
     connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
+    connect(m_cbUniformSizes, SIGNAL(toggled(bool)), this, SLOT(setUniformSizes(bool)));
+}
+
+void MainWindow::setUniformSizes(bool check)
+{
+    m_eLogRead->setUniformItemSizes(check);
+    m_eLogWrite->setUniformItemSizes(check);
 }
 
 void MainWindow::changeAllDelays(int n)
@@ -403,7 +412,6 @@ void MainWindow::hiddenClick()
         if (!isMaximized())
             resize(width() - m_gbHiddenGroup->width() - 5, height());
     }
-
 }
 
 void MainWindow::openDialog()

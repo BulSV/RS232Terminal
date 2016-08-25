@@ -73,6 +73,7 @@ class MainWindow : public QMainWindow
     QCheckBox *m_cbAllPeriods;
     QCheckBox *m_cbDisplayWrite;
     QCheckBox *m_cbDisplayRead;
+    QCheckBox *m_cbUniformSizes;
 
     QSerialPort *m_Port;
     QSettings *settings;
@@ -111,6 +112,7 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
+    void setUniformSizes(bool check);
     void rxNone();
     void txNone();
     void rxHold();
