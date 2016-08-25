@@ -391,7 +391,8 @@ void MainWindow::hiddenClick()
     {
         m_gbHiddenGroup->show();
         m_bHiddenGroup->setText("<");
-        resize(width() + m_gbHiddenGroup->width() + 5, height());
+        if (!isMaximized())
+            resize(width() + m_gbHiddenGroup->width() + 5, height());
         setMinimumWidth(665 + m_gbHiddenGroup->width() + 5);
     }
     else
@@ -399,8 +400,10 @@ void MainWindow::hiddenClick()
         setMinimumWidth(665);
         m_gbHiddenGroup->hide();
         m_bHiddenGroup->setText(">");
-        resize(width() - m_gbHiddenGroup->width() - 5, height());
+        if (!isMaximized())
+            resize(width() - m_gbHiddenGroup->width() - 5, height());
     }
+
 }
 
 void MainWindow::openDialog()
