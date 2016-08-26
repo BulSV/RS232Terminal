@@ -782,7 +782,10 @@ void MainWindow::start()
         if (!m_leSendPackage->text().isEmpty())
             m_abSendPackage->setEnabled(true);
         if (sendCount)
+        {
+            sendIndex = MiniMacrosList.first()->index;
             m_tIntervalSending->start();
+        }
     }
     else
     {
@@ -810,7 +813,6 @@ void MainWindow::stop()
     m_tEcho->stop();
     m_tDelay->stop();
     m_tIntervalSending->stop();
-    sendIndex = 0;
     txCount = 0;
     m_lTxCount->setText("Tx: 0");
     rxCount = 0;
@@ -1115,9 +1117,11 @@ void MainWindow::txHold()
 
 void MainWindow::saveSession()
 {
+
     settings->setValue("config/height", height());
     settings->setValue("config/width", width());
     settings->setValue("config/position", pos());
+    settings->setValue("config/isMaximized", isMaximized());
 
     settings->setValue("config/max_write_log_rows", m_eLogWrite->getMaxCount());
     settings->setValue("config/max_read_log_rows", m_eLogRead->getMaxCount());
@@ -1166,6 +1170,8 @@ void MainWindow::loadSession()
     const QPoint pos = settings->value ("config/position").toPoint();
         if (!pos.isNull())
             move (pos);
+    if (settings->value("config/isMaximized").toBool())
+        showMaximized();
 
     m_eLogRead->setMaxCount(settings->value("config/max_write_log_rows", 1000).toInt());
     m_eLogWrite->setMaxCount(settings->value("config/max_read_log_rows", 1000).toInt());
