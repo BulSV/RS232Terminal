@@ -16,6 +16,8 @@ Macros::Macros(QWidget *parent)
     , rbHEX(new QRadioButton("HEX", this))
     , rbDEC(new QRadioButton("DEC", this))
     , rbASCII(new QRadioButton("ASCII", this))
+    , aCR(new QAction(tr("CR"), this))
+    , aLF(new QAction(tr("LF"), this))
 {
     setWindowTitle("RS232 Terminal - Macros: Empty");
     time = 50;
@@ -23,10 +25,15 @@ Macros::Macros(QWidget *parent)
 
     addToolBar(Qt::TopToolBarArea, toolBar);
     toolBar->setMovable(false);
-    toolBar->addAction("New", this, SLOT(reset()));
-    toolBar->addAction("Load", this, SLOT(openDialog()));
-    toolBar->addAction("Save", this, SLOT(save()));
-    toolBar->addAction("Save as", this, SLOT(saveAs()));
+    toolBar->addAction(tr("New"), this, SLOT(reset()));
+    toolBar->addAction(tr("Load"), this, SLOT(openDialog()));
+    toolBar->addAction(tr("Save"), this, SLOT(save()));
+    toolBar->addAction(tr("Save as"), this, SLOT(saveAs()));
+    aCR->setCheckable(true);
+    aLF->setCheckable(true);
+    QList<QAction*> actionList;
+    actionList << aCR << aLF;
+    toolBar->addActions(actionList);
 
     connect(package, SIGNAL(textChanged(QString)), this, SLOT(compute(QString)));
     connect(rbHEX, SIGNAL(toggled(bool)), this, SLOT(hexChecked()));

@@ -9,6 +9,7 @@
 #include <QGridLayout>
 #include <QRadioButton>
 #include <QLabel>
+#include <QAction>
 
 class Macros : public QMainWindow
 {
@@ -24,6 +25,8 @@ class Macros : public QMainWindow
     QRadioButton *rbHEX;
     QRadioButton *rbDEC;
     QRadioButton *rbASCII;
+    QAction *aCR;
+    QAction *aLF;
 
     explicit Macros(QWidget *parent = 0);
     void update(unsigned short int t);
