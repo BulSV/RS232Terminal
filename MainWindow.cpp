@@ -1008,8 +1008,9 @@ void MainWindow::breakLine()
 
     QTextStream readStream(&readLog);
     QString in = QString(readBuffer.toHex()).toUpper();
-    for (int i = 2; !(i >= in.length()); i += 3)
+    for(int i = 2; !(i >= in.length()); i += 3) {
         in.insert(i, " ");
+    }
     QStringList list = in.split(" ", QString::SkipEmptyParts);
     QString outDEC;
     int count = list.size();
@@ -1122,6 +1123,8 @@ void MainWindow::saveSession()
     settings->setValue("config/mode", m_cbSendMode->currentIndex());
     settings->setValue("config/write_display", m_cbDisplayWrite->isChecked());
     settings->setValue("config/read_display", m_cbDisplayRead->isChecked());
+    settings->setValue("config/CR", m_chbCR->isChecked());
+    settings->setValue("config/LF", m_chbLF->isChecked());
 
     settings->remove("macros");
     int i = 1;
@@ -1173,6 +1176,8 @@ void MainWindow::loadSession()
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
     m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
+    m_chbCR->setChecked(settings->value("config/CR", false).toBool());
+    m_chbLF->setChecked(settings->value("config/LF", false).toBool());
     if(!m_gbHiddenGroup->isHidden()) {
         m_bHiddenGroup->setText("<");
         setMinimumWidth(665 + m_gbHiddenGroup->width() + 5);
