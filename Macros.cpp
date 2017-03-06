@@ -66,25 +66,22 @@ Macros::Macros(QWidget *parent)
 
 void Macros::compute(QString str)
 {
-    if (str.isEmpty())
-    {
+    if(str.isEmpty()) {
         lbDEC->clear();
         lbASCII->clear();
         lbHEX->clear();
+
         emit act(false);
     }
-    if (rbHEX->isChecked())
-    {
+    if(rbHEX->isChecked()) {
         QString outDEC;
         QString outASCII;
         QStringList list = str.split(" ", QString::SkipEmptyParts);
         bool ok;
         unsigned short int count = list.count();
-        for (int i = 0; i < count; i++)
-        {
+        for(int i = 0; i < count; i++) {
             int hex = list[i].toInt(&ok, 16);
-            if (ok)
-            {
+            if(ok) {
                 outDEC.append(QString::number(hex) + " ");
                 lbDEC->setText(outDEC);
                 QChar ch(hex);
@@ -94,13 +91,11 @@ void Macros::compute(QString str)
             }
         }
     }
-    if (rbASCII->isChecked())
-    {
+    if(rbASCII->isChecked()) {
         QString outDEC;
         QString outHEX;
         unsigned short int count = str.length();
-        for (int i = 0; i < count; i++)
-        {
+        for(int i = 0; i < count; i++) {
             int ascii = str[i].toLatin1();
             outDEC.append(QString::number(ascii) + " ");
             lbDEC->setText(outDEC);
@@ -109,26 +104,26 @@ void Macros::compute(QString str)
             lbHEX->setText(outHEX);
         }
     }
-    if (rbDEC->isChecked())
-    {
+    if(rbDEC->isChecked()) {
         QString outASCII;
         QString outHEX;
         QStringList list = str.split(" ", QString::SkipEmptyParts);
         unsigned short int count = list.count();
-        for (int i = 0; i < count; i++)
-        {
+        for(int i = 0; i < count; i++) {
             int dec = list[i].toInt();
             lbDEC->setText(str);
             QChar ch(dec);
             outASCII.append(ch);
             lbASCII->setText(outASCII);
             QString hex = QString::number(dec, 16).toUpper();
-            if (hex.length() < 2)
+            if(hex.length() < 2) {
                 hex.insert(0, "0");
+            }
             outHEX.append(hex + " ");
             lbHEX->setText(outHEX);
         }
     }
+
     emit act(true);
 }
 
@@ -141,140 +136,175 @@ void Macros::reset()
 {
     package->clear();
     path.clear();
+
     emit upd(false, "Empty", 50);
+
     setWindowTitle("RS232 Terminal - Macros: Empty");
 }
 
 void Macros::saveAs()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), QDir::currentPath()+"/Macros", tr("Macro Files (*.rsmc)"));
-        if (fileName != "") {
-            QFile file(fileName);
-            if (!file.open(QIODevice::WriteOnly)) {
-                QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
-                return;
-            } else {
-                QTextStream stream(&file);
-                QString mode;
-                if (rbHEX->isChecked())
-                    mode = "HEX";
-                if (rbASCII->isChecked())
-                    mode = "ASCII";
-                if (rbDEC->isChecked())
-                    mode = "DEC";
-                stream << mode + "\n";
-                stream.flush();
-                stream << package->text() + "\n";
-                stream.flush();
-                stream << QString::number(time) + "\n";
-                stream.flush();
-                stream << QString::number(height()) + "\n";
-                stream.flush();
-                stream << QString::number(width());
-                QFileInfo fileInfo(file.fileName());
-                emit upd(true, fileInfo.baseName(), time);
-                setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
-                file.close();
-                path = fileName;
-                isFromFile = true;
-            }
-        }
+
+    if(fileName.isEmpty()) {
+        return;
+    }
+
+    QFile file(fileName);
+    if(!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+
+        return;
+    }
+
+    QTextStream stream(&file);
+    QString mode;
+    if(rbHEX->isChecked()) {
+        mode = "HEX";
+    }
+    if(rbASCII->isChecked()) {
+        mode = "ASCII";
+    }
+    if(rbDEC->isChecked()) {
+        mode = "DEC";
+    }
+    stream << mode + "\n";
+    stream.flush();
+    stream << package->text() + "\n";
+    stream.flush();
+    stream << QString::number(time) + "\n";
+    stream.flush();
+    stream << QString::number(height()) + "\n";
+    stream.flush();
+    stream << QString::number(width());
+    QFileInfo fileInfo(file.fileName());
+
+    emit upd(true, fileInfo.baseName(), time);
+
+    setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
+    file.close();
+    path = fileName;
+    isFromFile = true;
 }
 
 void Macros::save()
 {
-    if (path.isEmpty())
-    {
+    if(path.isEmpty()) {
         saveAs();
+
+        return;
     }
-    else
-    {
-            if (path != "") {
-                QFile file(path);
-                if (!file.open(QIODevice::WriteOnly)) {
-                    QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
-                    return;
-                } else {
-                    QTextStream stream(&file);
-                    QString mode;
-                    if (rbHEX->isChecked())
-                        mode = "HEX";
-                    if (rbASCII->isChecked())
-                        mode = "ASCII";
-                    if (rbDEC->isChecked())
-                        mode = "DEC";
-                    stream << mode + "\n";
-                    stream.flush();
-                    stream << package->text() + "\n";
-                    stream.flush();
-                    stream << QString::number(time) + "\n";
-                    stream.flush();
-                    stream << QString::number(height()) + "\n";
-                    stream.flush();
-                    stream << QString::number(width());
-                    QFileInfo fileInfo(file.fileName());
-                    emit upd(true, fileInfo.baseName(), time);
-                    setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
-                    file.close();
-                    isFromFile = true;
-                }
-            }
+
+    if(path.isEmpty()) {
+        return;
     }
+
+    QFile file(path);
+    if(!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+
+        return;
+    }
+
+    QTextStream stream(&file);
+    QString mode;
+    if(rbHEX->isChecked()) {
+        mode = "HEX";
+    }
+    if(rbASCII->isChecked()) {
+        mode = "ASCII";
+    }
+    if(rbDEC->isChecked()) {
+        mode = "DEC";
+    }
+    stream << mode + "\n";
+    stream.flush();
+    stream << package->text() + "\n";
+    stream.flush();
+    stream << QString::number(time) + "\n";
+    stream.flush();
+    stream << QString::number(height()) + "\n";
+    stream.flush();
+    stream << QString::number(width());
+    QFileInfo fileInfo(file.fileName());
+
+    emit upd(true, fileInfo.baseName(), time);
+
+    setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
+    file.close();
+    isFromFile = true;
 }
 
 void Macros::openDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QDir::currentPath()+"/Macros", tr("Macro Files (*.rsmc)"));
-        if (fileName != "") {
-            QFile file(fileName);
-            if (!file.open(QIODevice::ReadOnly)) {
-                QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-                return;
-            }
-            QTextStream stream(&file);
-            QString mode = stream.readLine(0);
-            if (mode == "HEX")
-                rbHEX->setChecked(true);
-            if (mode == "ASCII")
-                rbASCII->setChecked(true);
-            if (mode == "DEC")
-                rbDEC->setChecked(true);
-            package->setText(stream.readLine(0));
-            time = stream.readLine(0).toInt();
-            resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
-            QFileInfo fileInfo(file.fileName());
-            emit upd(true, fileInfo.baseName(), time);
-            setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
-            file.close();
-            path = fileName;
-            isFromFile = true;
-        }
+    if(fileName.isEmpty()) {
+        return;
+    }
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+
+        return;
+    }
+
+    QTextStream stream(&file);
+    QString mode = stream.readLine(0);
+    if(mode == "HEX") {
+        rbHEX->setChecked(true);
+    }
+    if(mode == "ASCII") {
+        rbASCII->setChecked(true);
+    }
+    if(mode == "DEC") {
+        rbDEC->setChecked(true);
+    }
+    package->setText(stream.readLine(0));
+    time = stream.readLine(0).toInt();
+    resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
+    QFileInfo fileInfo(file.fileName());
+
+    emit upd(true, fileInfo.baseName(), time);
+
+    setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
+    file.close();
+    path = fileName;
+    isFromFile = true;
 }
 
 bool Macros::openPath(QString fileName)
 {
-        if (fileName != "") {
-            QFile file(fileName);
-            if (!file.open(QIODevice::ReadOnly))
-                return false;
-            QTextStream stream(&file);
-            QString mode = stream.readLine(0);
-            if (mode == "HEX")
-                rbHEX->setChecked(true);
-            if (mode == "ASCII")
-                rbASCII->setChecked(true);
-            if (mode == "DEC")
-                rbDEC->setChecked(true);
-            package->setText(stream.readLine(0));
-            time = stream.readLine(0).toInt();
-            resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
-            QFileInfo fileInfo(file.fileName());
-            emit upd(true, fileInfo.baseName(), time);
-            setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
-            file.close();
-            path = fileName;
-            isFromFile = true;
-            return true;
-        } else
-            return false;
+    if(fileName.isEmpty()) {
+        return false;
+    }
+
+    QFile file(fileName);
+    if(!file.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    QTextStream stream(&file);
+    QString mode = stream.readLine(0);
+    if(mode == "HEX") {
+        rbHEX->setChecked(true);
+    }
+    if(mode == "ASCII") {
+        rbASCII->setChecked(true);
+    }
+    if(mode == "DEC") {
+        rbDEC->setChecked(true);
+    }
+    package->setText(stream.readLine(0));
+    time = stream.readLine(0).toInt();
+    resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
+    QFileInfo fileInfo(file.fileName());
+
+    emit upd(true, fileInfo.baseName(), time);
+
+    setWindowTitle("RS232 Terminal - Macros: " + fileInfo.baseName());
+    file.close();
+    path = fileName;
+    isFromFile = true;
+
+    return true;
 }
