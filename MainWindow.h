@@ -20,9 +20,23 @@
 #include <QSpacerItem>
 #include <QScrollArea>
 
+#include "DataEncoder.h"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    enum DataMode
+    {
+        HEX = 0,
+        ASCII = 1,
+        DEC = 2
+    };
+    enum MacrosMoveDirection
+    {
+        MoveUp = 0,
+        MoveDown = 1
+    };
+
     QWidget *widget;
     QComboBox *m_cbPort;
     QComboBox *m_cbBaud;
@@ -74,6 +88,8 @@ class MainWindow : public QMainWindow
     QCheckBox *m_cbDisplayWrite;
     QCheckBox *m_cbDisplayRead;
     QCheckBox *m_cbUniformSizes;
+    QCheckBox *m_chbCR;
+    QCheckBox *m_chbLF;
 
     QSerialPort *m_Port;
     QSettings *settings;
@@ -96,18 +112,18 @@ class MainWindow : public QMainWindow
     QStringList echoBuffer;
     QByteArray readBuffer;
     unsigned short int index;
-    QMap<int, MiniMacros *> MiniMacrosList;
-    unsigned short int sendCount;
-    unsigned short int sendIndex;
+    QMap<int, MiniMacros *> miniMacroses;
+    unsigned int sendCount;
+    unsigned int sendIndex;
     QStringList echoSlave;
+
+    DataEncoder *dataEncoder;
 
     void view();
     void saveSession();
     void loadSession();
     void connections();
     int findIntervalItem(unsigned short start);
-    enum MoveDirection { MoveUp, MoveDown };
-
 protected:
     virtual void closeEvent(QCloseEvent *e);
 
@@ -147,7 +163,7 @@ private slots:
     void changeAllDelays(int n);
     void moveMacUp(int index);
     void moveMacDown(int index);
-    bool moveMacros(QWidget *widget, MoveDirection direction);
+    bool moveMacros(QWidget *widget, MacrosMoveDirection direction);
 
 public:
     void displayWriteData(QStringList list);

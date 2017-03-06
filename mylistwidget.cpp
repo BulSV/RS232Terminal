@@ -10,8 +10,9 @@ MyListWidget::MyListWidget(QWidget *parent) :
 void MyListWidget::addPackage(const QString &str)
 {
     addItem(str);
-    if (count() >= maxCount)
+    if(count() >= maxCount) {
         delete takeItem(0);
+    }
 }
 
 void MyListWidget::setMaxCount(int maxCount)

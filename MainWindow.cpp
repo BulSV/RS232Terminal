@@ -10,9 +10,17 @@
 #include <QDateTime>
 #include <QScrollBar>
 #include <QDir>
+#include <QListIterator>
+
+#include "HexEncoder.h"
+#include "AsciiEncoder.h"
+#include "DecEncoder.h"
 
 static unsigned short int BLINKTIMETX = 200;
 static unsigned short int BLINKTIMERX = 200;
+
+#define CR 0x0D
+#define LF 0x0A
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
@@ -66,6 +74,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbDisplayWrite(new QCheckBox("Display", this))
     , m_cbDisplayRead(new QCheckBox("Display", this))
     , m_cbUniformSizes(new QCheckBox("Uniform sizes", this))
+    , m_chbCR(new QCheckBox(tr("CR"), this))
+    , m_chbLF(new QCheckBox(tr("LF"), this))
     , m_Port(new QSerialPort(this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
@@ -75,6 +85,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , scrollArea(new QScrollArea(m_gbHiddenGroup))
     , widgetScroll(new QWidget(scrollArea))
     , HiddenLayout(new QVBoxLayout(widgetScroll))
+    , dataEncoder(0)
 {
     m_Port->setSettingsRestoredOnClose(false);
     setWindowTitle(title);
@@ -123,16 +134,15 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_lRx->setStyleSheet("font: bold; font-size: 10pt");
 
     QStringList buffer;
-    foreach(QSerialPortInfo portsAvailable, QSerialPortInfo::availablePorts())
-    {
+    foreach(QSerialPortInfo portsAvailable, QSerialPortInfo::availablePorts()) {
         buffer << portsAvailable.portName();
     }
     m_cbPort->addItems(buffer);
     m_cbPort->setEditable(true);
 
     buffer.clear();
-    buffer << "921600" << "115200" << "57600" << "38400" << "19200"
-           << "9600" << "4800" << "2400" << "1200";
+    buffer << "1200" << "2400" << "4800" << "9600" << "19200" << "38400"
+           << "57600" << "115200" << "230400" << "460800" << "921600";
     m_cbBaud->addItems(buffer);
     buffer.clear();
     buffer << "8" << "7" << "6" << "5";
@@ -150,8 +160,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbWriteMode->addItems(buffer);
 
     QDir dir;
-    if (!dir.exists(dir.currentPath()+"/Macros"))
+    if(!dir.exists(dir.currentPath()+"/Macros")) {
         dir.mkpath(dir.currentPath()+"/Macros");
+    }
     fileDialog->setDirectory(dir.currentPath()+"/Macros");
     fileDialog->setFileMode(QFileDialog::ExistingFiles);
     fileDialog->setNameFilter(trUtf8("Macro Files (*.rsmc)"));
@@ -194,6 +205,8 @@ void MainWindow::view()
     sendPackageLayout->addWidget(new QLabel("Mode:", this));
     sendPackageLayout->addWidget(m_cbSendMode);
     sendPackageLayout->addWidget(m_leSendPackage);
+    sendPackageLayout->addWidget(m_chbCR);
+    sendPackageLayout->addWidget(m_chbLF);
     sendPackageLayout->addWidget(m_sbRepeatSendInterval);
     sendPackageLayout->addWidget(m_abSendPackage);
 
@@ -330,7 +343,7 @@ void MainWindow::setUniformSizes(bool check)
 
 void MainWindow::changeAllDelays(int n)
 {
-    foreach (MiniMacros *m, MiniMacrosList) {
+    foreach(MiniMacros *m, miniMacroses) {
         m->time->setValue(n);
     }
 }
@@ -339,7 +352,7 @@ void MainWindow::checkAllIntervals(bool check)
 {
     m_cbAllPeriods->setChecked(false);
     m_cbAllIntervals->setChecked(check);
-    foreach (MiniMacros *m, MiniMacrosList) {
+    foreach(MiniMacros *m, miniMacroses) {
         m->period->setChecked(false);
         m->interval->setChecked(check);
     }
@@ -349,7 +362,7 @@ void MainWindow::checkAllPeriods(bool check)
 {
     m_cbAllIntervals->setChecked(false);
     m_cbAllPeriods->setChecked(check);
-    foreach (MiniMacros *m, MiniMacrosList) {
+    foreach(MiniMacros *m, miniMacroses) {
         m->interval->setChecked(false);
         m->period->setChecked(check);
     }
@@ -360,10 +373,10 @@ void MainWindow::deleteAllMacroses()
     int button = QMessageBox::question(this, "Warning",
                                        "Delete ALL macroses?",
                                        QMessageBox::Yes | QMessageBox::No);
-    if (button == QMessageBox::Yes) {
+    if(button == QMessageBox::Yes) {
         checkAllIntervals(false);
         checkAllPeriods(false);
-        foreach (MiniMacros *m, MiniMacrosList) {
+        foreach(MiniMacros *m, miniMacroses) {
             delMacros(m->index);
         }
     }
@@ -371,14 +384,12 @@ void MainWindow::deleteAllMacroses()
 
 int MainWindow::findIntervalItem(unsigned short int start)
 {
-    foreach (MiniMacros *m, MiniMacrosList)
-    {
+    foreach(MiniMacros *m, miniMacroses) {
         if (m->interval->isChecked() && m->index >= start)
             return m->index;
     }
     start = 0;
-    foreach (MiniMacros *m, MiniMacrosList)
-    {
+    foreach(MiniMacros *m, miniMacroses) {
         if (m->interval->isChecked() && m->index >= start)
             return m->index;
     }
@@ -387,70 +398,72 @@ int MainWindow::findIntervalItem(unsigned short int start)
 
 void MainWindow::sendInterval()
 {
-    sendPackage(MiniMacrosList[sendIndex]->editing->package->text(),
-                MiniMacrosList[sendIndex]->mode);
+    sendPackage(miniMacroses[sendIndex]->editing->package->text(),
+                miniMacroses[sendIndex]->mode);
     sendIndex++;
     sendIndex = findIntervalItem(sendIndex);
-    m_tIntervalSending->setInterval(MiniMacrosList[sendIndex]->time->value());
+    m_tIntervalSending->setInterval(miniMacroses[sendIndex]->time->value());
 }
 
 void MainWindow::hiddenClick()
 {
-    if (m_gbHiddenGroup->isHidden())
-    {
+    if(m_gbHiddenGroup->isHidden()) {
         m_gbHiddenGroup->show();
         m_bHiddenGroup->setText("<");
-        if (!isMaximized())
+        if(!isMaximized()) {
             resize(width() + m_gbHiddenGroup->width() + 5, height());
+        }
         setMinimumWidth(665 + m_gbHiddenGroup->width() + 5);
+
+        return;
     }
-    else
-    {
-        setMinimumWidth(665);
-        m_gbHiddenGroup->hide();
-        m_bHiddenGroup->setText(">");
-        if (!isMaximized())
-            resize(width() - m_gbHiddenGroup->width() - 5, height());
+    setMinimumWidth(665);
+    m_gbHiddenGroup->hide();
+    m_bHiddenGroup->setText(">");
+    if(!isMaximized()) {
+        resize(width() - m_gbHiddenGroup->width() - 5, height());
     }
 }
 
 void MainWindow::openDialog()
 {
     QStringList fileNames;
-    if (fileDialog->exec())
+    if(fileDialog->exec()) {
         fileNames = fileDialog->selectedFiles();
+    }
 
-    foreach (QString s, fileNames) {
+    foreach(QString s, fileNames) {
         addMacros();
-        MiniMacrosList.last()->editing->openPath(s);
+        miniMacroses.last()->editing->openPath(s);
     }
 }
 
 void MainWindow::addMacros()
 {
     HiddenLayout->removeItem(spacer);
-    MiniMacrosList.insert(index, new MiniMacros(index, this));
-    HiddenLayout->addWidget(MiniMacrosList[index]);
+    miniMacroses.insert(index, new MiniMacros(index, this));
+    HiddenLayout->addWidget(miniMacroses[index]);
     HiddenLayout->addSpacerItem(spacer);
 
-    connect(MiniMacrosList[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
-    connect(MiniMacrosList[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
-    connect(MiniMacrosList[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
-    connect(MiniMacrosList[index], SIGNAL(moveUp(int)), this, SLOT(moveMacUp(int)));
-    connect(MiniMacrosList[index], SIGNAL(moveDown(int)),this, SLOT(moveMacDown(int)));
+    connect(miniMacroses[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
+    connect(miniMacroses[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
+    connect(miniMacroses[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
+    connect(miniMacroses[index], SIGNAL(moveUp(int)), this, SLOT(moveMacUp(int)));
+    connect(miniMacroses[index], SIGNAL(moveDown(int)),this, SLOT(moveMacDown(int)));
+
     index++;
 }
 
-bool MainWindow::moveMacros(QWidget *widget, MoveDirection direction)
+bool MainWindow::moveMacros(QWidget *widget, MacrosMoveDirection direction)
 {
   QVBoxLayout* myLayout = qobject_cast<QVBoxLayout*>(widget->parentWidget()->layout());
   const int index = myLayout->indexOf(widget);
 
-  if (direction == MoveUp && index == 0) {
+  if(direction == MoveUp && index == 0) {
     return false;
   }
 
-  if (direction == MoveDown && index == myLayout->count()-1 ) {
+  if(direction == MoveDown && index == myLayout->count()-1 ) {
     return false;
   }
 
@@ -465,62 +478,65 @@ bool MainWindow::moveMacros(QWidget *widget, MoveDirection direction)
 
 void MainWindow::moveMacUp(int index)
 {
-   if (moveMacros(MiniMacrosList[index], MoveUp))
-   {
-       for (int i = index - 1; i >= MiniMacrosList.first()->index; i--)
-           if (MiniMacrosList.contains(i))
-           {
-               MiniMacrosList[index]->index = i;
-               MiniMacrosList[i]->index = index;
-               MiniMacros *temp = MiniMacrosList[index];
-               MiniMacrosList[index] = MiniMacrosList[i];
-               MiniMacrosList[i] = temp;
-               break;
-           }
+   if(!moveMacros(miniMacroses[index], MoveUp)) {
+       return;
+   }
+   for(int i = index - 1; i >= miniMacroses.first()->index; i--) {
+       if(miniMacroses.contains(i)) {
+           miniMacroses[index]->index = i;
+           miniMacroses[i]->index = index;
+           MiniMacros *temp = miniMacroses[index];
+           miniMacroses[index] = miniMacroses[i];
+           miniMacroses[i] = temp;
+
+           break;
+       }
    }
 }
 
 void MainWindow::moveMacDown(int index)
 {
-   if (moveMacros(MiniMacrosList[index], MoveDown))
-       for (int i = index + 1; i <= MiniMacrosList.last()->index; i++)
-           if (MiniMacrosList.contains(i))
-           {
-               MiniMacrosList[index]->index = i;
-               MiniMacrosList[i]->index = index;
-               MiniMacros *temp = MiniMacrosList[index];
-               MiniMacrosList[index] = MiniMacrosList[i];
-               MiniMacrosList[i] = temp;
-               break;
-           }
+   if(!moveMacros(miniMacroses[index], MoveDown)) {
+       return;
+   }
+   for(int i = index + 1; i <= miniMacroses.last()->index; i++) {
+       if(miniMacroses.contains(i)) {
+           miniMacroses[index]->index = i;
+           miniMacroses[i]->index = index;
+           MiniMacros *temp = miniMacroses[index];
+           miniMacroses[index] = miniMacroses[i];
+           miniMacroses[i] = temp;
+
+           break;
+       }
+   }
 }
 
 void MainWindow::intervalSendAdded(int index, bool check)
 {
-    if (check)
-    {
-        sendCount++;
-        if (sendCount == 1)
-        {
-            sendIndex = index;
-            m_tIntervalSending->setInterval(MiniMacrosList[index]->time->value());
-            if (m_Port->isOpen())
-                m_tIntervalSending->start();
-        }
-    }
-    else
-    {
+    if(!check) {
         sendCount--;
-        if (sendCount == 0)
+        if(sendCount == 0) {
             m_tIntervalSending->stop();
+        }
+
+        return;
+    }
+    sendCount++;
+    if(sendCount == 1) {
+        sendIndex = index;
+        m_tIntervalSending->setInterval(miniMacroses[index]->time->value());
+        if(m_Port->isOpen()) {
+            m_tIntervalSending->start();
+        }
     }
 }
 
 void MainWindow::delMacros(int index)
 {
-    MiniMacrosList[index]->interval->setChecked(false);
-    MiniMacrosList[index]->period->setChecked(false);
-    delete MiniMacrosList.take(index);
+    miniMacroses[index]->interval->setChecked(false);
+    miniMacroses[index]->period->setChecked(false);
+    delete miniMacroses.take(index);
 }
 
 void MainWindow::writeLogTimeout()
@@ -541,56 +557,55 @@ void MainWindow::readLogTimeout()
 
 void MainWindow::startWriteLog(bool check)
 {
-    if (check)
-    {
-        QString path = fileDialog->getSaveFileName(this,
-                                                   tr("Save File"),
-                                                   QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
-                                                   tr("Log Files (*.txt)"));
-        if (path.isEmpty())
-        {
-            m_abSaveWriteLog->setChecked(false);
-            return;
-        }
-        writeLog.setFileName(path);
-        writeLog.open(QIODevice::WriteOnly);
-        m_tWriteLog->start();
-        logWrite = true;
-        m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
-    } else
-    {
+    if(check) {
         m_tWriteLog->stop();
         writeLog.close();
         logWrite = false;
         m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
+
+        return;
     }
+    QString path = fileDialog->getSaveFileName(this,
+                                               tr("Save File"),
+                                               QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                               tr("Log Files (*.txt)"));
+    if(path.isEmpty()) {
+        m_abSaveWriteLog->setChecked(false);
+
+        return;
+    }
+    writeLog.setFileName(path);
+    writeLog.open(QIODevice::WriteOnly);
+    m_tWriteLog->start();
+    logWrite = true;
+    m_abSaveWriteLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
 }
 
 void MainWindow::startReadLog(bool check)
 {
-    if (check)
-    {
-        QString path = fileDialog->getSaveFileName(this,
-                                                   tr("Save File"),
-                                                   QDir::currentPath() + "/(READ)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
-                                                   tr("Log Files (*.txt)"));
-        if (path.isEmpty())
-        {
-            m_abSaveReadLog->setChecked(false);
-            return;
-        }
-        readLog.setFileName(path);
-        readLog.open(QIODevice::WriteOnly);
-        m_tReadLog->start();
-        logRead = true;
-        m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
-    } else
-    {
+    if(!check) {
         m_tReadLog->stop();
         readLog.close();
         logRead = false;
         m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
+
+        return;
     }
+
+    QString path = fileDialog->getSaveFileName(this,
+                                               tr("Save File"),
+                                               QDir::currentPath() + "/(READ)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                               tr("Log Files (*.txt)"));
+    if(path.isEmpty()) {
+        m_abSaveReadLog->setChecked(false);
+
+        return;
+    }
+    readLog.setFileName(path);
+    readLog.open(QIODevice::WriteOnly);
+    m_tReadLog->start();
+    logRead = true;
+    m_abSaveReadLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
 }
 
 void MainWindow::saveWrite()
@@ -600,20 +615,20 @@ void MainWindow::saveWrite()
                                                    QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
                                                    tr("Log Files (*.txt)"));
 
-        if (fileName != "") {
-            QFile file(fileName);
-            if (!file.open(QIODevice::WriteOnly)) {
-                QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
-                return;
-            } else {
-                QTextStream stream(&file);
-                for(int i = 0; i < m_eLogWrite->count(); ++i)
-                {
-                    stream << m_eLogWrite->item(i)->text() + "\n";
-                }
-                file.close();
-            }
-        }
+    if(fileName.isEmpty()) {
+        return;
+    }
+    QFile file(fileName);
+    if(!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+
+        return;
+    }
+    QTextStream stream(&file);
+    for(int i = 0; i < m_eLogWrite->count(); ++i) {
+        stream << m_eLogWrite->item(i)->text() + "\n";
+    }
+    file.close();
 }
 
 void MainWindow::saveRead()
@@ -623,56 +638,52 @@ void MainWindow::saveRead()
                                                    QDir::currentPath() + "/(READ)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
                                                    tr("Log Files (*.txt)"));
 
-        if (fileName != "") {
-            QFile file(fileName);
-            if (!file.open(QIODevice::WriteOnly)) {
-                QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
-                return;
-            } else {
-                QTextStream stream(&file);
-                for(int i = 0; i < m_eLogRead->count(); ++i)
-                {
-                    stream << m_eLogRead->item(i)->text() + "\n";
-                }
-                file.close();
-            }
-        }
+    if(fileName.isEmpty()) {
+        return;
+    }
+    QFile file(fileName);
+    if(!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+
+        return;
+    }
+    QTextStream stream(&file);
+    for(int i = 0; i < m_eLogRead->count(); ++i) {
+        stream << m_eLogRead->item(i)->text() + "\n";
+    }
+    file.close();
 }
 
 void MainWindow::textChanged(QString text)
 {
-    if (!text.isEmpty() && m_bStop->isEnabled())
-    {
+    if(!text.isEmpty() && m_bStop->isEnabled()) {
         m_abSendPackage->setEnabled(true);
         m_abSendPackage->setCheckable(true);
+
+        return;
     }
-    else
-    {
-        m_abSendPackage->setEnabled(false);
-        m_abSendPackage->setCheckable(false);
-    }
+    m_abSendPackage->setEnabled(false);
+    m_abSendPackage->setCheckable(false);
 }
 
 void MainWindow::echoCheckMaster(bool check)
 {
     m_cbEchoSlave->setChecked(false);
     m_cbEchoMaster->setChecked(check);
-    if (check)
-    {
+    if(check) {
         m_abSendPackage->setChecked(false);
-        foreach (MiniMacros *m, MiniMacrosList.values()) {
+        foreach(MiniMacros *m, miniMacroses.values()) {
             m->interval->setChecked(false);
             m->period->setChecked(false);
             m->interval->setEnabled(false);
             m->period->setEnabled(false);
         }
+
+        return;
     }
-    else
-    {
-        foreach (MiniMacros *m, MiniMacrosList.values()) {
-            m->interval->setEnabled(true);
-            m->period->setEnabled(true);
-        }
+    foreach(MiniMacros *m, miniMacroses.values()) {
+        m->interval->setEnabled(true);
+        m->period->setEnabled(true);
     }
 }
 
@@ -687,110 +698,114 @@ void MainWindow::start()
     m_Port->close();
     m_Port->setPortName(m_cbPort->currentText());
 
-    if(m_Port->open(QSerialPort::ReadWrite))
-    {
-        switch (m_cbBaud->currentIndex()) {
-        case 0:
-            m_Port->setBaudRate(QSerialPort::Baud921600);
-            break;
-        case 1:
-            m_Port->setBaudRate(QSerialPort::Baud115200);
-            break;
-        case 2:
-            m_Port->setBaudRate(QSerialPort::Baud57600);
-            break;
-        case 3:
-            m_Port->setBaudRate(QSerialPort::Baud38400);
-            break;
-        case 4:
-            m_Port->setBaudRate(QSerialPort::Baud19200);
-            break;
-        case 5:
-            m_Port->setBaudRate(QSerialPort::Baud9600);
-            break;
-        case 6:
-            m_Port->setBaudRate(QSerialPort::Baud4800);
-            break;
-        case 7:
-            m_Port->setBaudRate(QSerialPort::Baud2400);
-            break;
-        case 8:
-            m_Port->setBaudRate(QSerialPort::Baud1200);
-            break;
-        }
-
-        switch (m_cbBits->currentIndex()) {
-        case 0:
-            m_Port->setDataBits(QSerialPort::Data5);
-            break;
-        case 1:
-            m_Port->setDataBits(QSerialPort::Data6);
-            break;
-        case 2:
-            m_Port->setDataBits(QSerialPort::Data7);
-            break;
-        case 3:
-            m_Port->setDataBits(QSerialPort::Data8);
-            break;
-        }
-
-        switch (m_cbParity->currentIndex()) {
-        case 0:
-            m_Port->setParity(QSerialPort::NoParity);
-            break;
-        case 1:
-            m_Port->setParity(QSerialPort::OddParity);
-            break;
-        case 2:
-            m_Port->setParity(QSerialPort::EvenParity);
-            break;
-        case 3:
-            m_Port->setParity(QSerialPort::MarkParity);
-            break;
-        case 4:
-            m_Port->setParity(QSerialPort::SpaceParity);
-            break;
-        }
-
-        switch (m_cbStopBits->currentIndex()) {
-        case 0:
-            m_Port->setStopBits(QSerialPort::OneStop);
-            break;
-        case 1:
-            m_Port->setStopBits(QSerialPort::OneAndHalfStop);
-            break;
-        case 2:
-            m_Port->setStopBits(QSerialPort::TwoStop);
-            break;
-        }
-
-
-        m_Port->setDataBits(QSerialPort::Data8);
-        m_Port->setParity(QSerialPort::NoParity);
-        m_Port->setFlowControl(QSerialPort::NoFlowControl);
-
-        m_bStart->setEnabled(false);
-        m_bStop->setEnabled(true);
-        m_abPause->setEnabled(true);
-        m_cbPort->setEnabled(false);
-        m_cbBaud->setEnabled(false);
-        m_cbBits->setEnabled(false);
-        m_cbParity->setEnabled(false);
-        m_cbStopBits->setEnabled(false);
-        m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-        m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-        if (!m_leSendPackage->text().isEmpty())
-            m_abSendPackage->setEnabled(true);
-        if (sendCount)
-        {
-            sendIndex = MiniMacrosList.first()->index;
-            m_tIntervalSending->start();
-        }
-    }
-    else
-    {
+    if(!m_Port->open(QSerialPort::ReadWrite)) {
         m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
+
+        return;
+    }
+    switch(m_cbBaud->currentIndex()) {
+    case 0:
+        m_Port->setBaudRate(QSerialPort::Baud1200);
+        break;
+    case 1:
+        m_Port->setBaudRate(QSerialPort::Baud2400);
+        break;
+    case 2:
+        m_Port->setBaudRate(QSerialPort::Baud4800);
+        break;
+    case 3:
+        m_Port->setBaudRate(QSerialPort::Baud9600);
+        break;
+    case 4:
+        m_Port->setBaudRate(QSerialPort::Baud19200);
+        break;
+    case 5:
+        m_Port->setBaudRate(QSerialPort::Baud38400);
+        break;
+    case 6:
+        m_Port->setBaudRate(QSerialPort::Baud57600);
+        break;
+    case 7:
+        m_Port->setBaudRate(QSerialPort::Baud115200);
+        break;
+    case 8:
+        m_Port->setBaudRate(QSerialPort::Baud230400);
+        break;
+    case 9:
+        m_Port->setBaudRate(QSerialPort::Baud460800);
+        break;
+    case 10:
+        m_Port->setBaudRate(QSerialPort::Baud921600);
+        break;
+    }
+
+    switch(m_cbBits->currentIndex()) {
+    case 0:
+        m_Port->setDataBits(QSerialPort::Data5);
+        break;
+    case 1:
+        m_Port->setDataBits(QSerialPort::Data6);
+        break;
+    case 2:
+        m_Port->setDataBits(QSerialPort::Data7);
+        break;
+    case 3:
+        m_Port->setDataBits(QSerialPort::Data8);
+        break;
+    }
+
+    switch(m_cbParity->currentIndex()) {
+    case 0:
+        m_Port->setParity(QSerialPort::NoParity);
+        break;
+    case 1:
+        m_Port->setParity(QSerialPort::OddParity);
+        break;
+    case 2:
+        m_Port->setParity(QSerialPort::EvenParity);
+        break;
+    case 3:
+        m_Port->setParity(QSerialPort::MarkParity);
+        break;
+    case 4:
+        m_Port->setParity(QSerialPort::SpaceParity);
+        break;
+    }
+
+    switch(m_cbStopBits->currentIndex()) {
+    case 0:
+        m_Port->setStopBits(QSerialPort::OneStop);
+        break;
+    case 1:
+        m_Port->setStopBits(QSerialPort::OneAndHalfStop);
+        break;
+    case 2:
+        m_Port->setStopBits(QSerialPort::TwoStop);
+        break;
+    }
+
+
+    m_Port->setDataBits(QSerialPort::Data8);
+    m_Port->setParity(QSerialPort::NoParity);
+    m_Port->setFlowControl(QSerialPort::NoFlowControl);
+
+    m_bStart->setEnabled(false);
+    m_bStop->setEnabled(true);
+    m_abPause->setEnabled(true);
+    m_cbPort->setEnabled(false);
+    m_cbBaud->setEnabled(false);
+    m_cbBits->setEnabled(false);
+    m_cbParity->setEnabled(false);
+    m_cbStopBits->setEnabled(false);
+    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    if(!m_leSendPackage->text().isEmpty()) {
+        m_abSendPackage->setEnabled(true);
+    }
+    if(sendCount != 0) {
+        sendIndex = miniMacroses.first()->index;
+        m_tIntervalSending->start();
     }
 }
 
@@ -821,29 +836,20 @@ void MainWindow::stop()
 
 void MainWindow::pause(bool check)
 {
-    if (check)
-    {
+    if(check) {
         m_tIntervalSending->stop();
-
-        foreach (MiniMacros *m, MiniMacrosList) {
-            m->interval->setEnabled(false);
-            m->period->setEnabled(false);
-        }
-        m_cbAllIntervals->setEnabled(false);
-        m_cbAllPeriods->setEnabled(false);
+    } else if(sendCount != 0) {
+        m_tIntervalSending->start();
     }
-    else
-    {
-        foreach (MiniMacros *m, MiniMacrosList) {
-            m->interval->setEnabled(true);
-            m->period->setEnabled(true);
-        }
-        m_cbAllIntervals->setEnabled(true);
-        m_cbAllPeriods->setEnabled(true);
-
-        if (sendCount != 0)
-            m_tIntervalSending->start();
+    QListIterator<MiniMacros*> it(miniMacroses.values());
+    MiniMacros* m = 0;
+    while(it.hasNext()) {
+        m = it.next();
+        m->interval->setEnabled(!check);
+        m->period->setEnabled(!check);
     }
+    m_cbAllIntervals->setEnabled(!check);
+    m_cbAllPeriods->setEnabled(!check);
 }
 
 void MainWindow::received()
@@ -861,161 +867,140 @@ void MainWindow::sendSingle()
 
 void MainWindow::echo()
 {
-    if (m_cbEchoMaster->isChecked())
+    if(m_cbEchoMaster->isChecked()) {
         sendPackage(echoBuffer.join(" "), 2);
-    if (m_cbEchoSlave->isChecked())
-    {
+    }
+    if(m_cbEchoSlave->isChecked()) {
         sendPackage(echoSlave.takeFirst(), 2);
         m_tEcho->setInterval(m_sbEchoInterval->value());
-        if (echoSlave.isEmpty())
+        if(echoSlave.isEmpty()) {
             m_tEcho->stop();
+        }
     }
 }
 
 void MainWindow::startSending(bool checked)
 {
-    if (checked)
-        {
-            if (m_Port->isOpen())
-            {
-                if (m_sbRepeatSendInterval->value() != 0 && !m_cbEchoMaster->isChecked())
-                {
-                    m_tSend->setInterval(m_sbRepeatSendInterval->value());
-                    m_tSend->start();
+    if(!checked) {
+        m_tSend->stop();
 
-                } else
-                {
-                    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
-                    m_abSendPackage->setChecked(false);
-                }
-            }
-        } else
-        {
-            m_tSend->stop();
+        return;
+    }
+    if(m_Port->isOpen()) {
+        if(m_sbRepeatSendInterval->value() != 0 && !m_cbEchoMaster->isChecked()) {
+            m_tSend->setInterval(m_sbRepeatSendInterval->value());
+            m_tSend->start();
+
+        } else {
+            sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
+            m_abSendPackage->setChecked(false);
         }
+    }
 }
 
 void MainWindow::sendPackage(QString string, int mode)
 {
-    if (m_Port->isOpen() && m_Port->openMode() != QSerialPort::ReadOnly)
-    {
-        if (!string.isEmpty())
-        {
-            m_tSend->setInterval(m_sbRepeatSendInterval->value());
-
-            if (!m_tTx->isSingleShot())
-            {
-                m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
-                m_tTx->singleShot(BLINKTIMETX, this, SLOT(txNone()));
-                m_tTx->setSingleShot(true);
-            }
-
-            QStringList out;
-            switch (mode) {
-                case 0:
-                {
-                    QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-                    QString hex = string.remove(" ", Qt::CaseSensitive);
-                    QByteArray writeArray;
-                    writeArray.append(hex);
-                    m_Port->write(QByteArray::fromHex(writeArray));
-                    unsigned short int count = byteList.length();
-                    for (int i = 0; i < count; i++)
-                    {
-                        bool ok;
-                        int n = byteList[i].toInt(&ok, 16);
-                        out.append(QString::number(n));
-                    }
-                    break;
-                }
-                case 1:
-                {
-                    m_Port->write(string.toLocal8Bit());
-                    unsigned short int count = string.length();
-                    for (int i = 0; i < count; i++)
-                    {
-                        int ascii = string[i].toLatin1();
-                        out.append(QString::number(ascii, 10));
-                    }
-                    break;
-                }
-                case 2:
-                {
-                    QStringList byteList = string.split(" ", QString::SkipEmptyParts);
-                    QByteArray writeArray;
-                    unsigned short int count = byteList.length();
-                    for (int i = 0; i < count; i++)
-                    {
-                        bool ok;
-                        int n = byteList[i].toInt(&ok, 10);
-                        writeArray.append(QChar(n));
-                        out.append(QString::number(n));
-                    }
-                    m_Port->write(writeArray);
-                    break;
-                }
-
-            }
-            displayWriteData(out);
-            if (m_cbEchoMaster->isChecked())
-            {
-                echoBuffer = out;
-                echoWaiting = true;
-            }
-            txCount += out.count();
-            m_lTxCount->setText("Tx: " + QString::number(txCount));
-       }
+    if(!m_Port->isOpen() || m_Port->openMode() == QSerialPort::ReadOnly || string.isEmpty()) {
+        return;
     }
+
+    m_tSend->setInterval(m_sbRepeatSendInterval->value());
+
+    if(!m_tTx->isSingleShot()) {
+        m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
+        m_tTx->singleShot(BLINKTIMETX, this, SLOT(txNone()));
+        m_tTx->setSingleShot(true);
+    }
+
+    switch(mode) {
+    case HEX:
+        dataEncoder =  new HexEncoder;
+        break;
+    case ASCII:
+        dataEncoder = new AsciiEncoder;
+        break;
+    case DEC:
+        dataEncoder = new DecEncoder;
+    }
+    dataEncoder->setData(string);
+    QByteArray writeArray = dataEncoder->encodedByteArray();
+    QStringList writeList = dataEncoder->encodedStringList();
+    delete dataEncoder;
+    dataEncoder = 0;
+    if(m_chbCR->isChecked()) {
+        writeArray.append(CR);
+        writeList.append("\r");
+    }
+    if(m_chbLF->isChecked()) {
+        writeArray.append(LF);
+        writeList.append("\n");
+    }
+    m_Port->write(writeArray);
+    displayWriteData(writeList);
+    if(m_cbEchoMaster->isChecked()) {
+        echoBuffer = writeList;
+        echoWaiting = true;
+    }
+    txCount += writeList.count();
+    m_lTxCount->setText("Tx: " + QString::number(txCount));
 }
 
 void MainWindow::displayWriteData(QStringList list)
 {
-    if (!m_cbDisplayWrite->isChecked())
+    if (!m_cbDisplayWrite->isChecked()) {
         return;
+    }
 
     QTextStream writeStream (&writeLog);
     QString out;
-    unsigned short int count = list.length();
-    for (int i = 0; i < count; i++)
+    int count = list.size();
+    for(int i = 0; i < count; i++)
     {
-        int num = list[i].toInt();
+        bool ok;
+        int num = list.at(i).toInt(&ok);
+        if(!ok) {
+            num = list.at(i).toStdString().at(0);
+        }
         switch (m_cbWriteMode->currentIndex())
         {
-        case 0:
+        case HEX:
         {
             QString hex = QString::number(num, 16).toUpper();
-            if (hex.length() < 2)
+            if(hex.length() < 2) {
                 hex.insert(0, "0");
+            }
             out.append(hex + " ");
             break;
         }
-        case 1:
+        case ASCII:
         {
             QChar ch(num);
             out.append(ch);
             break;
         }
-        case 2:
+        case DEC:
         {
-            out.append(list[i] + " ");
+            QString dec = QString::number(num).toUpper();
+            out.append(dec + " ");
         }
         }
     }
 
     m_eLogWrite->addPackage(out);
-    if (logWrite)
+    if(logWrite) {
         writeStream << out + "\n";
+    }
 
-    if (m_cbWriteScroll->isChecked())
+    if(m_cbWriteScroll->isChecked()) {
         m_eLogWrite->scrollToBottom();
+    }
 }
 
 void MainWindow::breakLine()
 {
     m_tDelay->stop();
 
-    if (!m_tRx->isSingleShot())
-    {
+    if(!m_tRx->isSingleShot()) {
         m_lRx->setStyleSheet("background: red; font: bold; font-size: 10pt");
         m_tRx->singleShot(BLINKTIMERX, this, SLOT(rxNone()));
         m_tRx->setSingleShot(true);
@@ -1027,70 +1012,67 @@ void MainWindow::breakLine()
         in.insert(i, " ");
     QStringList list = in.split(" ", QString::SkipEmptyParts);
     QString outDEC;
-    unsigned short int count = list.length();
-    for (int i = 0; i < count; i++)
-    {
+    int count = list.size();
+    for(int i = 0; i < count; i++) {
         bool ok;
         int dec = list[i].toInt(&ok, 16);
         if (ok)
             outDEC.append(QString::number(dec) + " ");
     }
-    if (m_cbDisplayRead->isChecked())
-    {
+    if(m_cbDisplayRead->isChecked()) {
         switch (m_cbReadMode->currentIndex())
         {
-        case 0:
+        case HEX:
         {
             m_eLogRead->addPackage(in);
-            if (logRead)
+            if(logRead) {
                 readStream << in + "\n";
+            }
             break;
         }
-        case 1:
+        case ASCII:
         {
             m_eLogRead->addPackage(QString(readBuffer));
-            if (logRead)
+            if(logRead) {
                 readStream << QString(readBuffer) + "\n";
+            }
             break;
         }
-        case 2:
+        case DEC:
         {
             m_eLogRead->addPackage(outDEC);
-            if (logRead)
+            if(logRead) {
                 readStream << outDEC + "\n";
+            }
             break;
         }
         }
     }
-    if (m_cbEchoMaster->isChecked() && echoWaiting)
-    {
-        if (QString::compare(echoBuffer.join(" "), outDEC.remove(outDEC.length() - 1, 1), Qt::CaseInsensitive) == 0)
-        {
+    if(m_cbEchoMaster->isChecked() && echoWaiting) {
+        if(QString::compare(echoBuffer.join(" "), outDEC.remove(outDEC.length() - 1, 1), Qt::CaseInsensitive) == 0) {
             m_eLogWrite->setItemColor(m_eLogWrite->count() - 1, Qt::green);
             m_eLogRead->setItemColor(m_eLogWrite->count() - 1, Qt::green);
-        }
-        else
-        {
+        } else {
             m_eLogWrite->setItemColor(m_eLogWrite->count() - 1, Qt::red);
             m_eLogRead->setItemColor(m_eLogWrite->count() - 1, Qt::red);
         }
-        if (m_sbEchoInterval->value() != 0)
+        if(m_sbEchoInterval->value() != 0) {
             m_tEcho->singleShot(m_sbEchoInterval->value(), this, SLOT(echo()));
+        }
         echoWaiting = false;
     }
-    if (m_cbEchoSlave->isChecked())
-    {
+    if(m_cbEchoSlave->isChecked()) {
         echoSlave.append(outDEC);
-        if (!m_tEcho->isActive())
-        {
+        if(!m_tEcho->isActive()) {
             m_tEcho->setInterval(m_sbEchoInterval->value());
             m_tEcho->start();
         }
     }
     readBuffer.clear();
 
-    if (m_cbReadScroll->isChecked())
+    if(m_cbReadScroll->isChecked()) {
         m_eLogRead->scrollToBottom();
+    }
 }
 
 void MainWindow::rxNone()
@@ -1143,16 +1125,18 @@ void MainWindow::saveSession()
 
     settings->remove("macros");
     int i = 1;
-    foreach (MiniMacros *m, MiniMacrosList.values()) {
-        if (!m->editing->isFromFile)
-        {
+    foreach(MiniMacros *m, miniMacroses.values()) {
+        if(!m->editing->isFromFile) {
             QString mode;
-            if (m->editing->rbHEX->isChecked())
+            if(m->editing->rbHEX->isChecked()) {
                 mode = "HEX";
-            if (m->editing->rbDEC->isChecked())
+            }
+            if(m->editing->rbDEC->isChecked()) {
                 mode = "DEC";
-            if (m->editing->rbASCII->isChecked())
+            }
+            if(m->editing->rbASCII->isChecked()) {
                 mode = "ASCII";
+            }
             settings->setValue("macros/"+QString::number(i)+"/mode", mode);
             settings->setValue("macros/"+QString::number(i)+"/packege", m->editing->package->text());
             settings->setValue("macros/"+QString::number(i)+"/interval", m->time->value());
@@ -1168,10 +1152,12 @@ void MainWindow::saveSession()
 void MainWindow::loadSession()
 {
     const QPoint pos = settings->value ("config/position").toPoint();
-        if (!pos.isNull())
-            move (pos);
-    if (settings->value("config/isMaximized").toBool())
+    if(!pos.isNull()) {
+        move(pos);
+    }
+    if(settings->value("config/isMaximized").toBool()) {
         showMaximized();
+    }
 
     m_eLogRead->setMaxCount(settings->value("config/max_write_log_rows", 1000).toInt());
     m_eLogWrite->setMaxCount(settings->value("config/max_read_log_rows", 1000).toInt());
@@ -1187,8 +1173,7 @@ void MainWindow::loadSession()
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
     m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
-    if (!m_gbHiddenGroup->isHidden())
-    {
+    if(!m_gbHiddenGroup->isHidden()) {
         m_bHiddenGroup->setText("<");
         setMinimumWidth(665 + m_gbHiddenGroup->width() + 5);
     }
@@ -1196,35 +1181,36 @@ void MainWindow::loadSession()
     m_cbDisplayWrite->setChecked(settings->value("config/write_display", true).toBool());
     m_cbDisplayRead->setChecked(settings->value("config/read_display", true).toBool());
 
-    unsigned short int size = settings->value("macros/size", 0).toInt();
-    if (!size)
-    {
+    int size = settings->value("macros/size", 0).toInt();
+    if(!size) {
         addMacros();
         return;
     }
-    for (int i = 1; i <= size; ++i) {
+    for(int i = 1; i <= size; ++i) {
         addMacros();
-        if (!MiniMacrosList.last()->editing->openPath(settings->value("macros/"+QString::number(i)+"/path").toString()))
-        {
+        if(!miniMacroses.last()->editing->openPath(settings->value("macros/"+QString::number(i)+"/path").toString())) {
             QString mode = settings->value("macros/"+QString::number(i)+"/mode").toString();
-            if (mode == "HEX")
-                MiniMacrosList.last()->editing->rbHEX->setChecked(true);
-            if (mode == "DEC")
-                MiniMacrosList.last()->editing->rbDEC->setChecked(true);
-            if (mode == "ASCII")
-                MiniMacrosList.last()->editing->rbASCII->setChecked(true);
-            MiniMacrosList.last()->editing->package->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
-            MiniMacrosList.last()->time->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
+            if(mode == "HEX") {
+                miniMacroses.last()->editing->rbHEX->setChecked(true);
+            }
+            if(mode == "DEC") {
+                miniMacroses.last()->editing->rbDEC->setChecked(true);
+            }
+            if(mode == "ASCII") {
+                miniMacroses.last()->editing->rbASCII->setChecked(true);
+            }
+            miniMacroses.last()->editing->package->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
+            miniMacroses.last()->time->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
         }
-         MiniMacrosList.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
-         MiniMacrosList.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
+        miniMacroses.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
+        miniMacroses.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
     }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
     saveSession();
-    foreach (MiniMacros *m, MiniMacrosList.values()) {
+    foreach(MiniMacros *m, miniMacroses.values()) {
         m->editing->close();
     }
     e->accept();
