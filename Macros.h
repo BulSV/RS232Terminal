@@ -1,5 +1,5 @@
-#ifndef MACROSEDITING_H
-#define MACROSEDITING_H
+#ifndef MACROS_H
+#define MACROS_H
 
 #include <QMainWindow>
 #include <QWidget>
@@ -39,9 +39,9 @@ signals:
     void act(bool);
 
 public slots:
-    void hexChecked() { package->setText(lbHEX->text()); }
-    void asciiChecked() { package->setText(lbASCII->text()); }
-    void decChecked() { package->setText(lbDEC->text()); }
+    void hexChecked();
+    void asciiChecked();
+    void decChecked();
     void compute(QString str);
     void reset();
     void saveAs();
@@ -51,6 +51,9 @@ public slots:
 
 private:
     unsigned short int time;
+
+    void saveToFile(const QString &path);
+    void openFile(const QString &path);
 };
 
-#endif // MACROSEDITING_H
+#endif // MACROS_H

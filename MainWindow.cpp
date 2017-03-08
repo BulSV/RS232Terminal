@@ -58,8 +58,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_lRx(new QLabel("        Rx", this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
-    , m_eLogRead(new MyListWidget(this))
-    , m_eLogWrite(new MyListWidget(this))
+    , m_eLogRead(new LimitedItemsListWidget(this))
+    , m_eLogWrite(new LimitedItemsListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbEchoInterval(new QSpinBox(this))
     , m_sbDelay(new QSpinBox(this))
@@ -986,7 +986,7 @@ void MainWindow::displayWriteData(QStringList list)
         }
     }
 
-    m_eLogWrite->addPackage(out);
+    m_eLogWrite->addItem(out);
     if(logWrite) {
         writeStream << out + "\n";
     }
@@ -1025,7 +1025,7 @@ void MainWindow::breakLine()
         {
         case HEX:
         {
-            m_eLogRead->addPackage(in);
+            m_eLogRead->addItem(in);
             if(logRead) {
                 readStream << in + "\n";
             }
@@ -1033,7 +1033,7 @@ void MainWindow::breakLine()
         }
         case ASCII:
         {
-            m_eLogRead->addPackage(QString(readBuffer));
+            m_eLogRead->addItem(QString(readBuffer));
             if(logRead) {
                 readStream << QString(readBuffer) + "\n";
             }
@@ -1041,7 +1041,7 @@ void MainWindow::breakLine()
         }
         case DEC:
         {
-            m_eLogRead->addPackage(outDEC);
+            m_eLogRead->addItem(outDEC);
             if(logRead) {
                 readStream << outDEC + "\n";
             }
@@ -1106,8 +1106,8 @@ void MainWindow::saveSession()
     settings->setValue("config/position", pos());
     settings->setValue("config/isMaximized", isMaximized());
 
-    settings->setValue("config/max_write_log_rows", m_eLogWrite->getMaxCount());
-    settings->setValue("config/max_read_log_rows", m_eLogRead->getMaxCount());
+    settings->setValue("config/max_write_log_rows", m_eLogWrite->itemsLimit());
+    settings->setValue("config/max_read_log_rows", m_eLogRead->itemsLimit());
     settings->setValue("config/port", m_cbPort->currentText());
     settings->setValue("config/baud", m_cbBaud->currentIndex());
     settings->setValue("config/data_bits", m_cbBits->currentIndex());
@@ -1162,8 +1162,8 @@ void MainWindow::loadSession()
         showMaximized();
     }
 
-    m_eLogRead->setMaxCount(settings->value("config/max_write_log_rows", 1000).toInt());
-    m_eLogWrite->setMaxCount(settings->value("config/max_read_log_rows", 1000).toInt());
+    m_eLogRead->setItemsLimit(settings->value("config/max_write_log_rows", 1000).toInt());
+    m_eLogWrite->setItemsLimit(settings->value("config/max_read_log_rows", 1000).toInt());
     m_cbPort->setCurrentText(settings->value("config/port").toString());
     m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());

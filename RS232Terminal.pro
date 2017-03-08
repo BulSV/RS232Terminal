@@ -1,32 +1,30 @@
-QT       += widgets serialport
+QT += widgets serialport
 
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = RS232Terminal
+TARGET = Terminal
 TEMPLATE = app
-win32:RC_FILE = RS232Terminal.rc
+win32:RC_FILE = Terminal.rc
 
 SOURCES += main.cpp\
     MainWindow.cpp \
     Macros.cpp \
     MiniMacros.cpp \
-    mylistwidget.cpp \
     HexEncoder.cpp \
     DataEncoder.cpp \
     AsciiEncoder.cpp \
-    DecEncoder.cpp
+    DecEncoder.cpp \
+    RightClickedButton.cpp \
+    LimitedItemsListWidget.cpp
 
 HEADERS  += \
     MainWindow.h \
-    MyPushButton.h \
     Macros.h \
     MiniMacros.h \
-    mylistwidget.h \
     DataEncoder.h \
     HexEncoder.h \
     AsciiEncoder.h \
-    DecEncoder.h
+    DecEncoder.h \
+    RightClickedButton.h \
+    LimitedItemsListWidget.h
 
 RESOURCES += \
-    RS232Terminal.qrc
+    Terminal.qrc

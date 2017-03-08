@@ -8,7 +8,7 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     , interval(new QCheckBox(this))
     , period(new QCheckBox(this))
     , time(new QSpinBox(this))
-    , send(new MyPushButton("Empty", this))
+    , send(new RightClickedButton(tr("Empty"), this))
     , editing(new Macros(this))
     , tPeriod(new QTimer(this))
 {
@@ -64,7 +64,18 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
 void MiniMacros::sendPeriod()
 {
     tPeriod->setInterval(time->value());
+
     emit setSend(editing->package->text(), mode);
+}
+
+void MiniMacros::sendMoveUp()
+{
+    emit moveUp(index);
+}
+
+void MiniMacros::sendMoveDown()
+{
+    emit moveDown(index);
 }
 
 void MiniMacros::intervalToggled(bool check)
@@ -80,10 +91,11 @@ void MiniMacros::periodToggled(bool check)
     interval->setChecked(false);
     interval->setEnabled(!check);
     editing->update(time->value());
-    if (check)
+    if(check) {
         tPeriod->start();
-    else
+    } else {
         tPeriod->stop();
+    }
 }
 
 void MiniMacros::timeChanged()
@@ -93,16 +105,9 @@ void MiniMacros::timeChanged()
 
 void MiniMacros::update(bool enabled, QString buttonText, int t)
 {
-    interval->setEnabled(enabled);
-    period->setEnabled(enabled);
     send->setText(buttonText);
     time->setValue(t);
-    if (editing->rbHEX->isChecked())
-        mode = 0;
-    if (editing->rbASCII->isChecked())
-        mode = 1;
-    if (editing->rbDEC->isChecked())
-        mode = 2;
+    activate(enabled);
 }
 
 void MiniMacros::activate(bool enabled)
@@ -110,20 +115,23 @@ void MiniMacros::activate(bool enabled)
     interval->setEnabled(enabled);
     period->setEnabled(enabled);
 
-    if (editing->rbHEX->isChecked())
+    if(editing->rbHEX->isChecked()) {
         mode = 0;
-    if (editing->rbASCII->isChecked())
+    }
+    if(editing->rbASCII->isChecked()) {
         mode = 1;
-    if (editing->rbDEC->isChecked())
+    }
+    if(editing->rbDEC->isChecked()) {
         mode = 2;
+    }
 }
 
 void MiniMacros::delMac()
 {
-    int button = QMessageBox::question(this, "Warning",
-                                       "Delete macros " + send->text() + " ?",
+    int button = QMessageBox::question(this, tr("Warning"),
+                                       tr("Delete macros ") + send->text() + " ?",
                                        QMessageBox::Yes | QMessageBox::No);
-    if (button == QMessageBox::Yes) {
+    if(button == QMessageBox::Yes) {
         emit deleteSignal(index);
     }
 }

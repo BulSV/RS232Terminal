@@ -1,5 +1,5 @@
-#ifndef MINIMACROS_H
-#define MINIMACROS_H
+#ifndef MINI_MACROS_H
+#define MINI_MACROS_H
 
 #include <QWidget>
 #include <QHBoxLayout>
@@ -7,7 +7,7 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QTimer>
-#include "MyPushButton.h"
+#include "RightClickedButton.h"
 #include "Macros.h"
 
 class MiniMacros : public QWidget
@@ -21,7 +21,7 @@ public:
     QCheckBox *interval;
     QCheckBox *period;
     QSpinBox *time;
-    MyPushButton *send;
+    RightClickedButton *send;
     Macros *editing;
     QTimer *tPeriod;
     unsigned short int index;
@@ -35,8 +35,8 @@ public slots:
     void activate(bool enabled);
     void delMac();
     void sendPeriod();
-    void sendMoveUp() { emit moveUp(index); }
-    void sendMoveDown() { emit moveDown(index); }
+    void sendMoveUp();
+    void sendMoveDown();
 
 signals:
     void deleteSignal(int);
@@ -46,4 +46,4 @@ signals:
     void moveDown(int);
 };
 
-#endif // MINIMACROS_H
+#endif // MINI_MACROS_H

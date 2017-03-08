@@ -1,12 +1,9 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAIN_WINDOW_H
+#define MAIN_WINDOW_H
 
-#include <mylistwidget.h>
-#include "MiniMacros.h"
 #include <QMainWindow>
 #include <QLabel>
 #include <QComboBox>
-#include <MyPushButton.h>
 #include <QTimer>
 #include <QTime>
 #include <QSerialPort>
@@ -20,6 +17,9 @@
 #include <QSpacerItem>
 #include <QScrollArea>
 
+#include "RightClickedButton.h"
+#include "LimitedItemsListWidget.h"
+#include "MiniMacros.h"
 #include "DataEncoder.h"
 
 class MainWindow : public QMainWindow
@@ -72,8 +72,8 @@ class MainWindow : public QMainWindow
     QLabel *m_lRx;
     QLabel *m_lTxCount;
     QLabel *m_lRxCount;
-    MyListWidget *m_eLogRead;
-    MyListWidget *m_eLogWrite;
+    LimitedItemsListWidget *m_eLogRead;
+    LimitedItemsListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbEchoInterval;
     QSpinBox *m_sbDelay;
@@ -170,4 +170,4 @@ public:
     explicit MainWindow(QString title, QWidget *parent = 0);
 };
 
-#endif
+#endif // MAIN_WINDOW_H

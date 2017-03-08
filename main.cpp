@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 #if defined (Q_OS_UNIX)
     app.setWindowIcon(QIcon(":/Resources/terminal.png"));
 #endif
-    MainWindow window(QString::fromUtf8("RS232 Terminal"));
+    MainWindow window(QObject::tr("Terminal"));
     window.show();
 
     return app.exec();
