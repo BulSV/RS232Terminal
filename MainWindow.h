@@ -9,7 +9,6 @@
 #include <QSerialPort>
 #include <QCheckBox>
 #include <QSpinBox>
-#include <QSignalMapper>
 #include <QSettings>
 #include <QAbstractButton>
 #include <QFileDialog>
@@ -56,18 +55,18 @@ class MainWindow : public QMainWindow
     QTimer *m_tRx;
     QPushButton *m_bStart;
     QPushButton *m_bStop;
-    QAbstractButton *m_abPause;
+    QPushButton *m_bPause;
     QPushButton *m_bWriteLogClear;
     QPushButton *m_bReadLogClear;
     QPushButton *m_bSaveWriteLog;
     QPushButton *m_bSaveReadLog;
     QPushButton *m_bHiddenGroup;
     QPushButton *m_bDeleteAllMacroses;
-    QPushButton *m_bAddMacros;
+    QPushButton *m_bNewMacros;
     QPushButton *m_bLoadMacroses;
-    QAbstractButton *m_abSaveWriteLog;
-    QAbstractButton *m_abSaveReadLog;
-    QAbstractButton *m_abSendPackage;
+    QPushButton *m_bRecordWriteLog;
+    QPushButton *m_bRecordReadLog;
+    QPushButton *m_bSendPackage;
     QLabel *m_lTx;
     QLabel *m_lRx;
     QLabel *m_lTxCount;
@@ -77,7 +76,7 @@ class MainWindow : public QMainWindow
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbEchoInterval;
     QSpinBox *m_sbDelay;
-    QSpinBox *m_sbAllDelay;
+    QSpinBox *m_sbAllDelays;
     QLineEdit *m_leSendPackage;
     QCheckBox *m_cbEchoMaster;
     QCheckBox *m_cbEchoSlave;
@@ -101,17 +100,17 @@ class MainWindow : public QMainWindow
     QWidget *widgetScroll;
     QVBoxLayout *HiddenLayout;
 
-    QFile writeLog;
-    QFile readLog;
-    qint32 txCount;
-    qint32 rxCount;
+    QFile writeLogFile;
+    QFile readLogFile;
+    int txCount;
+    int rxCount;
     bool logWrite;
     bool logRead;
 
     bool echoWaiting;
     QStringList echoBuffer;
     QByteArray readBuffer;
-    unsigned short int index;
+    unsigned int index;
     QMap<int, MiniMacros *> miniMacroses;
     unsigned int sendCount;
     unsigned int sendIndex;

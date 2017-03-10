@@ -19,27 +19,27 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     interval->setEnabled(false);
     period->setEnabled(false);
 
-    QPushButton *up = new QPushButton(this);
-    QPushButton *down = new QPushButton(this);
-    up->setFixedSize(16, 13);
-    down->setFixedSize(16, 13);
-    up->setStyleSheet("border-image: url(:/Resources/arrow-up.png) stretch;");
-    down->setStyleSheet("border-image: url(:/Resources/arrow-down.png) stretch;");
-    QVBoxLayout *lay = new QVBoxLayout();
-    lay->setMargin(1);
-    lay->setSpacing(1);
-    lay->addWidget(up);
-    lay->addWidget(down);
+    QPushButton *buttonUp = new QPushButton(this);
+    QPushButton *buttonDown = new QPushButton(this);
+    buttonUp->setFixedSize(16, 13);
+    buttonDown->setFixedSize(16, 13);
+    buttonUp->setStyleSheet("border-image: url(:/Resources/arrow-up.png) stretch;");
+    buttonDown->setStyleSheet("border-image: url(:/Resources/arrow-down.png) stretch;");
 
-    layout->setMargin(3);
-    layout->setSpacing(3);
-    setLayout(layout);
+    QVBoxLayout *lay = new QVBoxLayout();
+    lay->setSpacing(1);
+    lay->addWidget(buttonUp);
+    lay->addWidget(buttonDown);
+
     layout->addWidget(del);
     layout->addWidget(interval);
     layout->addWidget(period);
     layout->addWidget(time);
     layout->addWidget(send);
     layout->addLayout(lay);
+    layout->setSpacing(5);
+
+    setLayout(layout);
 
     send->setStyleSheet("font-weight: bold");
     interval->setFixedWidth(15);
@@ -57,8 +57,8 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     connect(editing, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
     connect(editing, SIGNAL(act(bool)), this, SLOT(activate(bool)));
     connect(tPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
-    connect(up, SIGNAL(clicked()), this, SLOT(sendMoveUp()));
-    connect(down, SIGNAL(clicked()), this, SLOT(sendMoveDown()));
+    connect(buttonUp, SIGNAL(clicked(bool)), this, SLOT(sendMoveUp()));
+    connect(buttonDown, SIGNAL(clicked(bool)), this, SLOT(sendMoveDown()));
 }
 
 void MiniMacros::sendPeriod()
@@ -81,6 +81,7 @@ void MiniMacros::sendMoveDown()
 void MiniMacros::intervalToggled(bool check)
 {
     emit setIntervalSend(index, check);
+
     period->setChecked(false);
     period->setEnabled(!check);
     editing->update(time->value());

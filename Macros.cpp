@@ -42,8 +42,7 @@ Macros::Macros(QWidget *parent)
 
     widget->setLayout(mainLay);
     setCentralWidget(widget);
-    mainLay->setSpacing(3);
-    mainLay->setMargin(3);
+    mainLay->setSpacing(5);
     mainLay->addWidget(new QLabel(tr("Formats:"), this), 0, 0);
     mainLay->addWidget(package, 0, 1);
     mainLay->addWidget(rbHEX, 1, 0);
