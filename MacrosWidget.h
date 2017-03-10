@@ -1,5 +1,5 @@
-#ifndef MACROS_H
-#define MACROS_H
+#ifndef MACROS_WIDGET_H
+#define MACROS_WIDGET_H
 
 #include <QMainWindow>
 #include <QWidget>
@@ -11,7 +11,7 @@
 #include <QLabel>
 #include <QAction>
 
-class Macros : public QMainWindow
+class MacrosWidget : public QMainWindow
 {
     Q_OBJECT
     public:
@@ -28,7 +28,7 @@ class Macros : public QMainWindow
     QAction *aCR;
     QAction *aLF;
 
-    explicit Macros(QWidget *parent = 0);
+    explicit MacrosWidget(QWidget *parent = 0);
     void update(unsigned short int t);
     bool isFromFile;
     QString path;
@@ -56,4 +56,4 @@ private:
     void openFile(const QString &path);
 };
 
-#endif // MACROS_H
+#endif // MACROS_WIDGET_H

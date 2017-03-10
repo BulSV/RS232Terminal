@@ -1,5 +1,5 @@
-#ifndef MINI_MACROS_H
-#define MINI_MACROS_H
+#ifndef MACROS_ITEM_WIDGET_H
+#define MACROS_ITEM_WIDGET_H
 
 #include <QWidget>
 #include <QHBoxLayout>
@@ -8,13 +8,13 @@
 #include <QSpinBox>
 #include <QTimer>
 #include "RightClickedButton.h"
-#include "Macros.h"
+#include "MacrosWidget.h"
 
-class MiniMacros : public QWidget
+class MacrosItemWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MiniMacros(int i, QWidget *parent = 0);
+    explicit MacrosItemWidget(int i, QWidget *parent = 0);
 
     QHBoxLayout *layout;
     QPushButton *del;
@@ -22,14 +22,12 @@ public:
     QCheckBox *period;
     QSpinBox *time;
     RightClickedButton *send;
-    Macros *editing;
+    MacrosWidget *macrosWidget;
     QTimer *tPeriod;
     unsigned short int index;
     unsigned short int mode;
 
 public slots:
-    void intervalToggled(bool);
-    void periodToggled(bool);
     void timeChanged();
     void update(bool enabled, QString buttonText, int t);
     void activate(bool enabled);
@@ -44,6 +42,8 @@ signals:
     void setIntervalSend(int, bool);
     void moveUp(int);
     void moveDown(int);
+private slots:
+    void checkMacros();
 };
 
-#endif // MINI_MACROS_H
+#endif // MACROS_ITEM_WIDGET_H

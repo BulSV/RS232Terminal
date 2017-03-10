@@ -1,7 +1,8 @@
-#include "MiniMacros.h"
 #include <QMessageBox>
 
-MiniMacros::MiniMacros(int i, QWidget *parent)
+#include "MacrosItemWidget.h"
+
+MacrosItemWidget::MacrosItemWidget(int i, QWidget *parent)
     :QWidget(parent)
     , layout(new QHBoxLayout(this))
     , del(new QPushButton(this))
@@ -9,7 +10,7 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     , period(new QCheckBox(this))
     , time(new QSpinBox(this))
     , send(new RightClickedButton(tr("Empty"), this))
-    , editing(new Macros(this))
+    , macrosWidget(new MacrosWidget(this))
     , tPeriod(new QTimer(this))
 {
     index = i;
@@ -48,86 +49,86 @@ MiniMacros::MiniMacros(int i, QWidget *parent)
     del->setFixedSize(15, 15);
     del->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
 
-    connect(interval, SIGNAL(toggled(bool)), this, SLOT(intervalToggled(bool)));
-    connect(period, SIGNAL(toggled(bool)), this, SLOT(periodToggled(bool)));
-    connect(send, SIGNAL(rightClicked()), editing, SLOT(show()));
+    connect(interval, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
+    connect(period, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
+    connect(send, SIGNAL(rightClicked()), macrosWidget, SLOT(show()));
     connect(send, SIGNAL(clicked()), this, SLOT(sendPeriod()));
     connect(time, SIGNAL(valueChanged(int)), this, SLOT(timeChanged()));
     connect(del, SIGNAL(pressed()), this, SLOT(delMac()));
-    connect(editing, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
-    connect(editing, SIGNAL(act(bool)), this, SLOT(activate(bool)));
+    connect(macrosWidget, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
+    connect(macrosWidget, SIGNAL(act(bool)), this, SLOT(activate(bool)));
     connect(tPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
     connect(buttonUp, SIGNAL(clicked(bool)), this, SLOT(sendMoveUp()));
     connect(buttonDown, SIGNAL(clicked(bool)), this, SLOT(sendMoveDown()));
 }
 
-void MiniMacros::sendPeriod()
+void MacrosItemWidget::sendPeriod()
 {
     tPeriod->setInterval(time->value());
 
-    emit setSend(editing->package->text(), mode);
+    emit setSend(macrosWidget->package->text(), mode);
 }
 
-void MiniMacros::sendMoveUp()
+void MacrosItemWidget::sendMoveUp()
 {
     emit moveUp(index);
 }
 
-void MiniMacros::sendMoveDown()
+void MacrosItemWidget::sendMoveDown()
 {
     emit moveDown(index);
 }
 
-void MiniMacros::intervalToggled(bool check)
+void MacrosItemWidget::checkMacros()
 {
-    emit setIntervalSend(index, check);
+    if(interval->isChecked() && period->isChecked()) {
+        if(dynamic_cast<QCheckBox*>(sender())) {
+            dynamic_cast<QCheckBox*>(sender())->setChecked(false);
+        }
 
-    period->setChecked(false);
-    period->setEnabled(!check);
-    editing->update(time->value());
-}
+        return;
+    }
 
-void MiniMacros::periodToggled(bool check)
-{
-    interval->setChecked(false);
-    interval->setEnabled(!check);
-    editing->update(time->value());
-    if(check) {
+    emit setIntervalSend(index, interval->isChecked());
+
+    macrosWidget->update(time->value());
+
+    if(period->isChecked()) {
         tPeriod->start();
     } else {
         tPeriod->stop();
     }
 }
 
-void MiniMacros::timeChanged()
+void MacrosItemWidget::timeChanged()
 {
-    editing->update(time->value());
+    macrosWidget->update(time->value());
 }
 
-void MiniMacros::update(bool enabled, QString buttonText, int t)
+void MacrosItemWidget::update(bool enabled, QString buttonText, int t)
 {
     send->setText(buttonText);
     time->setValue(t);
     activate(enabled);
 }
 
-void MiniMacros::activate(bool enabled)
+void MacrosItemWidget::activate(bool enabled)
 {
     interval->setEnabled(enabled);
     period->setEnabled(enabled);
 
-    if(editing->rbHEX->isChecked()) {
+    if(macrosWidget->rbHEX->isChecked()) {
         mode = 0;
     }
-    if(editing->rbASCII->isChecked()) {
+    if(macrosWidget->rbASCII->isChecked()) {
         mode = 1;
     }
-    if(editing->rbDEC->isChecked()) {
+    if(macrosWidget->rbDEC->isChecked()) {
         mode = 2;
     }
 }
 
-void MiniMacros::delMac()
+void MacrosItemWidget::delMac()
 {
     int button = QMessageBox::question(this, tr("Warning"),
                                        tr("Delete macros ") + send->text() + " ?",

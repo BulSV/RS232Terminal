@@ -8,10 +8,9 @@
 #include <QScrollBar>
 #include <QDir>
 #include <QListIterator>
-#include <QButtonGroup>
 
 #include "MainWindow.h"
-#include "MiniMacros.h"
+#include "MacrosItemWidget.h"
 #include "HexEncoder.h"
 #include "AsciiEncoder.h"
 #include "DecEncoder.h"
@@ -158,11 +157,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbSendMode->addItems(buffer);
     m_cbReadMode->addItems(buffer);
     m_cbWriteMode->addItems(buffer);
-
-    QButtonGroup *intervalsPeriodsGroup = new QButtonGroup(this);
-    intervalsPeriodsGroup->addButton(m_cbAllIntervals);
-    intervalsPeriodsGroup->addButton(m_cbAllPeriods);
-    intervalsPeriodsGroup->setExclusive(true);
 
     QDir dir;
     if(!dir.exists(dir.currentPath()+"/Macros")) {
@@ -351,7 +345,7 @@ void MainWindow::setUniformSizes(bool check)
 
 void MainWindow::changeAllDelays(int n)
 {
-    QListIterator<MiniMacros*> it(miniMacroses.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
     while(it.hasNext()) {
         it.next()->time->setValue(n);
     }
@@ -359,8 +353,15 @@ void MainWindow::changeAllDelays(int n)
 
 void MainWindow::checkAllMacroses()
 {
-    QListIterator<MiniMacros*> it(miniMacroses.values());
-    MiniMacros *m = 0;
+    if(m_cbAllIntervals->isChecked() && m_cbAllPeriods->isChecked()) {
+        if(dynamic_cast<QCheckBox*>(sender())) {
+            dynamic_cast<QCheckBox*>(sender())->setChecked(false);
+        }
+
+        return;
+    }
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
         m->interval->setChecked(m_cbAllIntervals->isChecked());
@@ -374,28 +375,31 @@ void MainWindow::deleteAllMacroses()
                                        tr("Delete ALL macroses?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
-        checkAllIntervals(false);
-        checkAllPeriods(false);
-        QListIterator<MiniMacros*> it(miniMacroses.values());
-        MiniMacros *m = 0;
+        QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+        MacrosItemWidget *m = 0;
         while(it.hasNext()) {
             m = it.next();
             delete m;
             m = 0;
         }
-        miniMacroses.clear();
+        macrosItemWidgets.clear();
     }
 }
 
-int MainWindow::findIntervalItem(unsigned short int start)
+int MainWindow::findIntervalItem(int start)
 {
-    foreach(MiniMacros *m, miniMacroses) {
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    MacrosItemWidget *m = 0;
+    while(it.hasNext()) {
+        m = it.next();
         if(m->interval->isChecked() && m->index >= start) {
             return m->index;
         }
     }
     start = 0;
-    foreach(MiniMacros *m, miniMacroses) {
+    it.toFront();
+    while(it.hasNext()) {
+        m = it.next();
         if(m->interval->isChecked() && m->index >= start) {
             return m->index;
         }
@@ -405,11 +409,11 @@ int MainWindow::findIntervalItem(unsigned short int start)
 
 void MainWindow::sendInterval()
 {
-    sendPackage(miniMacroses[sendIndex]->editing->package->text(),
-                miniMacroses[sendIndex]->mode);
+    sendPackage(macrosItemWidgets[sendIndex]->macrosWidget->package->text(),
+                macrosItemWidgets[sendIndex]->mode);
     sendIndex++;
     sendIndex = findIntervalItem(sendIndex);
-    m_tIntervalSending->setInterval(miniMacroses[sendIndex]->time->value());
+    m_tIntervalSending->setInterval(macrosItemWidgets[sendIndex]->time->value());
 }
 
 void MainWindow::hiddenClick()
@@ -424,9 +428,11 @@ void MainWindow::hiddenClick()
 
         return;
     }
+
     setMinimumWidth(665);
     m_gbHiddenGroup->hide();
     m_bHiddenGroup->setText(">");
+
     if(!isMaximized()) {
         resize(width() - m_gbHiddenGroup->width() - 5, height());
     }
@@ -439,24 +445,25 @@ void MainWindow::openDialog()
         fileNames = fileDialog->selectedFiles();
     }
 
-    foreach(QString s, fileNames) {
+    QListIterator<QString> it(fileNames);
+    while(it.hasNext()) {
         addMacros();
-        miniMacroses.last()->editing->openPath(s);
+        macrosItemWidgets.last()->macrosWidget->openPath(it.next());
     }
 }
 
 void MainWindow::addMacros()
 {
     HiddenLayout->removeItem(spacer);
-    miniMacroses.insert(index, new MiniMacros(index, this));
-    HiddenLayout->addWidget(miniMacroses[index]);
+    macrosItemWidgets.insert(index, new MacrosItemWidget(index, this));
+    HiddenLayout->addWidget(macrosItemWidgets[index]);
     HiddenLayout->addSpacerItem(spacer);
 
-    connect(miniMacroses[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
-    connect(miniMacroses[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
-    connect(miniMacroses[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
-    connect(miniMacroses[index], SIGNAL(moveUp(int)), this, SLOT(moveMacUp(int)));
-    connect(miniMacroses[index], SIGNAL(moveDown(int)),this, SLOT(moveMacDown(int)));
+    connect(macrosItemWidgets[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
+    connect(macrosItemWidgets[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
+    connect(macrosItemWidgets[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
+    connect(macrosItemWidgets[index], SIGNAL(moveUp(int)), this, SLOT(moveMacUp(int)));
+    connect(macrosItemWidgets[index], SIGNAL(moveDown(int)),this, SLOT(moveMacDown(int)));
 
     index++;
 }
@@ -485,16 +492,16 @@ bool MainWindow::moveMacros(QWidget *widget, MacrosMoveDirection direction)
 
 void MainWindow::moveMacUp(int index)
 {
-   if(!moveMacros(miniMacroses[index], MoveUp)) {
+   if(!moveMacros(macrosItemWidgets[index], MoveUp)) {
        return;
    }
-   for(int i = index - 1; i >= miniMacroses.first()->index; i--) {
-       if(miniMacroses.contains(i)) {
-           miniMacroses[index]->index = i;
-           miniMacroses[i]->index = index;
-           MiniMacros *temp = miniMacroses[index];
-           miniMacroses[index] = miniMacroses[i];
-           miniMacroses[i] = temp;
+   for(int i = index - 1; i >= macrosItemWidgets.first()->index; i--) {
+       if(macrosItemWidgets.contains(i)) {
+           macrosItemWidgets[index]->index = i;
+           macrosItemWidgets[i]->index = index;
+           MacrosItemWidget *temp = macrosItemWidgets[index];
+           macrosItemWidgets[index] = macrosItemWidgets[i];
+           macrosItemWidgets[i] = temp;
 
            break;
        }
@@ -503,16 +510,16 @@ void MainWindow::moveMacUp(int index)
 
 void MainWindow::moveMacDown(int index)
 {
-   if(!moveMacros(miniMacroses[index], MoveDown)) {
+   if(!moveMacros(macrosItemWidgets[index], MoveDown)) {
        return;
    }
-   for(int i = index + 1; i <= miniMacroses.last()->index; i++) {
-       if(miniMacroses.contains(i)) {
-           miniMacroses[index]->index = i;
-           miniMacroses[i]->index = index;
-           MiniMacros *temp = miniMacroses[index];
-           miniMacroses[index] = miniMacroses[i];
-           miniMacroses[i] = temp;
+   for(int i = index + 1; i <= macrosItemWidgets.last()->index; i++) {
+       if(macrosItemWidgets.contains(i)) {
+           macrosItemWidgets[index]->index = i;
+           macrosItemWidgets[i]->index = index;
+           MacrosItemWidget *temp = macrosItemWidgets[index];
+           macrosItemWidgets[index] = macrosItemWidgets[i];
+           macrosItemWidgets[i] = temp;
 
            break;
        }
@@ -529,10 +536,11 @@ void MainWindow::intervalSendAdded(int index, bool check)
 
         return;
     }
+
     sendCount++;
     if(sendCount == 1) {
         sendIndex = index;
-        m_tIntervalSending->setInterval(miniMacroses[index]->time->value());
+        m_tIntervalSending->setInterval(macrosItemWidgets[index]->time->value());
         if(m_Port->isOpen()) {
             m_tIntervalSending->start();
         }
@@ -541,9 +549,7 @@ void MainWindow::intervalSendAdded(int index, bool check)
 
 void MainWindow::delMacros(int index)
 {
-    miniMacroses[index]->interval->setChecked(false);
-    miniMacroses[index]->period->setChecked(false);
-    delete miniMacroses.take(index);
+    delete macrosItemWidgets.take(index);
 }
 
 void MainWindow::writeLogTimeout()
@@ -679,7 +685,7 @@ void MainWindow::echoCheckMaster(bool check)
     m_cbEchoMaster->setChecked(check);
     if(check) {
         m_bSendPackage->setChecked(false);
-        foreach(MiniMacros *m, miniMacroses.values()) {
+        foreach(MacrosItemWidget *m, macrosItemWidgets.values()) {
             m->interval->setChecked(false);
             m->period->setChecked(false);
             m->interval->setEnabled(false);
@@ -688,7 +694,7 @@ void MainWindow::echoCheckMaster(bool check)
 
         return;
     }
-    foreach(MiniMacros *m, miniMacroses.values()) {
+    foreach(MacrosItemWidget *m, macrosItemWidgets.values()) {
         m->interval->setEnabled(true);
         m->period->setEnabled(true);
     }
@@ -811,7 +817,7 @@ void MainWindow::start()
         m_bSendPackage->setEnabled(true);
     }
     if(sendCount != 0) {
-        sendIndex = miniMacroses.first()->index;
+        sendIndex = macrosItemWidgets.first()->index;
         m_tIntervalSending->start();
     }
 }
@@ -848,8 +854,8 @@ void MainWindow::pause(bool check)
     } else if(sendCount != 0) {
         m_tIntervalSending->start();
     }
-    QListIterator<MiniMacros*> it(miniMacroses.values());
-    MiniMacros* m = 0;
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    MacrosItemWidget* m = 0;
     while(it.hasNext()) {
         m = it.next();
         m->interval->setEnabled(!check);
@@ -1126,28 +1132,28 @@ void MainWindow::saveSession()
 
     settings->remove("macros");
     int i = 1;
-    QListIterator<MiniMacros*> it(miniMacroses.values());
-    MiniMacros *m = 0;
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
-        if(!m->editing->isFromFile) {
+        if(!m->macrosWidget->isFromFile) {
             QString mode;
-            if(m->editing->rbHEX->isChecked()) {
+            if(m->macrosWidget->rbHEX->isChecked()) {
                 mode = "HEX";
             }
-            if(m->editing->rbDEC->isChecked()) {
+            if(m->macrosWidget->rbDEC->isChecked()) {
                 mode = "DEC";
             }
-            if(m->editing->rbASCII->isChecked()) {
+            if(m->macrosWidget->rbASCII->isChecked()) {
                 mode = "ASCII";
             }
             settings->setValue("macros/"+QString::number(i)+"/mode", mode);
-            settings->setValue("macros/"+QString::number(i)+"/packege", m->editing->package->text());
+            settings->setValue("macros/"+QString::number(i)+"/packege", m->macrosWidget->package->text());
             settings->setValue("macros/"+QString::number(i)+"/interval", m->time->value());
         }
         settings->setValue("macros/"+QString::number(i)+"/checked_interval", m->interval->isChecked());
         settings->setValue("macros/"+QString::number(i)+"/checked_period", m->period->isChecked());
-        settings->setValue("macros/"+QString::number(i)+"/path", m->editing->path);
+        settings->setValue("macros/"+QString::number(i)+"/path", m->macrosWidget->path);
         i++;
     }
     settings->setValue("macros/size", i-1);
@@ -1195,31 +1201,31 @@ void MainWindow::loadSession()
     }
     for(int i = 1; i <= size; ++i) {
         addMacros();
-        if(!miniMacroses.last()->editing->openPath(settings->value("macros/"+QString::number(i)+"/path").toString())) {
+        if(!macrosItemWidgets.last()->macrosWidget->openPath(settings->value("macros/"+QString::number(i)+"/path").toString())) {
             QString mode = settings->value("macros/"+QString::number(i)+"/mode").toString();
             if(mode == "HEX") {
-                miniMacroses.last()->editing->rbHEX->setChecked(true);
+                macrosItemWidgets.last()->macrosWidget->rbHEX->setChecked(true);
             }
             if(mode == "DEC") {
-                miniMacroses.last()->editing->rbDEC->setChecked(true);
+                macrosItemWidgets.last()->macrosWidget->rbDEC->setChecked(true);
             }
             if(mode == "ASCII") {
-                miniMacroses.last()->editing->rbASCII->setChecked(true);
+                macrosItemWidgets.last()->macrosWidget->rbASCII->setChecked(true);
             }
-            miniMacroses.last()->editing->package->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
-            miniMacroses.last()->time->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
+            macrosItemWidgets.last()->macrosWidget->package->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
+            macrosItemWidgets.last()->time->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
         }
-        miniMacroses.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
-        miniMacroses.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
+        macrosItemWidgets.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
+        macrosItemWidgets.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
     }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
     saveSession();
-    QListIterator<MiniMacros*> it(miniMacroses.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
     while(it.hasNext()) {
-        it.next()->editing->close();
+        it.next()->macrosWidget->close();
     }
     e->accept();
 }

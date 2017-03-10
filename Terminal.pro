@@ -6,25 +6,25 @@ win32:RC_FILE = Terminal.rc
 
 SOURCES += main.cpp\
     MainWindow.cpp \
-    Macros.cpp \
-    MiniMacros.cpp \
     HexEncoder.cpp \
     DataEncoder.cpp \
     AsciiEncoder.cpp \
     DecEncoder.cpp \
     RightClickedButton.cpp \
-    LimitedItemsListWidget.cpp
+    LimitedItemsListWidget.cpp \
+    MacrosWidget.cpp \
+    MacrosItemWidget.cpp
 
 HEADERS  += \
     MainWindow.h \
-    Macros.h \
-    MiniMacros.h \
     DataEncoder.h \
     HexEncoder.h \
     AsciiEncoder.h \
     DecEncoder.h \
     RightClickedButton.h \
-    LimitedItemsListWidget.h
+    LimitedItemsListWidget.h \
+    MacrosWidget.h \
+    MacrosItemWidget.h
 
 RESOURCES += \
     Terminal.qrc

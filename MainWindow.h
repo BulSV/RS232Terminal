@@ -18,7 +18,7 @@
 
 #include "RightClickedButton.h"
 #include "LimitedItemsListWidget.h"
-#include "MiniMacros.h"
+#include "MacrosItemWidget.h"
 #include "DataEncoder.h"
 
 class MainWindow : public QMainWindow
@@ -111,7 +111,7 @@ class MainWindow : public QMainWindow
     QStringList echoBuffer;
     QByteArray readBuffer;
     unsigned int index;
-    QMap<int, MiniMacros *> miniMacroses;
+    QMap<int, MacrosItemWidget *> macrosItemWidgets;
     unsigned int sendCount;
     unsigned int sendIndex;
     QStringList echoSlave;
@@ -122,7 +122,7 @@ class MainWindow : public QMainWindow
     void saveSession();
     void loadSession();
     void connections();
-    int findIntervalItem(unsigned short start);
+    int findIntervalItem(int start);
 protected:
     virtual void closeEvent(QCloseEvent *e);
 

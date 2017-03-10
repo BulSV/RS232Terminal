@@ -1,10 +1,10 @@
-#include "Macros.h"
+#include "MacrosWidget.h"
 #include <QFileDialog>
 #include <QTextStream>
 #include <QMessageBox>
 #include <QDir>
 
-Macros::Macros(QWidget *parent)
+MacrosWidget::MacrosWidget(QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
     , widget(new QWidget(this))
     , toolBar(new QToolBar(this))
@@ -63,7 +63,7 @@ Macros::Macros(QWidget *parent)
     rbHEX->setChecked(true);
 }
 
-void Macros::compute(QString str)
+void MacrosWidget::compute(QString str)
 {
     if(str.isEmpty()) {
         lbDEC->clear();
@@ -126,27 +126,27 @@ void Macros::compute(QString str)
     emit act(true);
 }
 
-void Macros::update(unsigned short int t)
+void MacrosWidget::update(unsigned short int t)
 {
     time = t;
 }
 
-void Macros::hexChecked()
+void MacrosWidget::hexChecked()
 {
     package->setText(lbHEX->text());
 }
 
-void Macros::asciiChecked()
+void MacrosWidget::asciiChecked()
 {
     package->setText(lbASCII->text());
 }
 
-void Macros::decChecked()
+void MacrosWidget::decChecked()
 {
     package->setText(lbDEC->text());
 }
 
-void Macros::reset()
+void MacrosWidget::reset()
 {
     package->clear();
     path.clear();
@@ -156,7 +156,7 @@ void Macros::reset()
     setWindowTitle(tr("Terminal - Macros: Empty"));
 }
 
-void Macros::saveAs()
+void MacrosWidget::saveAs()
 {
     QString fileName = QFileDialog::getSaveFileName(this,
                                                     tr("Save File"),
@@ -170,7 +170,7 @@ void Macros::saveAs()
     saveToFile(fileName);
 }
 
-void Macros::save()
+void MacrosWidget::save()
 {
     if(path.isEmpty()) {
         saveAs();
@@ -181,7 +181,7 @@ void Macros::save()
     saveToFile(path);
 }
 
-void Macros::openDialog()
+void MacrosWidget::openDialog()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Open File"),
@@ -194,18 +194,18 @@ void Macros::openDialog()
     openFile(fileName);
 }
 
-bool Macros::openPath(QString fileName)
+bool MacrosWidget::openPath(QString fileName)
 {
     if(fileName.isEmpty()) {
         return false;
     }
 
-    saveToFile(fileName);
+    openFile(fileName);
 
     return true;
 }
 
-void Macros::saveToFile(const QString &path)
+void MacrosWidget::saveToFile(const QString &path)
 {
     QFile file(path);
     if(!file.open(QIODevice::WriteOnly)) {
@@ -243,7 +243,7 @@ void Macros::saveToFile(const QString &path)
     isFromFile = true;
 }
 
-void Macros::openFile(const QString &path)
+void MacrosWidget::openFile(const QString &path)
 {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
