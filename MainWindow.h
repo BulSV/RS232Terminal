@@ -157,13 +157,11 @@ private slots:
     void delMacros(int index);
     void sendPackage(QString string, int mode);
     void deleteAllMacroses();
-    void checkAllIntervals(bool check);
-    void checkAllPeriods(bool check);
+    void checkAllMacroses();
     void changeAllDelays(int n);
     void moveMacUp(int index);
     void moveMacDown(int index);
     bool moveMacros(QWidget *widget, MacrosMoveDirection direction);
-
 public:
     void displayWriteData(QStringList list);
     explicit MainWindow(QString title, QWidget *parent = 0);

@@ -8,6 +8,7 @@
 #include <QScrollBar>
 #include <QDir>
 #include <QListIterator>
+#include <QButtonGroup>
 
 #include "MainWindow.h"
 #include "MiniMacros.h"
@@ -157,6 +158,11 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbSendMode->addItems(buffer);
     m_cbReadMode->addItems(buffer);
     m_cbWriteMode->addItems(buffer);
+
+    QButtonGroup *intervalsPeriodsGroup = new QButtonGroup(this);
+    intervalsPeriodsGroup->addButton(m_cbAllIntervals);
+    intervalsPeriodsGroup->addButton(m_cbAllPeriods);
+    intervalsPeriodsGroup->setExclusive(true);
 
     QDir dir;
     if(!dir.exists(dir.currentPath()+"/Macros")) {
@@ -324,8 +330,8 @@ void MainWindow::connections()
     connect(m_leSendPackage, SIGNAL(returnPressed()), m_bSendPackage, SLOT(click()));
     connect(m_bNewMacros, SIGNAL(clicked()), this, SLOT(addMacros()));
     connect(m_bLoadMacroses, SIGNAL(clicked()), this, SLOT(openDialog()));
-    connect(m_cbAllIntervals, SIGNAL(toggled(bool)), this, SLOT(checkAllIntervals(bool)));
-    connect(m_cbAllPeriods, SIGNAL(toggled(bool)), this, SLOT(checkAllPeriods(bool)));
+    connect(m_cbAllIntervals, SIGNAL(toggled(bool)), this, SLOT(checkAllMacroses()));
+    connect(m_cbAllPeriods, SIGNAL(toggled(bool)), this, SLOT(checkAllMacroses()));
     connect(m_sbAllDelays, SIGNAL(valueChanged(int)), this, SLOT(changeAllDelays(int)));
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
@@ -345,35 +351,27 @@ void MainWindow::setUniformSizes(bool check)
 
 void MainWindow::changeAllDelays(int n)
 {
-    foreach(MiniMacros *m, miniMacroses) {
-        m->time->setValue(n);
+    QListIterator<MiniMacros*> it(miniMacroses.values());
+    while(it.hasNext()) {
+        it.next()->time->setValue(n);
     }
 }
 
-void MainWindow::checkAllIntervals(bool check)
+void MainWindow::checkAllMacroses()
 {
-    m_cbAllPeriods->setChecked(false);
-    m_cbAllIntervals->setChecked(check);
-    foreach(MiniMacros *m, miniMacroses) {
-        m->period->setChecked(false);
-        m->interval->setChecked(check);
-    }
-}
-
-void MainWindow::checkAllPeriods(bool check)
-{
-    m_cbAllIntervals->setChecked(false);
-    m_cbAllPeriods->setChecked(check);
-    foreach(MiniMacros *m, miniMacroses) {
-        m->interval->setChecked(false);
-        m->period->setChecked(check);
+    QListIterator<MiniMacros*> it(miniMacroses.values());
+    MiniMacros *m = 0;
+    while(it.hasNext()) {
+        m = it.next();
+        m->interval->setChecked(m_cbAllIntervals->isChecked());
+        m->period->setChecked(m_cbAllPeriods->isChecked());
     }
 }
 
 void MainWindow::deleteAllMacroses()
 {
-    int button = QMessageBox::question(this, "Warning",
-                                       "Delete ALL macroses?",
+    int button = QMessageBox::question(this, tr("Warning"),
+                                       tr("Delete ALL macroses?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
         checkAllIntervals(false);
