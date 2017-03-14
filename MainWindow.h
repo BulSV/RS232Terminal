@@ -97,7 +97,7 @@ class MainWindow : public QMainWindow
     QSpacerItem *spacer;
     QVBoxLayout *scrollAreaLayout;
     QScrollArea *scrollArea;
-    QWidget *widgetScroll;
+    QWidget *scrollWidget;
     QVBoxLayout *HiddenLayout;
 
     QFile writeLogFile;

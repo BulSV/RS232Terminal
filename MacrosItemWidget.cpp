@@ -4,12 +4,14 @@
 
 MacrosItemWidget::MacrosItemWidget(int i, QWidget *parent)
     :QWidget(parent)
-    , layout(new QHBoxLayout(this))
+    , mainLayout(new QHBoxLayout(this))
     , del(new QPushButton(this))
     , interval(new QCheckBox(this))
     , period(new QCheckBox(this))
     , time(new QSpinBox(this))
     , send(new RightClickedButton(tr("Empty"), this))
+    , buttonUp(new QPushButton(this))
+    , buttonDown(new QPushButton(this))
     , macrosWidget(new MacrosWidget(this))
     , tPeriod(new QTimer(this))
 {
@@ -20,46 +22,13 @@ MacrosItemWidget::MacrosItemWidget(int i, QWidget *parent)
     interval->setEnabled(false);
     period->setEnabled(false);
 
-    QPushButton *buttonUp = new QPushButton(this);
-    QPushButton *buttonDown = new QPushButton(this);
-    buttonUp->setFixedSize(16, 13);
-    buttonDown->setFixedSize(16, 13);
-    buttonUp->setStyleSheet("border-image: url(:/Resources/arrow-up.png) stretch;");
-    buttonDown->setStyleSheet("border-image: url(:/Resources/arrow-down.png) stretch;");
+    view();
+    connections();
+}
 
-    QVBoxLayout *lay = new QVBoxLayout();
-    lay->setSpacing(1);
-    lay->addWidget(buttonUp);
-    lay->addWidget(buttonDown);
-
-    layout->addWidget(del);
-    layout->addWidget(interval);
-    layout->addWidget(period);
-    layout->addWidget(time);
-    layout->addWidget(send);
-    layout->addLayout(lay);
-    layout->setSpacing(5);
-
-    setLayout(layout);
-
-    send->setStyleSheet("font-weight: bold");
-    interval->setFixedWidth(15);
-    period->setFixedWidth(15);
-    send->setFixedWidth(85);
-    del->setFixedSize(15, 15);
-    del->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
-
-    connect(interval, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
-    connect(period, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
-    connect(send, SIGNAL(rightClicked()), macrosWidget, SLOT(show()));
-    connect(send, SIGNAL(clicked()), this, SLOT(sendPeriod()));
-    connect(time, SIGNAL(valueChanged(int)), this, SLOT(timeChanged()));
-    connect(del, SIGNAL(pressed()), this, SLOT(delMac()));
-    connect(macrosWidget, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
-    connect(macrosWidget, SIGNAL(act(bool)), this, SLOT(activate(bool)));
-    connect(tPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
-    connect(buttonUp, SIGNAL(clicked(bool)), this, SLOT(sendMoveUp()));
-    connect(buttonDown, SIGNAL(clicked(bool)), this, SLOT(sendMoveDown()));
+int MacrosItemWidget::getMode() const
+{
+    return mode;
 }
 
 void MacrosItemWidget::sendPeriod()
@@ -100,6 +69,16 @@ void MacrosItemWidget::checkMacros()
     }
 }
 
+QSettings *MacrosItemWidget::getSettings() const
+{
+    return settings;
+}
+
+void MacrosItemWidget::setSettings(QSettings *settings)
+{
+    this->settings = settings;
+}
+
 void MacrosItemWidget::timeChanged()
 {
     macrosWidget->update(time->value());
@@ -118,13 +97,13 @@ void MacrosItemWidget::activate(bool enabled)
     period->setEnabled(enabled);
 
     if(macrosWidget->rbHEX->isChecked()) {
-        mode = 0;
+        mode = HEX;
     }
     if(macrosWidget->rbASCII->isChecked()) {
-        mode = 1;
+        mode = ASCII;
     }
     if(macrosWidget->rbDEC->isChecked()) {
-        mode = 2;
+        mode = DEC;
     }
 }
 
@@ -136,4 +115,49 @@ void MacrosItemWidget::delMac()
     if(button == QMessageBox::Yes) {
         emit deleteSignal(index);
     }
+}
+
+void MacrosItemWidget::view()
+{
+    buttonUp->setFixedSize(16, 13);
+    buttonDown->setFixedSize(16, 13);
+    buttonUp->setStyleSheet("border-image: url(:/Resources/arrow-up.png) stretch;");
+    buttonDown->setStyleSheet("border-image: url(:/Resources/arrow-down.png) stretch;");
+
+    QVBoxLayout *upDownButtonsLayout = new QVBoxLayout;
+    upDownButtonsLayout->setSpacing(1);
+    upDownButtonsLayout->addWidget(buttonUp);
+    upDownButtonsLayout->addWidget(buttonDown);
+
+    mainLayout->addWidget(del);
+    mainLayout->addWidget(interval);
+    mainLayout->addWidget(period);
+    mainLayout->addWidget(time);
+    mainLayout->addWidget(send);
+    mainLayout->addLayout(upDownButtonsLayout);
+    mainLayout->setSpacing(5);
+
+    setLayout(mainLayout);
+
+    send->setStyleSheet("font-weight: bold");
+    interval->setFixedWidth(15);
+    period->setFixedWidth(15);
+    send->setFixedWidth(85);
+    del->setFixedSize(15, 15);
+    del->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
+}
+
+void MacrosItemWidget::connections()
+{
+    connect(interval, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
+    connect(period, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
+    connect(send, SIGNAL(rightClicked()), macrosWidget, SLOT(show()));
+    connect(send, SIGNAL(clicked()), this, SLOT(sendPeriod()));
+    connect(time, SIGNAL(valueChanged(int)), this, SLOT(timeChanged()));
+    connect(del, SIGNAL(pressed()), this, SLOT(delMac()));
+    connect(macrosWidget, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
+    connect(macrosWidget, SIGNAL(act(bool)), this, SLOT(activate(bool)));
+    connect(tPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
+    connect(buttonUp, SIGNAL(clicked(bool)), this, SLOT(sendMoveUp()));
+    connect(buttonDown, SIGNAL(clicked(bool)), this, SLOT(sendMoveDown()));
 }

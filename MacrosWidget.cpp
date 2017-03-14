@@ -6,9 +6,9 @@
 
 MacrosWidget::MacrosWidget(QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
-    , widget(new QWidget(this))
+    , centralWidget(new QWidget(this))
     , toolBar(new QToolBar(this))
-    , mainLay(new QGridLayout())
+    , mainLayout(new QGridLayout())
     , lbHEX(new QLineEdit(this))
     , lbDEC(new QLineEdit(this))
     , lbASCII(new QLineEdit(this))
@@ -23,44 +23,8 @@ MacrosWidget::MacrosWidget(QWidget *parent)
     time = 50;
     isFromFile = false;
 
-    addToolBar(Qt::TopToolBarArea, toolBar);
-    toolBar->setMovable(false);
-    toolBar->addAction(tr("New"), this, SLOT(reset()));
-    toolBar->addAction(tr("Load"), this, SLOT(openDialog()));
-    toolBar->addAction(tr("Save"), this, SLOT(save()));
-    toolBar->addAction(tr("Save as"), this, SLOT(saveAs()));
-    aCR->setCheckable(true);
-    aLF->setCheckable(true);
-    QList<QAction*> actionList;
-    actionList << aCR << aLF;
-    toolBar->addActions(actionList);
-
-    connect(package, SIGNAL(textChanged(QString)), this, SLOT(compute(QString)));
-    connect(rbHEX, SIGNAL(toggled(bool)), this, SLOT(hexChecked()));
-    connect(rbDEC, SIGNAL(toggled(bool)), this, SLOT(decChecked()));
-    connect(rbASCII, SIGNAL(toggled(bool)), this, SLOT(asciiChecked()));
-
-    widget->setLayout(mainLay);
-    setCentralWidget(widget);
-    mainLay->setSpacing(5);
-    mainLay->addWidget(new QLabel(tr("Formats:"), this), 0, 0);
-    mainLay->addWidget(package, 0, 1);
-    mainLay->addWidget(rbHEX, 1, 0);
-    mainLay->addWidget(lbHEX, 1, 1);
-    mainLay->addWidget(rbASCII, 2, 0);
-    mainLay->addWidget(lbASCII, 2, 1);
-    mainLay->addWidget(rbDEC, 3, 0);
-    mainLay->addWidget(lbDEC, 3, 1);
-
-    lbHEX->setReadOnly(true);
-    lbDEC->setReadOnly(true);
-    lbASCII->setReadOnly(true);
-    lbHEX->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    lbDEC->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    lbASCII->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    package->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    setMinimumSize(400, 150);
-    rbHEX->setChecked(true);
+    view();
+    connections();
 }
 
 void MacrosWidget::compute(QString str)
@@ -274,4 +238,49 @@ void MacrosWidget::openFile(const QString &path)
     file.close();
     this->path = path;
     isFromFile = true;
+}
+
+void MacrosWidget::connections()
+{
+    connect(package, SIGNAL(textChanged(QString)), this, SLOT(compute(QString)));
+    connect(rbHEX, SIGNAL(toggled(bool)), this, SLOT(hexChecked()));
+    connect(rbDEC, SIGNAL(toggled(bool)), this, SLOT(decChecked()));
+    connect(rbASCII, SIGNAL(toggled(bool)), this, SLOT(asciiChecked()));
+}
+
+void MacrosWidget::view()
+{
+    addToolBar(Qt::TopToolBarArea, toolBar);
+    toolBar->setMovable(false);
+    toolBar->addAction(tr("New"), this, SLOT(reset()));
+    toolBar->addAction(tr("Load"), this, SLOT(openDialog()));
+    toolBar->addAction(tr("Save"), this, SLOT(save()));
+    toolBar->addAction(tr("Save as"), this, SLOT(saveAs()));
+    aCR->setCheckable(true);
+    aLF->setCheckable(true);
+    QList<QAction*> actionList;
+    actionList << aCR << aLF;
+    toolBar->addActions(actionList);
+
+    centralWidget->setLayout(mainLayout);
+    setCentralWidget(centralWidget);
+    mainLayout->setSpacing(5);
+    mainLayout->addWidget(new QLabel(tr("Formats:"), this), 0, 0);
+    mainLayout->addWidget(package, 0, 1);
+    mainLayout->addWidget(rbHEX, 1, 0);
+    mainLayout->addWidget(lbHEX, 1, 1);
+    mainLayout->addWidget(rbASCII, 2, 0);
+    mainLayout->addWidget(lbASCII, 2, 1);
+    mainLayout->addWidget(rbDEC, 3, 0);
+    mainLayout->addWidget(lbDEC, 3, 1);
+
+    lbHEX->setReadOnly(true);
+    lbDEC->setReadOnly(true);
+    lbASCII->setReadOnly(true);
+    lbHEX->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
+    lbDEC->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
+    lbASCII->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
+    package->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
+    setMinimumSize(400, 150);
+    rbHEX->setChecked(true);
 }

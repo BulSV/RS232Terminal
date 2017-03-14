@@ -82,16 +82,17 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
     , scrollAreaLayout(new QVBoxLayout)
     , scrollArea(new QScrollArea(m_gbHiddenGroup))
-    , widgetScroll(new QWidget(scrollArea))
-    , HiddenLayout(new QVBoxLayout(widgetScroll))
+    , scrollWidget(new QWidget(scrollArea))
+    , HiddenLayout(new QVBoxLayout(scrollWidget))
     , dataEncoder(0)
 {
-    m_Port->setSettingsRestoredOnClose(false);
     setWindowTitle(title);
     resize(settings->value("config/width").toInt(),
            settings->value("config/height").toInt());
+
     view();
     connections();
+
     setMinimumWidth(665);
 
     m_Port->setReadBufferSize(1);
@@ -277,7 +278,7 @@ void MainWindow::view()
     hiddenAllCheck->setSpacing(5);
 
     scrollAreaLayout->addLayout(hiddenAllCheck);
-    scrollArea->setWidget(widgetScroll);
+    scrollArea->setWidget(scrollWidget);
     scrollArea->show();
     scrollArea->setVisible(true);
     scrollArea->setVerticalScrollBar(new QScrollBar(Qt::Vertical, scrollArea));
@@ -410,7 +411,7 @@ int MainWindow::findIntervalItem(int start)
 void MainWindow::sendInterval()
 {
     sendPackage(macrosItemWidgets[sendIndex]->macrosWidget->package->text(),
-                macrosItemWidgets[sendIndex]->mode);
+                macrosItemWidgets[sendIndex]->getMode());
     sendIndex++;
     sendIndex = findIntervalItem(sendIndex);
     m_tIntervalSending->setInterval(macrosItemWidgets[sendIndex]->time->value());
@@ -685,7 +686,9 @@ void MainWindow::echoCheckMaster(bool check)
     m_cbEchoMaster->setChecked(check);
     if(check) {
         m_bSendPackage->setChecked(false);
-        foreach(MacrosItemWidget *m, macrosItemWidgets.values()) {
+        QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+        MacrosItemWidget *m = 0;
+        while(it.hasNext()) {
             m->interval->setChecked(false);
             m->period->setChecked(false);
             m->interval->setEnabled(false);
@@ -694,7 +697,9 @@ void MainWindow::echoCheckMaster(bool check)
 
         return;
     }
-    foreach(MacrosItemWidget *m, macrosItemWidgets.values()) {
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    MacrosItemWidget *m = 0;
+    while(it.hasNext()) {
         m->interval->setEnabled(true);
         m->period->setEnabled(true);
     }

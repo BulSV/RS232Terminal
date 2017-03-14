@@ -7,6 +7,8 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QTimer>
+#include <QSettings>
+
 #include "RightClickedButton.h"
 #include "MacrosWidget.h"
 
@@ -14,18 +16,28 @@ class MacrosItemWidget : public QWidget
 {
     Q_OBJECT
 public:
+    enum DataMode
+    {
+        HEX = 0,
+        ASCII = 1,
+        DEC = 2
+    };
     explicit MacrosItemWidget(int i, QWidget *parent = 0);
 
-    QHBoxLayout *layout;
-    QPushButton *del;
     QCheckBox *interval;
     QCheckBox *period;
     QSpinBox *time;
     RightClickedButton *send;
+    QPushButton *buttonUp;
+    QPushButton *buttonDown;
     MacrosWidget *macrosWidget;
     QTimer *tPeriod;
-    unsigned short int index;
-    unsigned short int mode;
+    int index;
+
+    int getMode() const;
+
+    QSettings *getSettings() const;
+    void setSettings(QSettings *settings);
 
 public slots:
     void timeChanged();
@@ -44,6 +56,15 @@ signals:
     void moveDown(int);
 private slots:
     void checkMacros();
+private:
+    QHBoxLayout *mainLayout;
+    QPushButton *del;
+
+    int mode;
+    QSettings *settings;
+
+    void view();
+    void connections();
 };
 
 #endif // MACROS_ITEM_WIDGET_H
