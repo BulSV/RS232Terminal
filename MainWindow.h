@@ -86,7 +86,6 @@ class MainWindow : public QMainWindow
     QCheckBox *m_cbAllPeriods;
     QCheckBox *m_cbDisplayWrite;
     QCheckBox *m_cbDisplayRead;
-    QCheckBox *m_cbUniformSizes;
     QCheckBox *m_chbCR;
     QCheckBox *m_chbLF;
 
@@ -132,7 +131,6 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private slots:
-    void setUniformSizes(bool check);
     void rxNone();
     void txNone();
     void rxHold();
@@ -151,7 +149,7 @@ private slots:
     void readLogTimeout();
     void startWriteLog(bool check);
     void startReadLog(bool check);
-    void textChanged(QString text);
+    void textChanged(const QString &text);
     void echoCheckMaster(bool check);
     void echoCheckSlave(bool check);
     void received();

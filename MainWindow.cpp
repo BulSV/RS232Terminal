@@ -74,7 +74,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbAllPeriods(new QCheckBox(tr("Period"), this))
     , m_cbDisplayWrite(new QCheckBox(tr("Display"), this))
     , m_cbDisplayRead(new QCheckBox(tr("Display"), this))
-    , m_cbUniformSizes(new QCheckBox(tr("Uniform sizes"), this))
     , m_chbCR(new QCheckBox("CR", this))
     , m_chbLF(new QCheckBox("LF", this))
     , m_Port(new QSerialPort(this))
@@ -194,7 +193,6 @@ void MainWindow::view()
     configLayout->addWidget(m_sbDelay, 10, 1);
     configLayout->addWidget(m_bStart, 11, 0);
     configLayout->addWidget(m_bStop, 11, 1);
-    configLayout->addWidget(m_cbUniformSizes, 13, 0, 1, 2);
     configLayout->addWidget(m_lTxCount, 14, 0);
     configLayout->addWidget(m_lRxCount, 14, 1);
     configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 12, 0);
@@ -224,7 +222,6 @@ void MainWindow::view()
     WriteLayout->addWidget(m_bWriteLogClear, 1, 2);
     WriteLayout->addWidget(m_eLogWrite, 2, 0, 1, 6);
     WriteLayout->setSpacing(5);
-    WriteLayout->setMargin(5);
 
     QGridLayout *ReadLayout = new QGridLayout;
     ReadLayout->addWidget(new QLabel(tr("Read:"), this), 0, 0);
@@ -241,7 +238,6 @@ void MainWindow::view()
     ReadLayout->addWidget(m_bReadLogClear, 1, 2);
     ReadLayout->addWidget(m_eLogRead, 2, 0, 1, 6);
     ReadLayout->setSpacing(5);
-    ReadLayout->setMargin(5);
 
     QWidget *wWrite = new QWidget;
     wWrite->setLayout(WriteLayout);
@@ -257,7 +253,6 @@ void MainWindow::view()
     dataLayout->addWidget(splitter, 0, 0);
     dataLayout->addLayout(sendPackageLayout, 1, 0);
     dataLayout->setSpacing(0);
-    dataLayout->setMargin(0);
 
     QHBoxLayout *hiddenAllCheck = new QHBoxLayout;
     m_bDeleteAllMacroses->setFixedSize(15, 15);
@@ -337,13 +332,6 @@ void MainWindow::connections()
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
     connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
-    connect(m_cbUniformSizes, SIGNAL(toggled(bool)), this, SLOT(setUniformSizes(bool)));
-}
-
-void MainWindow::setUniformSizes(bool check)
-{
-    m_eLogRead->setUniformItemSizes(check);
-    m_eLogWrite->setUniformItemSizes(check);
 }
 
 void MainWindow::changeAllDelays(int n)
@@ -424,6 +412,7 @@ void MainWindow::hiddenClick()
     if(m_gbHiddenGroup->isHidden()) {
         m_gbHiddenGroup->show();
         m_bHiddenGroup->setText("<");
+
         if(!isMaximized()) {
             resize(width() + m_gbHiddenGroup->width() + 5, height());
         }
@@ -458,6 +447,7 @@ void MainWindow::openDialog()
 void MainWindow::addMacros()
 {
     MacrosItemWidget *macrosItemWidget = new MacrosItemWidget(index, this);
+    index++;
     macrosItemWidgets.append(macrosItemWidget);
     hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosItemWidget);
 
@@ -466,8 +456,6 @@ void MainWindow::addMacros()
     connect(macrosItemWidget, &MacrosItemWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
     connect(macrosItemWidget, &MacrosItemWidget::movedUp, this, &MainWindow::moveMacrosUp);
     connect(macrosItemWidget, &MacrosItemWidget::movedDown, this, &MainWindow::moveMacrosDown);
-
-    index++;
 }
 
 void MainWindow::moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction)
@@ -651,7 +639,7 @@ void MainWindow::saveRead()
     file.close();
 }
 
-void MainWindow::textChanged(QString text)
+void MainWindow::textChanged(const QString &text)
 {
     if(!text.isEmpty() && m_bStop->isEnabled()) {
         m_bSendPackage->setEnabled(true);
