@@ -164,9 +164,9 @@ private slots:
     void deleteAllMacroses();
     void checkAllMacroses();
     void changeAllDelays(int n);
-    void moveMacUp();
-    void moveMacDown();
-    void moveMacros(QWidget *widget, MacrosMoveDirection direction);
+    void moveMacrosUp();
+    void moveMacrosDown();
+    void moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction);
 public:
     void displayWriteData(QStringList list);
     explicit MainWindow(QString title, QWidget *parent = 0);

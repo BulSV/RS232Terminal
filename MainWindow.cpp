@@ -464,63 +464,50 @@ void MainWindow::addMacros()
     connect(macrosItemWidget, &MacrosItemWidget::deleteSignal, this, &MainWindow::delMacros);
     connect(macrosItemWidget, &MacrosItemWidget::setSend, this, &MainWindow::sendPackage);
     connect(macrosItemWidget, &MacrosItemWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
-    connect(macrosItemWidget, &MacrosItemWidget::movedUp, this, &MainWindow::moveMacUp);
-    connect(macrosItemWidget, &MacrosItemWidget::movedDown, this, &MainWindow::moveMacDown);
+    connect(macrosItemWidget, &MacrosItemWidget::movedUp, this, &MainWindow::moveMacrosUp);
+    connect(macrosItemWidget, &MacrosItemWidget::movedDown, this, &MainWindow::moveMacrosDown);
 
     index++;
 }
 
-void MainWindow::moveMacros(QWidget *widget, MacrosMoveDirection direction)
+void MainWindow::moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction)
 {
-    QVBoxLayout* myLayout = qobject_cast<QVBoxLayout*>(widget->parentWidget()->layout());
-    int oldIndex = myLayout->indexOf(widget);
-
-    if(direction == MoveUp && oldIndex == 0) {
+    if(!macrosItemWidget) {
         return;
     }
 
-    if(direction == MoveDown && oldIndex == myLayout->count() - 2) {
-        return;
-    }
+    int macrosIndex = macrosItemWidgets.indexOf(macrosItemWidget);
 
-    int newIndex = oldIndex + 1;
+    QVBoxLayout* tempLayout = qobject_cast<QVBoxLayout*>(macrosItemWidget->parentWidget()->layout());
+    int index = tempLayout->indexOf(macrosItemWidget);
+
     if(direction == MoveUp) {
-        newIndex = oldIndex - 1;
+        if(macrosIndex == 0) {
+            return;
+        }
+
+        macrosItemWidgets.swap(macrosIndex, macrosIndex - 1);
+        --index;
+    } else {
+        if(macrosIndex == macrosItemWidgets.size() - 1) {
+            return;
+        }
+
+        macrosItemWidgets.swap(macrosIndex, macrosIndex + 1);
+        ++index;
     }
-    myLayout->removeWidget(widget);
-    myLayout->insertWidget(newIndex , widget);
+    tempLayout->removeWidget(macrosItemWidget);
+    tempLayout->insertWidget(index, macrosItemWidget);
 }
 
-void MainWindow::moveMacUp()
+void MainWindow::moveMacrosUp()
 {
-    MacrosItemWidget *macrosItemWidget = qobject_cast<MacrosItemWidget*>(sender());
-    if(!macrosItemWidget) {
-        return;
-    }
-
-    int macrosIndex = macrosItemWidgets.indexOf(macrosItemWidget);
-    if(macrosIndex == 0) {
-        return;
-    }
-
-    macrosItemWidgets.swap(macrosIndex, macrosIndex - 1);
-    moveMacros(macrosItemWidget, MoveUp);
+    moveMacros(qobject_cast<MacrosItemWidget*>(sender()), MoveUp);
 }
 
-void MainWindow::moveMacDown()
+void MainWindow::moveMacrosDown()
 {
-    MacrosItemWidget *macrosItemWidget = qobject_cast<MacrosItemWidget*>(sender());
-    if(!macrosItemWidget) {
-        return;
-    }
-
-    int macrosIndex = macrosItemWidgets.indexOf(macrosItemWidget);
-    if(macrosIndex == macrosItemWidgets.size() - 1) {
-        return;
-    }
-
-    macrosItemWidgets.swap(macrosIndex, macrosIndex + 1);
-    moveMacros(macrosItemWidget, MoveDown);
+    moveMacros(qobject_cast<MacrosItemWidget*>(sender()), MoveDown);
 }
 
 void MainWindow::intervalSendAdded(int index, bool check)
