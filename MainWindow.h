@@ -15,6 +15,7 @@
 #include <QGroupBox>
 #include <QSpacerItem>
 #include <QScrollArea>
+#include <QList>
 
 #include "RightClickedButton.h"
 #include "LimitedItemsListWidget.h"
@@ -111,7 +112,7 @@ class MainWindow : public QMainWindow
     QStringList echoBuffer;
     QByteArray readBuffer;
     unsigned int index;
-    QMap<int, MacrosItemWidget *> macrosItemWidgets;
+    QList<MacrosItemWidget*> macrosItemWidgets;
     unsigned int sendCount;
     unsigned int sendIndex;
     QStringList echoSlave;

@@ -346,7 +346,7 @@ void MainWindow::setUniformSizes(bool check)
 
 void MainWindow::changeAllDelays(int n)
 {
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     while(it.hasNext()) {
         it.next()->time->setValue(n);
     }
@@ -361,7 +361,7 @@ void MainWindow::checkAllMacroses()
 
         return;
     }
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
@@ -376,7 +376,7 @@ void MainWindow::deleteAllMacroses()
                                        tr("Delete ALL macroses?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
-        QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+        QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
         MacrosItemWidget *m = 0;
         while(it.hasNext()) {
             m = it.next();
@@ -389,7 +389,7 @@ void MainWindow::deleteAllMacroses()
 
 int MainWindow::findIntervalItem(int start)
 {
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
@@ -497,7 +497,7 @@ void MainWindow::moveMacUp(int index)
        return;
    }
    for(int i = index - 1; i >= macrosItemWidgets.first()->index; i--) {
-       if(macrosItemWidgets.contains(i)) {
+       if(i < macrosItemWidgets.size() && i >= 0) {
            macrosItemWidgets[index]->index = i;
            macrosItemWidgets[i]->index = index;
            MacrosItemWidget *temp = macrosItemWidgets[index];
@@ -515,7 +515,7 @@ void MainWindow::moveMacDown(int index)
        return;
    }
    for(int i = index + 1; i <= macrosItemWidgets.last()->index; i++) {
-       if(macrosItemWidgets.contains(i)) {
+       if(i < macrosItemWidgets.size() && i >= 0) {
            macrosItemWidgets[index]->index = i;
            macrosItemWidgets[i]->index = index;
            MacrosItemWidget *temp = macrosItemWidgets[index];
@@ -550,7 +550,7 @@ void MainWindow::intervalSendAdded(int index, bool check)
 
 void MainWindow::delMacros(int index)
 {
-    delete macrosItemWidgets.take(index);
+    delete macrosItemWidgets.takeAt(index);
 }
 
 void MainWindow::writeLogTimeout()
@@ -686,7 +686,7 @@ void MainWindow::echoCheckMaster(bool check)
     m_cbEchoMaster->setChecked(check);
     if(check) {
         m_bSendPackage->setChecked(false);
-        QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+        QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
         MacrosItemWidget *m = 0;
         while(it.hasNext()) {
             m->interval->setChecked(false);
@@ -697,7 +697,7 @@ void MainWindow::echoCheckMaster(bool check)
 
         return;
     }
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m->interval->setEnabled(true);
@@ -876,7 +876,7 @@ void MainWindow::pause(bool check)
         m_tIntervalSending->start();
     }
 
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     MacrosItemWidget* m = 0;
     while(it.hasNext()) {
         m = it.next();
@@ -1159,7 +1159,7 @@ void MainWindow::saveSession()
 
     settings->remove("macros");
     int i = 1;
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
@@ -1250,7 +1250,7 @@ void MainWindow::loadSession()
 void MainWindow::closeEvent(QCloseEvent *e)
 {
     saveSession();
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
+    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     while(it.hasNext()) {
         it.next()->macrosWidget->close();
     }
