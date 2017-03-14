@@ -123,6 +123,12 @@ class MainWindow : public QMainWindow
     void loadSession();
     void connections();
     int findIntervalItem(int start);
+
+    void portBaudSetting();
+    void portDataBitsSetting();
+    void portParitySetting();
+    void portStopBitsSetting();
+
 protected:
     virtual void closeEvent(QCloseEvent *e);
 

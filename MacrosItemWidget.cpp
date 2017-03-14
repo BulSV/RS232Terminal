@@ -69,14 +69,25 @@ void MacrosItemWidget::checkMacros()
     }
 }
 
-QSettings *MacrosItemWidget::getSettings() const
-{
-    return settings;
-}
-
-void MacrosItemWidget::setSettings(QSettings *settings)
+void MacrosItemWidget::setSettings(QSettings *settings, int index)
 {
     this->settings = settings;
+    if(!macrosWidget->openPath(settings->value("macros/"+QString::number(index)+"/path").toString())) {
+        QString mode = settings->value("macros/"+QString::number(index)+"/mode").toString();
+        if(mode == "HEX") {
+            macrosWidget->rbHEX->setChecked(true);
+        }
+        if(mode == "DEC") {
+            macrosWidget->rbDEC->setChecked(true);
+        }
+        if(mode == "ASCII") {
+            macrosWidget->rbASCII->setChecked(true);
+        }
+        macrosWidget->package->setText(settings->value("macros/"+QString::number(index)+"/packege").toString());
+        time->setValue(settings->value("macros/"+QString::number(index)+"/interval").toInt());
+    }
+    interval->setChecked(settings->value("macros/"+QString::number(index)+"/checked_interval").toBool());
+    period->setChecked(settings->value("macros/"+QString::number(index)+"/checked_period").toBool());
 }
 
 void MacrosItemWidget::timeChanged()

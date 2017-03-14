@@ -90,9 +90,9 @@ void MacrosWidget::compute(QString str)
     emit act(true);
 }
 
-void MacrosWidget::update(unsigned short int t)
+void MacrosWidget::update(int time)
 {
-    time = t;
+    this->time = time;
 }
 
 void MacrosWidget::hexChecked()
@@ -158,7 +158,7 @@ void MacrosWidget::openDialog()
     openFile(fileName);
 }
 
-bool MacrosWidget::openPath(QString fileName)
+bool MacrosWidget::openPath(const QString &fileName)
 {
     if(fileName.isEmpty()) {
         return false;
@@ -167,6 +167,11 @@ bool MacrosWidget::openPath(QString fileName)
     openFile(fileName);
 
     return true;
+}
+
+void MacrosWidget::setSettings(QSettings *value)
+{
+    settings = value;
 }
 
 void MacrosWidget::saveToFile(const QString &path)
@@ -217,7 +222,7 @@ void MacrosWidget::openFile(const QString &path)
     }
 
     QTextStream stream(&file);
-    QString mode = stream.readLine(0);
+    QString mode = stream.readLine();
     if(mode == "HEX") {
         rbHEX->setChecked(true);
     }
@@ -227,9 +232,9 @@ void MacrosWidget::openFile(const QString &path)
     if(mode == "DEC") {
         rbDEC->setChecked(true);
     }
-    package->setText(stream.readLine(0));
-    time = stream.readLine(0).toInt();
-    resize(stream.readLine(0).toInt(), stream.readLine(0).toInt());
+    package->setText(stream.readLine());
+    time = stream.readLine().toInt();
+    resize(stream.readLine().toInt(), stream.readLine().toInt());
     QFileInfo fileInfo(file.fileName());
 
     emit upd(true, fileInfo.baseName(), time);

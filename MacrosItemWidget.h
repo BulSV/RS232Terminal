@@ -36,8 +36,7 @@ public:
 
     int getMode() const;
 
-    QSettings *getSettings() const;
-    void setSettings(QSettings *settings);
+    void setSettings(QSettings *settings, int index);
 
 public slots:
     void timeChanged();

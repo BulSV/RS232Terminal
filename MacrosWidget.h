@@ -10,6 +10,7 @@
 #include <QRadioButton>
 #include <QLabel>
 #include <QAction>
+#include <QSettings>
 
 class MacrosWidget : public QMainWindow
 {
@@ -21,9 +22,11 @@ public:
     QRadioButton *rbASCII;
 
     explicit MacrosWidget(QWidget *parent = 0);
-    void update(unsigned short int t);
+    void update(int time);
     bool isFromFile;
     QString path;
+    void setSettings(QSettings *value);
+
 signals:
     void packageChanged(QString);
     void upd(bool, QString, int);
@@ -37,7 +40,7 @@ public slots:
     void saveAs();
     void save();
     void openDialog();
-    bool openPath(QString fileName);
+    bool openPath(const QString &fileName);
 private:
     QWidget *centralWidget;
     QToolBar *toolBar;
@@ -47,6 +50,7 @@ private:
     QLineEdit *lbASCII;
     QAction *aCR;
     QAction *aLF;
+    QSettings *settings;
 
     int time;
 

@@ -711,17 +711,8 @@ void MainWindow::echoCheckSlave(bool check)
     m_cbEchoSlave->setChecked(check);
 }
 
-void MainWindow::start()
+void MainWindow::portBaudSetting()
 {
-    m_Port->close();
-    m_Port->setPortName(m_cbPort->currentText());
-
-    if(!m_Port->open(QSerialPort::ReadWrite)) {
-        m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
-        m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
-
-        return;
-    }
     switch(m_cbBaud->currentIndex()) {
     case 0:
         m_Port->setBaudRate(QSerialPort::Baud1200);
@@ -757,7 +748,10 @@ void MainWindow::start()
         m_Port->setBaudRate(QSerialPort::Baud921600);
         break;
     }
+}
 
+void MainWindow::portDataBitsSetting()
+{
     switch(m_cbBits->currentIndex()) {
     case 0:
         m_Port->setDataBits(QSerialPort::Data5);
@@ -772,7 +766,10 @@ void MainWindow::start()
         m_Port->setDataBits(QSerialPort::Data8);
         break;
     }
+}
 
+void MainWindow::portParitySetting()
+{
     switch(m_cbParity->currentIndex()) {
     case 0:
         m_Port->setParity(QSerialPort::NoParity);
@@ -790,7 +787,10 @@ void MainWindow::start()
         m_Port->setParity(QSerialPort::SpaceParity);
         break;
     }
+}
 
+void MainWindow::portStopBitsSetting()
+{
     switch(m_cbStopBits->currentIndex()) {
     case 0:
         m_Port->setStopBits(QSerialPort::OneStop);
@@ -802,10 +802,24 @@ void MainWindow::start()
         m_Port->setStopBits(QSerialPort::TwoStop);
         break;
     }
+}
 
+void MainWindow::start()
+{
+    m_Port->close();
+    m_Port->setPortName(m_cbPort->currentText());
 
-    m_Port->setDataBits(QSerialPort::Data8);
-    m_Port->setParity(QSerialPort::NoParity);
+    if(!m_Port->open(QSerialPort::ReadWrite)) {
+        m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
+        m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
+
+        return;
+    }
+    portBaudSetting();
+    portDataBitsSetting();
+    portParitySetting();
+    portStopBitsSetting();
+
     m_Port->setFlowControl(QSerialPort::NoFlowControl);
 
     m_bStart->setEnabled(false);
@@ -818,9 +832,11 @@ void MainWindow::start()
     m_cbStopBits->setEnabled(false);
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+
     if(!m_leSendPackage->text().isEmpty()) {
         m_bSendPackage->setEnabled(true);
     }
+
     if(sendCount != 0) {
         sendIndex = macrosItemWidgets.first()->index;
         m_tIntervalSending->start();
@@ -859,6 +875,7 @@ void MainWindow::pause(bool check)
     } else if(sendCount != 0) {
         m_tIntervalSending->start();
     }
+
     QListIterator<MacrosItemWidget*> it(macrosItemWidgets.values());
     MacrosItemWidget* m = 0;
     while(it.hasNext()) {
@@ -888,9 +905,11 @@ void MainWindow::echo()
     if(m_cbEchoMaster->isChecked()) {
         sendPackage(echoBuffer.join(" "), 2);
     }
+
     if(m_cbEchoSlave->isChecked()) {
         sendPackage(echoSlave.takeFirst(), 2);
         m_tEcho->setInterval(m_sbEchoInterval->value());
+
         if(echoSlave.isEmpty()) {
             m_tEcho->stop();
         }
@@ -904,15 +923,16 @@ void MainWindow::startSending(bool checked)
 
         return;
     }
+
     if(m_Port->isOpen()) {
         if(m_sbRepeatSendInterval->value() != 0 && !m_cbEchoMaster->isChecked()) {
             m_tSend->setInterval(m_sbRepeatSendInterval->value());
             m_tSend->start();
 
-        } else {
-            sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
-            m_bSendPackage->setChecked(false);
+            return;
         }
+        sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
+        m_bSendPackage->setChecked(false);
     }
 }
 
@@ -940,11 +960,13 @@ void MainWindow::sendPackage(QString string, int mode)
     case DEC:
         dataEncoder = new DecEncoder;
     }
+
     dataEncoder->setData(string);
     QByteArray writeArray = dataEncoder->encodedByteArray();
     QStringList writeList = dataEncoder->encodedStringList();
     delete dataEncoder;
     dataEncoder = 0;
+
     if(m_chbCR->isChecked()) {
         writeArray.append(CR);
         writeList.append("\r");
