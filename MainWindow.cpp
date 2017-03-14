@@ -15,6 +15,8 @@
 #include "AsciiEncoder.h"
 #include "DecEncoder.h"
 
+#include <QDebug>
+
 const int BLINKTIMETX = 200;
 const int BLINKTIMERX = 200;
 
@@ -79,11 +81,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
     , m_gbHiddenGroup(new QGroupBox(this))
-    , spacer(new QSpacerItem(1, 1, QSizePolicy::Minimum, QSizePolicy::Expanding))
     , scrollAreaLayout(new QVBoxLayout)
     , scrollArea(new QScrollArea(m_gbHiddenGroup))
     , scrollWidget(new QWidget(scrollArea))
-    , HiddenLayout(new QVBoxLayout(scrollWidget))
+    , hiddenLayout(new QVBoxLayout(scrollWidget))
     , dataEncoder(0)
 {
     setWindowTitle(title);
@@ -172,8 +173,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
 void MainWindow::view()
 {
-    QSpacerItem *spacer = new QSpacerItem(1, 1, QSizePolicy::Minimum,
-                                          QSizePolicy::Expanding);
     QGridLayout *configLayout = new QGridLayout;
     configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='160'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
     configLayout->addWidget(m_lTx, 2, 0);
@@ -198,7 +197,7 @@ void MainWindow::view()
     configLayout->addWidget(m_cbUniformSizes, 13, 0, 1, 2);
     configLayout->addWidget(m_lTxCount, 14, 0);
     configLayout->addWidget(m_lRxCount, 14, 1);
-    configLayout->addItem(spacer, 12, 0);
+    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 12, 0);
     configLayout->setSpacing(5);
 
     QHBoxLayout *sendPackageLayout = new QHBoxLayout;
@@ -278,6 +277,7 @@ void MainWindow::view()
     hiddenAllCheck->setSpacing(5);
 
     scrollAreaLayout->addLayout(hiddenAllCheck);
+
     scrollArea->setWidget(scrollWidget);
     scrollArea->show();
     scrollArea->setVisible(true);
@@ -286,8 +286,10 @@ void MainWindow::view()
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setWidgetResizable(true);
     scrollAreaLayout->addWidget(scrollArea);
-    HiddenLayout->setSpacing(0);
-    HiddenLayout->setMargin(2);
+
+    hiddenLayout->setSpacing(0);
+    hiddenLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
     m_gbHiddenGroup->setLayout(scrollAreaLayout);
     m_gbHiddenGroup->setFixedWidth(300);
 
@@ -455,76 +457,70 @@ void MainWindow::openDialog()
 
 void MainWindow::addMacros()
 {
-    HiddenLayout->removeItem(spacer);
-    macrosItemWidgets.insert(index, new MacrosItemWidget(index, this));
-    HiddenLayout->addWidget(macrosItemWidgets[index]);
-    HiddenLayout->addSpacerItem(spacer);
+    MacrosItemWidget *macrosItemWidget = new MacrosItemWidget(index, this);
+    macrosItemWidgets.append(macrosItemWidget);
+    hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosItemWidget);
 
-    connect(macrosItemWidgets[index], SIGNAL(deleteSignal(int)), this, SLOT(delMacros(int)));
-    connect(macrosItemWidgets[index], SIGNAL(setSend(QString, int)), this, SLOT(sendPackage(QString, int)));
-    connect(macrosItemWidgets[index], SIGNAL(setIntervalSend(int, bool)), this, SLOT(intervalSendAdded(int, bool)));
-    connect(macrosItemWidgets[index], SIGNAL(moveUp(int)), this, SLOT(moveMacUp(int)));
-    connect(macrosItemWidgets[index], SIGNAL(moveDown(int)),this, SLOT(moveMacDown(int)));
+    connect(macrosItemWidget, &MacrosItemWidget::deleteSignal, this, &MainWindow::delMacros);
+    connect(macrosItemWidget, &MacrosItemWidget::setSend, this, &MainWindow::sendPackage);
+    connect(macrosItemWidget, &MacrosItemWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
+    connect(macrosItemWidget, &MacrosItemWidget::movedUp, this, &MainWindow::moveMacUp);
+    connect(macrosItemWidget, &MacrosItemWidget::movedDown, this, &MainWindow::moveMacDown);
 
     index++;
 }
 
-bool MainWindow::moveMacros(QWidget *widget, MacrosMoveDirection direction)
+void MainWindow::moveMacros(QWidget *widget, MacrosMoveDirection direction)
 {
-  QVBoxLayout* myLayout = qobject_cast<QVBoxLayout*>(widget->parentWidget()->layout());
-  int index = myLayout->indexOf(widget);
+    QVBoxLayout* myLayout = qobject_cast<QVBoxLayout*>(widget->parentWidget()->layout());
+    int oldIndex = myLayout->indexOf(widget);
 
-  if(direction == MoveUp && index == 0) {
-    return false;
-  }
+    if(direction == MoveUp && oldIndex == 0) {
+        return;
+    }
 
-  if(direction == MoveDown && index == myLayout->count() - 1) {
-    return false;
-  }
+    if(direction == MoveDown && oldIndex == myLayout->count() - 2) {
+        return;
+    }
 
-  int newIndex = direction == MoveUp ? index - 1 : index + 1;
-  HiddenLayout->removeItem(spacer);
-  myLayout->removeWidget(widget);
-  myLayout->insertWidget(newIndex , widget);
-  HiddenLayout->addSpacerItem(spacer);
-
-  return true;
+    int newIndex = oldIndex + 1;
+    if(direction == MoveUp) {
+        newIndex = oldIndex - 1;
+    }
+    myLayout->removeWidget(widget);
+    myLayout->insertWidget(newIndex , widget);
 }
 
-void MainWindow::moveMacUp(int index)
+void MainWindow::moveMacUp()
 {
-   if(!moveMacros(macrosItemWidgets[index], MoveUp)) {
-       return;
-   }
-   for(int i = index - 1; i >= macrosItemWidgets.first()->index; i--) {
-       if(i < macrosItemWidgets.size() && i >= 0) {
-           macrosItemWidgets[index]->index = i;
-           macrosItemWidgets[i]->index = index;
-           MacrosItemWidget *temp = macrosItemWidgets[index];
-           macrosItemWidgets[index] = macrosItemWidgets[i];
-           macrosItemWidgets[i] = temp;
+    MacrosItemWidget *macrosItemWidget = qobject_cast<MacrosItemWidget*>(sender());
+    if(!macrosItemWidget) {
+        return;
+    }
 
-           break;
-       }
-   }
+    int macrosIndex = macrosItemWidgets.indexOf(macrosItemWidget);
+    if(macrosIndex == 0) {
+        return;
+    }
+
+    macrosItemWidgets.swap(macrosIndex, macrosIndex - 1);
+    moveMacros(macrosItemWidget, MoveUp);
 }
 
-void MainWindow::moveMacDown(int index)
+void MainWindow::moveMacDown()
 {
-   if(!moveMacros(macrosItemWidgets[index], MoveDown)) {
-       return;
-   }
-   for(int i = index + 1; i <= macrosItemWidgets.last()->index; i++) {
-       if(i < macrosItemWidgets.size() && i >= 0) {
-           macrosItemWidgets[index]->index = i;
-           macrosItemWidgets[i]->index = index;
-           MacrosItemWidget *temp = macrosItemWidgets[index];
-           macrosItemWidgets[index] = macrosItemWidgets[i];
-           macrosItemWidgets[i] = temp;
+    MacrosItemWidget *macrosItemWidget = qobject_cast<MacrosItemWidget*>(sender());
+    if(!macrosItemWidget) {
+        return;
+    }
 
-           break;
-       }
-   }
+    int macrosIndex = macrosItemWidgets.indexOf(macrosItemWidget);
+    if(macrosIndex == macrosItemWidgets.size() - 1) {
+        return;
+    }
+
+    macrosItemWidgets.swap(macrosIndex, macrosIndex + 1);
+    moveMacros(macrosItemWidget, MoveDown);
 }
 
 void MainWindow::intervalSendAdded(int index, bool check)

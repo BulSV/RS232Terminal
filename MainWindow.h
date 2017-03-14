@@ -10,10 +10,9 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QSettings>
-#include <QAbstractButton>
 #include <QFileDialog>
 #include <QGroupBox>
-#include <QSpacerItem>
+#include <QVBoxLayout>
 #include <QScrollArea>
 #include <QList>
 
@@ -95,11 +94,10 @@ class MainWindow : public QMainWindow
     QSettings *settings;
     QFileDialog *fileDialog;
     QGroupBox *m_gbHiddenGroup;
-    QSpacerItem *spacer;
     QVBoxLayout *scrollAreaLayout;
     QScrollArea *scrollArea;
     QWidget *scrollWidget;
-    QVBoxLayout *HiddenLayout;
+    QVBoxLayout *hiddenLayout;
 
     QFile writeLogFile;
     QFile readLogFile;
@@ -166,9 +164,9 @@ private slots:
     void deleteAllMacroses();
     void checkAllMacroses();
     void changeAllDelays(int n);
-    void moveMacUp(int index);
-    void moveMacDown(int index);
-    bool moveMacros(QWidget *widget, MacrosMoveDirection direction);
+    void moveMacUp();
+    void moveMacDown();
+    void moveMacros(QWidget *widget, MacrosMoveDirection direction);
 public:
     void displayWriteData(QStringList list);
     explicit MainWindow(QString title, QWidget *parent = 0);

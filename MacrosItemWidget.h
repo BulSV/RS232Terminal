@@ -51,8 +51,8 @@ signals:
     void deleteSignal(int);
     void setSend(QString, int);
     void setIntervalSend(int, bool);
-    void moveUp(int);
-    void moveDown(int);
+    void movedUp();
+    void movedDown();
 private slots:
     void checkMacros();
 private:

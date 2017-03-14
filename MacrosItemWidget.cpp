@@ -40,12 +40,12 @@ void MacrosItemWidget::sendPeriod()
 
 void MacrosItemWidget::sendMoveUp()
 {
-    emit moveUp(index);
+    emit movedUp();
 }
 
 void MacrosItemWidget::sendMoveDown()
 {
-    emit moveDown(index);
+    emit movedDown();
 }
 
 void MacrosItemWidget::checkMacros()

@@ -1,4 +1,5 @@
 QT += widgets serialport
+CONFIG += C++11
 
 TARGET = Terminal
 TEMPLATE = app
