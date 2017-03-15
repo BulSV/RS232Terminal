@@ -340,19 +340,20 @@ void MainWindow::connections()
     connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
 }
 
-void MainWindow::changeAllDelays(int n)
+void MainWindow::changeAllDelays(int time)
 {
     QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     while(it.hasNext()) {
-        it.next()->time->setValue(n);
+        it.next()->setTime(time);
     }
 }
 
 void MainWindow::checkAllMacroses()
 {
     if(m_cbAllIntervals->isChecked() && m_cbAllPeriods->isChecked()) {
-        if(dynamic_cast<QCheckBox*>(sender())) {
-            dynamic_cast<QCheckBox*>(sender())->setChecked(false);
+        QCheckBox *tempCheckBox = dynamic_cast<QCheckBox*>(sender());
+        if(tempCheckBox) {
+            tempCheckBox->setChecked(false);
         }
 
         return;
@@ -361,8 +362,17 @@ void MainWindow::checkAllMacroses()
     MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
-        m->interval->setChecked(m_cbAllIntervals->isChecked());
-        m->period->setChecked(m_cbAllPeriods->isChecked());
+        if(m_cbAllIntervals->isChecked()) {
+            m->setTimeMode(MacrosItemWidget::INTERVAL);
+
+            continue;
+        }
+        if(m_cbAllPeriods->isChecked()) {
+            m->setTimeMode(MacrosItemWidget::PERIOD);
+
+            continue;
+        }
+        m->setTimeMode(MacrosItemWidget::NONE);
     }
 }
 
@@ -385,23 +395,14 @@ void MainWindow::deleteAllMacroses()
 
 int MainWindow::findIntervalItem(int start)
 {
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-    MacrosItemWidget *m = 0;
-    while(it.hasNext()) {
-        m = it.next();
-        if(m->interval->isChecked() && m->index >= start) {
-            return m->index;
+    int size = macrosItemWidgets.size();
+    for(; start < size; ++start) {
+        if(macrosItemWidgets.at(start)->getTimeMode() == MacrosItemWidget::INTERVAL) {
+            return start;
         }
     }
-    start = 0;
-    it.toFront();
-    while(it.hasNext()) {
-        m = it.next();
-        if(m->interval->isChecked() && m->index >= start) {
-            return m->index;
-        }
-    }
-    return start;
+
+    return -1;
 }
 
 void MainWindow::sendInterval()
@@ -410,6 +411,9 @@ void MainWindow::sendInterval()
                 macrosItemWidgets[sendIndex]->getMode());
     sendIndex++;
     sendIndex = findIntervalItem(sendIndex);
+    if(sendIndex == -1) {
+        sendIndex = findIntervalItem(0);
+    }
     m_tIntervalSending->setInterval(macrosItemWidgets[sendIndex]->time->value());
 }
 
@@ -857,8 +861,8 @@ void MainWindow::pause(bool check)
     MacrosItemWidget* m = 0;
     while(it.hasNext()) {
         m = it.next();
-        m->interval->setEnabled(!check);
-        m->period->setEnabled(!check);
+        m->setEnabled(!check);
+        m->setEnabled(!check);
     }
     m_cbAllIntervals->setEnabled(!check);
     m_cbAllPeriods->setEnabled(!check);
@@ -913,7 +917,7 @@ void MainWindow::startSending(bool checked)
     }
 }
 
-void MainWindow::sendPackage(QString string, int mode)
+void MainWindow::sendPackage(const QString &string, int mode)
 {
     if(!m_Port->isOpen() || m_Port->openMode() == QSerialPort::ReadOnly || string.isEmpty()) {
         return;
@@ -1108,7 +1112,6 @@ void MainWindow::txHold()
 
 void MainWindow::saveSession()
 {
-
     settings->setValue("config/height", height());
     settings->setValue("config/width", width());
     settings->setValue("config/position", pos());
@@ -1116,51 +1119,38 @@ void MainWindow::saveSession()
 
     settings->setValue("config/max_write_log_rows", m_eLogWrite->itemsLimit());
     settings->setValue("config/max_read_log_rows", m_eLogRead->itemsLimit());
+    settings->setValue("config/write_display", m_cbDisplayWrite->isChecked());
+    settings->setValue("config/read_display", m_cbDisplayRead->isChecked());
+    settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
+    settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
+    settings->setValue("config/write_log_timeout", m_tWriteLog->interval());
+    settings->setValue("config/read_log_timeout", m_tReadLog->interval());
+
     settings->setValue("config/port", m_cbPort->currentText());
     settings->setValue("config/baud", m_cbBaud->currentIndex());
     settings->setValue("config/data_bits", m_cbBits->currentIndex());
     settings->setValue("config/parity", m_cbParity->currentIndex());
     settings->setValue("config/stop_bits", m_cbStopBits->currentIndex());
+
     settings->setValue("config/echo_interval", m_sbEchoInterval->value());
     settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
-    settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
-    settings->setValue("config/read_autoscroll", m_cbReadScroll->isChecked());
-    settings->setValue("config/write_log_timeout", m_tWriteLog->interval());
-    settings->setValue("config/read_log_timeout", m_tReadLog->interval());
+
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
+
     settings->setValue("config/mode", m_cbSendMode->currentIndex());
-    settings->setValue("config/write_display", m_cbDisplayWrite->isChecked());
-    settings->setValue("config/read_display", m_cbDisplayRead->isChecked());
     settings->setValue("config/CR", m_chbCR->isChecked());
     settings->setValue("config/LF", m_chbLF->isChecked());
 
     settings->remove("macros");
-    int i = 1;
+    int macrosIndex = 1;
     QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
     MacrosItemWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
-        if(!m->macrosWidget->isFromFile) {
-            QString mode;
-            if(m->macrosWidget->rbHEX->isChecked()) {
-                mode = "HEX";
-            }
-            if(m->macrosWidget->rbDEC->isChecked()) {
-                mode = "DEC";
-            }
-            if(m->macrosWidget->rbASCII->isChecked()) {
-                mode = "ASCII";
-            }
-            settings->setValue("macros/"+QString::number(i)+"/mode", mode);
-            settings->setValue("macros/"+QString::number(i)+"/packege", m->macrosWidget->package->text());
-            settings->setValue("macros/"+QString::number(i)+"/interval", m->time->value());
-        }
-        settings->setValue("macros/"+QString::number(i)+"/checked_interval", m->interval->isChecked());
-        settings->setValue("macros/"+QString::number(i)+"/checked_period", m->period->isChecked());
-        settings->setValue("macros/"+QString::number(i)+"/path", m->macrosWidget->path);
-        i++;
+        m->saveSettings(settings, macrosIndex);
+        macrosIndex++;
     }
-    settings->setValue("macros/size", i-1);
+    settings->setValue("macros/size", macrosIndex-1);
 }
 
 void MainWindow::loadSession()
@@ -1175,6 +1165,7 @@ void MainWindow::loadSession()
 
     m_eLogRead->setItemsLimit(settings->value("config/max_write_log_rows", 1000).toInt());
     m_eLogWrite->setItemsLimit(settings->value("config/max_read_log_rows", 1000).toInt());
+
     m_cbPort->setCurrentText(settings->value("config/port").toString());
     m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
@@ -1187,6 +1178,7 @@ void MainWindow::loadSession()
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
     m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
+
     m_chbCR->setChecked(settings->value("config/CR", false).toBool());
     m_chbLF->setChecked(settings->value("config/LF", false).toBool());
     if(!m_gbHiddenGroup->isHidden()) {
@@ -1198,23 +1190,15 @@ void MainWindow::loadSession()
     m_cbDisplayRead->setChecked(settings->value("config/read_display", true).toBool());
 
     int size = settings->value("macros/size", 0).toInt();
-    if(!size) {
+    for(int macrosIndex = 1; macrosIndex <= size; ++macrosIndex) {
         addMacros();
-
-        return;
-    }
-    for(int i = 1; i <= size; ++i) {
-        addMacros();
-        macrosItemWidgets.last()->loadSettings(settings, i);
+        macrosItemWidgets.last()->loadSettings(settings, macrosIndex);
     }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
     saveSession();
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-    while(it.hasNext()) {
-        it.next()->macrosWidget->close();
-    }
+
     e->accept();
 }

@@ -22,12 +22,22 @@ public:
         ASCII = 1,
         DEC = 2
     };
+    enum TimeMode
+    {
+        NONE = 0,
+        INTERVAL = 1,
+        PERIOD = 2
+    };
+
     explicit MacrosItemWidget(QWidget *parent = 0);
 
     int getMode() const;
 
     void saveSettings(QSettings *settings, int macrosIndex);
     void loadSettings(QSettings *settings, int macrosIndex);
+    void setTimeMode(int mode);
+    int getTimeMode() const;
+    void setTime(int time);
 
 public slots:
     void timeChanged();
@@ -35,9 +45,6 @@ public slots:
     void activate(bool enabled);
     void delMac();
     void sendPeriod();
-    void sendMoveUp();
-    void sendMoveDown();
-
 signals:
     void deleteSignal(int);
     void setSend(QString, int);

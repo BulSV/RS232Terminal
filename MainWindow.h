@@ -68,10 +68,10 @@ private slots:
     void addMacros();
     void openDialog();
     void delMacros(int index);
-    void sendPackage(QString string, int mode);
+    void sendPackage(const QString &string, int mode);
     void deleteAllMacroses();
     void checkAllMacroses();
-    void changeAllDelays(int n);
+    void changeAllDelays(int time);
     void moveMacrosUp();
     void moveMacrosDown();
     void moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction);

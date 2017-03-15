@@ -17,7 +17,7 @@ MacrosItemWidget::MacrosItemWidget(QWidget *parent)
     , mode(HEX)
 {
     time->setRange(0, 999999);
-    time->setValue(50);
+    time->setValue(0);
     interval->setEnabled(false);
     period->setEnabled(false);
 
@@ -49,6 +49,41 @@ void MacrosItemWidget::loadSettings(QSettings *settings, int macrosIndex)
     period->setChecked(settings->value("macros/"+QString::number(macrosIndex)+"/checked_period").toBool());
 }
 
+void MacrosItemWidget::setTimeMode(int mode)
+{
+    switch (mode) {
+    case INTERVAL:
+        interval->setChecked(true);
+        period->setChecked(false);
+        break;
+    case PERIOD:
+        interval->setChecked(false);
+        period->setChecked(true);
+        break;
+    default:
+        interval->setChecked(false);
+        period->setChecked(false);
+        break;
+    }
+    checkMacros();
+}
+
+int MacrosItemWidget::getTimeMode() const
+{
+    if(interval->isChecked()) {
+        return INTERVAL;
+    }
+    if(period->isChecked()) {
+        return PERIOD;
+    }
+    return NONE;
+}
+
+void MacrosItemWidget::setTime(int time)
+{
+    this->time->setValue(time);
+}
+
 void MacrosItemWidget::sendPeriod()
 {
     tPeriod->setInterval(time->value());
@@ -56,21 +91,12 @@ void MacrosItemWidget::sendPeriod()
     emit setSend(macrosWidget->package->text(), mode);
 }
 
-void MacrosItemWidget::sendMoveUp()
-{
-    emit movedUp();
-}
-
-void MacrosItemWidget::sendMoveDown()
-{
-    emit movedDown();
-}
-
 void MacrosItemWidget::checkMacros()
 {
     if(interval->isChecked() && period->isChecked()) {
-        if(dynamic_cast<QCheckBox*>(sender())) {
-            dynamic_cast<QCheckBox*>(sender())->setChecked(false);
+        QCheckBox *tempCheckBox = dynamic_cast<QCheckBox*>(sender());
+        if(tempCheckBox) {
+            tempCheckBox->setChecked(false);
         }
 
         return;
@@ -166,6 +192,6 @@ void MacrosItemWidget::connections()
     connect(macrosWidget, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
     connect(macrosWidget, SIGNAL(act(bool)), this, SLOT(activate(bool)));
     connect(tPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
-    connect(buttonUp, SIGNAL(clicked(bool)), this, SLOT(sendMoveUp()));
-    connect(buttonDown, SIGNAL(clicked(bool)), this, SLOT(sendMoveDown()));
+    connect(buttonUp, &QPushButton::clicked, this, &MacrosItemWidget::movedUp);
+    connect(buttonDown, &QPushButton::clicked, this, &MacrosItemWidget::movedDown);
 }
