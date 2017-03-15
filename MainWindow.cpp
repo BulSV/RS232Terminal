@@ -207,42 +207,44 @@ void MainWindow::view()
     sendPackageLayout->addWidget(m_sbRepeatSendInterval);
     sendPackageLayout->addWidget(m_bSendPackage);
 
-    QGridLayout *WriteLayout = new QGridLayout;
-    WriteLayout->addWidget(new QLabel(tr("Write :"), this), 0, 0);
+    QGridLayout *writeLayout = new QGridLayout;
+    writeLayout->addWidget(new QLabel(tr("Write :"), this), 0, 0);
     m_cbWriteMode->setFixedWidth(55);
-    WriteLayout->addWidget(m_cbWriteMode, 0, 1);
+    writeLayout->addWidget(m_cbWriteMode, 0, 1);
     m_cbWriteScroll->setFixedWidth(65);
-    WriteLayout->addWidget(m_cbWriteScroll, 0, 2);
-    WriteLayout->addWidget(m_cbDisplayWrite, 0, 3);
+    writeLayout->addWidget(m_cbWriteScroll, 0, 2);
+    writeLayout->addWidget(m_cbDisplayWrite, 0, 3);
     m_bRecordWriteLog->setFixedWidth(35);
-    WriteLayout->addWidget(m_bRecordWriteLog, 1, 0);
+    writeLayout->addWidget(m_bRecordWriteLog, 1, 0);
     m_bSaveWriteLog->setFixedWidth(50);
-    WriteLayout->addWidget(m_bSaveWriteLog, 1, 1);
+    writeLayout->addWidget(m_bSaveWriteLog, 1, 1);
     m_bWriteLogClear->setFixedWidth(50);
-    WriteLayout->addWidget(m_bWriteLogClear, 1, 2);
-    WriteLayout->addWidget(m_eLogWrite, 2, 0, 1, 6);
-    WriteLayout->setSpacing(5);
+    writeLayout->addWidget(m_bWriteLogClear, 1, 2);
+    writeLayout->addWidget(m_eLogWrite, 2, 0, 1, 6);
+    writeLayout->setSpacing(5);
+    writeLayout->setContentsMargins(2, 2, 2, 2);
 
-    QGridLayout *ReadLayout = new QGridLayout;
-    ReadLayout->addWidget(new QLabel(tr("Read:"), this), 0, 0);
+    QGridLayout *readLayout = new QGridLayout;
+    readLayout->addWidget(new QLabel(tr("Read:"), this), 0, 0);
     m_cbReadMode->setFixedWidth(55);
-    ReadLayout->addWidget(m_cbReadMode, 0, 1);
+    readLayout->addWidget(m_cbReadMode, 0, 1);
     m_cbReadScroll->setFixedWidth(65);
-    ReadLayout->addWidget(m_cbReadScroll, 0, 2);
-    ReadLayout->addWidget(m_cbDisplayRead, 0, 3);
+    readLayout->addWidget(m_cbReadScroll, 0, 2);
+    readLayout->addWidget(m_cbDisplayRead, 0, 3);
     m_bRecordReadLog->setFixedWidth(35);
-    ReadLayout->addWidget(m_bRecordReadLog, 1, 0);
+    readLayout->addWidget(m_bRecordReadLog, 1, 0);
     m_bSaveReadLog->setFixedWidth(50);
-    ReadLayout->addWidget(m_bSaveReadLog, 1, 1);
+    readLayout->addWidget(m_bSaveReadLog, 1, 1);
     m_bReadLogClear->setFixedWidth(50);
-    ReadLayout->addWidget(m_bReadLogClear, 1, 2);
-    ReadLayout->addWidget(m_eLogRead, 2, 0, 1, 6);
-    ReadLayout->setSpacing(5);
+    readLayout->addWidget(m_bReadLogClear, 1, 2);
+    readLayout->addWidget(m_eLogRead, 2, 0, 1, 6);
+    readLayout->setSpacing(5);
+    readLayout->setContentsMargins(2, 2, 2, 2);
 
     QWidget *wWrite = new QWidget;
-    wWrite->setLayout(WriteLayout);
+    wWrite->setLayout(writeLayout);
     QWidget *wRead = new QWidget;
-    wRead->setLayout(ReadLayout);
+    wRead->setLayout(readLayout);
 
     QSplitter *splitter = new QSplitter;
     splitter->addWidget(wWrite);
@@ -253,6 +255,7 @@ void MainWindow::view()
     dataLayout->addWidget(splitter, 0, 0);
     dataLayout->addLayout(sendPackageLayout, 1, 0);
     dataLayout->setSpacing(0);
+    dataLayout->setContentsMargins(0, 0, 0, 0);
 
     QHBoxLayout *hiddenAllCheck = new QHBoxLayout;
     m_bDeleteAllMacroses->setFixedSize(15, 15);
@@ -270,8 +273,10 @@ void MainWindow::view()
     m_bPause->setFixedWidth(38);
     hiddenAllCheck->addWidget(m_bPause);
     hiddenAllCheck->setSpacing(5);
+    hiddenAllCheck->setContentsMargins(0, 0, 0, 0);
 
     scrollAreaLayout->addLayout(hiddenAllCheck);
+    scrollAreaLayout->setContentsMargins(0, 0, 0, 0);
 
     scrollArea->setWidget(scrollWidget);
     scrollArea->show();
@@ -282,15 +287,16 @@ void MainWindow::view()
     scrollArea->setWidgetResizable(true);
     scrollAreaLayout->addWidget(scrollArea);
 
-    hiddenLayout->setSpacing(0);
     hiddenLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    hiddenLayout->setSpacing(0);
+    hiddenLayout->setContentsMargins(0, 0, 0, 0);
 
     m_gbHiddenGroup->setLayout(scrollAreaLayout);
     m_gbHiddenGroup->setFixedWidth(300);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
-    allLayouts->setMargin(5);
+    allLayouts->setContentsMargins(0, 0, 0, 0);
     allLayouts->addLayout(configLayout, 0, 0);
     allLayouts->addLayout(dataLayout, 0, 1);
     m_bHiddenGroup->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
@@ -446,7 +452,7 @@ void MainWindow::openDialog()
 
 void MainWindow::addMacros()
 {
-    MacrosItemWidget *macrosItemWidget = new MacrosItemWidget(index, this);
+    MacrosItemWidget *macrosItemWidget = new MacrosItemWidget(this);
     index++;
     macrosItemWidgets.append(macrosItemWidget);
     hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosItemWidget);
@@ -1199,22 +1205,7 @@ void MainWindow::loadSession()
     }
     for(int i = 1; i <= size; ++i) {
         addMacros();
-        if(!macrosItemWidgets.last()->macrosWidget->openPath(settings->value("macros/"+QString::number(i)+"/path").toString())) {
-            QString mode = settings->value("macros/"+QString::number(i)+"/mode").toString();
-            if(mode == "HEX") {
-                macrosItemWidgets.last()->macrosWidget->rbHEX->setChecked(true);
-            }
-            if(mode == "DEC") {
-                macrosItemWidgets.last()->macrosWidget->rbDEC->setChecked(true);
-            }
-            if(mode == "ASCII") {
-                macrosItemWidgets.last()->macrosWidget->rbASCII->setChecked(true);
-            }
-            macrosItemWidgets.last()->macrosWidget->package->setText(settings->value("macros/"+QString::number(i)+"/packege").toString());
-            macrosItemWidgets.last()->time->setValue(settings->value("macros/"+QString::number(i)+"/interval").toInt());
-        }
-        macrosItemWidgets.last()->interval->setChecked(settings->value("macros/"+QString::number(i)+"/checked_interval").toBool());
-        macrosItemWidgets.last()->period->setChecked(settings->value("macros/"+QString::number(i)+"/checked_period").toBool());
+        macrosItemWidgets.last()->loadSettings(settings, i);
     }
 }
 

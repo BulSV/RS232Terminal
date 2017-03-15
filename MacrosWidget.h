@@ -16,26 +16,20 @@ class MacrosWidget : public QMainWindow
 {
     Q_OBJECT
 public:
-    QLineEdit *package;
-    QRadioButton *rbHEX;
-    QRadioButton *rbDEC;
-    QRadioButton *rbASCII;
-
     explicit MacrosWidget(QWidget *parent = 0);
-    void update(int time);
-    bool isFromFile;
-    QString path;
-    void setSettings(QSettings *value);
 
+    void update(int time);
+    void saveSettings(QSettings *settings, int macrosIndex);
+    void loadSettings(QSettings *settings, int macrosIndex);
 signals:
-    void packageChanged(QString);
-    void upd(bool, QString, int);
+    void packageChanged(const QString &package);
+    void upd(bool, const QString&, int);
     void act(bool);
 public slots:
     void hexChecked();
     void asciiChecked();
     void decChecked();
-    void compute(QString str);
+    void compute(const QString &str);
     void reset();
     void saveAs();
     void save();
@@ -48,9 +42,15 @@ private:
     QLineEdit *lbHEX;
     QLineEdit *lbDEC;
     QLineEdit *lbASCII;
+    QLineEdit *package;
+    QRadioButton *rbHEX;
+    QRadioButton *rbDEC;
+    QRadioButton *rbASCII;
     QAction *aCR;
     QAction *aLF;
-    QSettings *settings;
+
+    bool isFromFile;
+    QString path;
 
     int time;
 

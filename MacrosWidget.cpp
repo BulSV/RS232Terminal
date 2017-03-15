@@ -1,8 +1,9 @@
-#include "MacrosWidget.h"
 #include <QFileDialog>
 #include <QTextStream>
 #include <QMessageBox>
 #include <QDir>
+
+#include "MacrosWidget.h"
 
 MacrosWidget::MacrosWidget(QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
@@ -18,16 +19,16 @@ MacrosWidget::MacrosWidget(QWidget *parent)
     , rbASCII(new QRadioButton("ASCII", this))
     , aCR(new QAction("CR", this))
     , aLF(new QAction("LF", this))
+    , isFromFile(false)
+    , time(50)
 {
     setWindowTitle(tr("Terminal - Macros: Empty"));
-    time = 50;
-    isFromFile = false;
 
     view();
     connections();
 }
 
-void MacrosWidget::compute(QString str)
+void MacrosWidget::compute(const QString &str)
 {
     if(str.isEmpty()) {
         lbDEC->clear();
@@ -169,9 +170,38 @@ bool MacrosWidget::openPath(const QString &fileName)
     return true;
 }
 
-void MacrosWidget::setSettings(QSettings *value)
+void MacrosWidget::saveSettings(QSettings *settings, int macrosIndex)
 {
-    settings = value;
+    if(!isFromFile) {
+        QString mode;
+        if(rbHEX->isChecked()) {
+            mode = "HEX";
+        }
+        if(rbDEC->isChecked()) {
+            mode = "DEC";
+        }
+        if(rbASCII->isChecked()) {
+            mode = "ASCII";
+        }
+        settings->setValue("macros/"+QString::number(macrosIndex)+"/mode", mode);
+        settings->setValue("macros/"+QString::number(macrosIndex)+"/packege", package->text());
+    }
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/path", path);
+}
+
+void MacrosWidget::loadSettings(QSettings *settings, int macrosIndex)
+{
+    QString mode = settings->value("macros/"+QString::number(macrosIndex)+"/mode").toString();
+    if(mode == "HEX") {
+        rbHEX->setChecked(true);
+    }
+    if(mode == "DEC") {
+        rbDEC->setChecked(true);
+    }
+    if(mode == "ASCII") {
+        rbASCII->setChecked(true);
+    }
+    package->setText(settings->value("macros/"+QString::number(macrosIndex)+"/packege").toString());
 }
 
 void MacrosWidget::saveToFile(const QString &path)

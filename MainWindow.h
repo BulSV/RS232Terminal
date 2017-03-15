@@ -35,7 +35,47 @@ class MainWindow : public QMainWindow
         MoveUp = 0,
         MoveDown = 1
     };
-
+public:
+    void displayWriteData(QStringList list);
+    explicit MainWindow(QString title, QWidget *parent = 0);
+protected:
+    virtual void closeEvent(QCloseEvent *e);
+private slots:
+    void rxNone();
+    void txNone();
+    void rxHold();
+    void txHold();
+    void breakLine();
+    void sendInterval();
+    void intervalSendAdded(int index, bool check);
+    void hiddenClick();
+    void start();
+    void stop();
+    void pause(bool check);
+    void echo();
+    void saveWrite();
+    void saveRead();
+    void writeLogTimeout();
+    void readLogTimeout();
+    void startWriteLog(bool check);
+    void startReadLog(bool check);
+    void textChanged(const QString &text);
+    void echoCheckMaster(bool check);
+    void echoCheckSlave(bool check);
+    void received();
+    void sendSingle();
+    void startSending(bool checked);
+    void addMacros();
+    void openDialog();
+    void delMacros(int index);
+    void sendPackage(QString string, int mode);
+    void deleteAllMacroses();
+    void checkAllMacroses();
+    void changeAllDelays(int n);
+    void moveMacrosUp();
+    void moveMacrosDown();
+    void moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction);
+private:
     QWidget *widget;
     QComboBox *m_cbPort;
     QComboBox *m_cbBaud;
@@ -126,48 +166,6 @@ class MainWindow : public QMainWindow
     void portDataBitsSetting();
     void portParitySetting();
     void portStopBitsSetting();
-
-protected:
-    virtual void closeEvent(QCloseEvent *e);
-
-private slots:
-    void rxNone();
-    void txNone();
-    void rxHold();
-    void txHold();
-    void breakLine();
-    void sendInterval();
-    void intervalSendAdded(int index, bool check);
-    void hiddenClick();
-    void start();
-    void stop();
-    void pause(bool check);
-    void echo();
-    void saveWrite();
-    void saveRead();
-    void writeLogTimeout();
-    void readLogTimeout();
-    void startWriteLog(bool check);
-    void startReadLog(bool check);
-    void textChanged(const QString &text);
-    void echoCheckMaster(bool check);
-    void echoCheckSlave(bool check);
-    void received();
-    void sendSingle();
-    void startSending(bool checked);
-    void addMacros();
-    void openDialog();
-    void delMacros(int index);
-    void sendPackage(QString string, int mode);
-    void deleteAllMacroses();
-    void checkAllMacroses();
-    void changeAllDelays(int n);
-    void moveMacrosUp();
-    void moveMacrosDown();
-    void moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction);
-public:
-    void displayWriteData(QStringList list);
-    explicit MainWindow(QString title, QWidget *parent = 0);
 };
 
 #endif // MAIN_WINDOW_H

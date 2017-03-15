@@ -22,21 +22,12 @@ public:
         ASCII = 1,
         DEC = 2
     };
-    explicit MacrosItemWidget(int i, QWidget *parent = 0);
-
-    QCheckBox *interval;
-    QCheckBox *period;
-    QSpinBox *time;
-    RightClickedButton *send;
-    QPushButton *buttonUp;
-    QPushButton *buttonDown;
-    MacrosWidget *macrosWidget;
-    QTimer *tPeriod;
-    int index;
+    explicit MacrosItemWidget(QWidget *parent = 0);
 
     int getMode() const;
 
-    void setSettings(QSettings *settings, int index);
+    void saveSettings(QSettings *settings, int macrosIndex);
+    void loadSettings(QSettings *settings, int macrosIndex);
 
 public slots:
     void timeChanged();
@@ -58,9 +49,16 @@ private slots:
 private:
     QHBoxLayout *mainLayout;
     QPushButton *del;
+    QCheckBox *interval;
+    QCheckBox *period;
+    QSpinBox *time;
+    RightClickedButton *send;
+    QPushButton *buttonUp;
+    QPushButton *buttonDown;
+    MacrosWidget *macrosWidget;
+    QTimer *tPeriod;
 
     int mode;
-    QSettings *settings;
 
     void view();
     void connections();

@@ -2,8 +2,8 @@
 
 #include "MacrosItemWidget.h"
 
-MacrosItemWidget::MacrosItemWidget(int i, QWidget *parent)
-    :QWidget(parent)
+MacrosItemWidget::MacrosItemWidget(QWidget *parent)
+    : QWidget(parent)
     , mainLayout(new QHBoxLayout(this))
     , del(new QPushButton(this))
     , interval(new QCheckBox(this))
@@ -14,9 +14,8 @@ MacrosItemWidget::MacrosItemWidget(int i, QWidget *parent)
     , buttonDown(new QPushButton(this))
     , macrosWidget(new MacrosWidget(this))
     , tPeriod(new QTimer(this))
+    , mode(HEX)
 {
-    index = i;
-
     time->setRange(0, 999999);
     time->setValue(50);
     interval->setEnabled(false);
@@ -29,6 +28,25 @@ MacrosItemWidget::MacrosItemWidget(int i, QWidget *parent)
 int MacrosItemWidget::getMode() const
 {
     return mode;
+}
+
+void MacrosItemWidget::saveSettings(QSettings *settings, int macrosIndex)
+{
+    macrosWidget->saveSettings(settings, macrosIndex);
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/time", time->value());
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/checked_interval", interval->isChecked());
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/checked_period", period->isChecked());
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/path", m->macrosWidget->path);
+}
+
+void MacrosItemWidget::loadSettings(QSettings *settings, int macrosIndex)
+{
+    if(!macrosWidget->openPath(settings->value("macros/"+QString::number(macrosIndex)+"/path").toString())) {
+        macrosWidget->loadSettings(settings, macrosIndex);
+    }
+    time->setValue(settings->value("macros/"+QString::number(macrosIndex)+"/time").toInt());
+    interval->setChecked(settings->value("macros/"+QString::number(macrosIndex)+"/checked_interval").toBool());
+    period->setChecked(settings->value("macros/"+QString::number(macrosIndex)+"/checked_period").toBool());
 }
 
 void MacrosItemWidget::sendPeriod()
@@ -67,27 +85,6 @@ void MacrosItemWidget::checkMacros()
     } else {
         tPeriod->stop();
     }
-}
-
-void MacrosItemWidget::setSettings(QSettings *settings, int index)
-{
-    this->settings = settings;
-    if(!macrosWidget->openPath(settings->value("macros/"+QString::number(index)+"/path").toString())) {
-        QString mode = settings->value("macros/"+QString::number(index)+"/mode").toString();
-        if(mode == "HEX") {
-            macrosWidget->rbHEX->setChecked(true);
-        }
-        if(mode == "DEC") {
-            macrosWidget->rbDEC->setChecked(true);
-        }
-        if(mode == "ASCII") {
-            macrosWidget->rbASCII->setChecked(true);
-        }
-        macrosWidget->package->setText(settings->value("macros/"+QString::number(index)+"/packege").toString());
-        time->setValue(settings->value("macros/"+QString::number(index)+"/interval").toInt());
-    }
-    interval->setChecked(settings->value("macros/"+QString::number(index)+"/checked_interval").toBool());
-    period->setChecked(settings->value("macros/"+QString::number(index)+"/checked_period").toBool());
 }
 
 void MacrosItemWidget::timeChanged()
