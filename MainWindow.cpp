@@ -84,7 +84,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , scrollArea(new QScrollArea(m_gbHiddenGroup))
     , scrollWidget(new QWidget(scrollArea))
     , hiddenLayout(new QVBoxLayout(scrollWidget))
-    , dataEncoder(0)
+    , hexEncoder(new HexEncoder)
+    , decEncoder(new DecEncoder)
+    , asciiEncoder(new AsciiEncoder)
 {
     setWindowTitle(title);
     resize(settings->value("config/width").toInt(),
@@ -931,22 +933,21 @@ void MainWindow::sendPackage(const QString &string, int mode)
         m_tTx->setSingleShot(true);
     }
 
+    DataEncoder *dataEncoder = 0;
     switch(mode) {
     case HEX:
-        dataEncoder =  new HexEncoder;
+        dataEncoder =  hexEncoder;
         break;
     case ASCII:
-        dataEncoder = new AsciiEncoder;
+        dataEncoder = asciiEncoder;
         break;
     case DEC:
-        dataEncoder = new DecEncoder;
+        dataEncoder = decEncoder;
     }
 
     dataEncoder->setData(string);
     QByteArray writeArray = dataEncoder->encodedByteArray();
     QStringList writeList = dataEncoder->encodedStringList();
-    delete dataEncoder;
-    dataEncoder = 0;
 
     if(m_chbCR->isChecked()) {
         writeArray.append(CR);
@@ -1014,7 +1015,9 @@ void MainWindow::displayWriteData(QStringList list)
         m_eLogWrite->scrollToBottom();
     }
 }
-
+// Перевод строки при приеме данных
+// Срабатывает по таймеру m_tDelay
+// Определяет отображаемую длину принятого пакета
 void MainWindow::breakLine()
 {
     m_tDelay->stop();
@@ -1036,8 +1039,9 @@ void MainWindow::breakLine()
     for(int i = 0; i < count; i++) {
         bool ok;
         int dec = list[i].toInt(&ok, 16);
-        if (ok)
+        if(ok) {
             outDEC.append(QString::number(dec) + " ");
+        }
     }
     if(m_cbDisplayRead->isChecked()) {
         switch (m_cbReadMode->currentIndex()) {

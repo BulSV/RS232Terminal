@@ -20,6 +20,9 @@
 #include "LimitedItemsListWidget.h"
 #include "MacrosItemWidget.h"
 #include "DataEncoder.h"
+#include "HexEncoder.h"
+#include "DecEncoder.h"
+#include "AsciiEncoder.h"
 
 class MainWindow : public QMainWindow
 {
@@ -154,7 +157,9 @@ private:
     unsigned int sendIndex;
     QStringList echoSlave;
 
-    DataEncoder *dataEncoder;
+    HexEncoder *hexEncoder;
+    DecEncoder *decEncoder;
+    AsciiEncoder *asciiEncoder;
 
     void view();
     void saveSession();

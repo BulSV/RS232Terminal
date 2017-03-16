@@ -184,7 +184,7 @@ void MacrosWidget::saveSettings(QSettings *settings, int macrosIndex)
             mode = "ASCII";
         }
         settings->setValue("macros/"+QString::number(macrosIndex)+"/mode", mode);
-        settings->setValue("macros/"+QString::number(macrosIndex)+"/packege", package->text());
+        settings->setValue("macros/"+QString::number(macrosIndex)+"/package", package->text());
     }
     settings->setValue("macros/"+QString::number(macrosIndex)+"/path", path);
 }
@@ -201,7 +201,12 @@ void MacrosWidget::loadSettings(QSettings *settings, int macrosIndex)
     if(mode == "ASCII") {
         rbASCII->setChecked(true);
     }
-    package->setText(settings->value("macros/"+QString::number(macrosIndex)+"/packege").toString());
+    package->setText(settings->value("macros/"+QString::number(macrosIndex)+"/package").toString());
+}
+
+const QString &MacrosWidget::getPackage() const
+{
+    return package->text();
 }
 
 void MacrosWidget::saveToFile(const QString &path)

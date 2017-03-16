@@ -45,12 +45,14 @@ public slots:
     void activate(bool enabled);
     void delMac();
     void sendPeriod();
+    void sendPackage();
 signals:
     void deleteSignal(int);
     void setSend(QString, int);
     void setIntervalSend(int, bool);
     void movedUp();
     void movedDown();
+    void package(const QString& package, int mode);
 private slots:
     void checkMacros();
 private:

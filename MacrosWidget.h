@@ -21,6 +21,7 @@ public:
     void update(int time);
     void saveSettings(QSettings *settings, int macrosIndex);
     void loadSettings(QSettings *settings, int macrosIndex);
+    const QString &getPackage() const;
 signals:
     void packageChanged(const QString &package);
     void upd(bool, const QString&, int);

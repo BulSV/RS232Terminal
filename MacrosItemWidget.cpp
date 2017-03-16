@@ -91,6 +91,11 @@ void MacrosItemWidget::sendPeriod()
     emit setSend(macrosWidget->package->text(), mode);
 }
 
+void MacrosItemWidget::sendPackage()
+{
+    emit package(macrosWidget->getPackage(), getMode());
+}
+
 void MacrosItemWidget::checkMacros()
 {
     if(interval->isChecked() && period->isChecked()) {
