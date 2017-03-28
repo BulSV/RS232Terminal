@@ -36,6 +36,7 @@ public:
     int getTime() const;
 
     const QByteArray &getPackage() const;
+    void openMacrosFile(const QString &fileName);
 signals:
     void deleted();
     void intervalChecked(bool checked);

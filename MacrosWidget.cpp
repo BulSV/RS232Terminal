@@ -98,6 +98,11 @@ const QByteArray &MacrosWidget::getPackage() const
     return macrosEditWidget->getPackage();
 }
 
+void MacrosWidget::openMacrosFile(const QString &fileName)
+{
+    macrosEditWidget->openMacrosFile(fileName);
+}
+
 void MacrosWidget::deleteMacros()
 {
     int button = QMessageBox::question(this, tr("Warning"),

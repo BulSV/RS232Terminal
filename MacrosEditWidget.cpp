@@ -107,19 +107,7 @@ void MacrosEditWidget::newMacrosFile()
 
 void MacrosEditWidget::openMacrosFile()
 {
-    QString fileName = fileOpenDialog->selectedFiles().first();
-    if(fileName.isEmpty()) {
-        return;
-    }
-    if(!openMacros.open(fileName)) {
-        return;
-    }
-    macrosFileName = fileName;
-    setRawData(openMacros.getData());
-    QFileInfo fileInfo(fileName);
-    fileName = fileInfo.fileName();
-    fileName.chop(4);
-    setWindowTitle(tr("Macros Sander - ") + fileName);
+    openMacrosFile(fileOpenDialog->selectedFiles().first());
 }
 
 void MacrosEditWidget::saveMacrosFile()
@@ -234,6 +222,22 @@ void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
     }
 
     macrosRawEditWidget->loadSettings(settings, macrosIndex);
+}
+
+void MacrosEditWidget::openMacrosFile(const QString &fileName)
+{
+    if(fileName.isEmpty()) {
+        return;
+    }
+    if(!openMacros.open(fileName)) {
+        return;
+    }
+    macrosFileName = fileName;
+    setRawData(openMacros.getData());
+    QFileInfo fileInfo(fileName);
+    fileName = fileInfo.fileName();
+    fileName.chop(4);
+    setWindowTitle(tr("Macros Sander - ") + fileName);
 }
 
 void MacrosEditWidget::connections()

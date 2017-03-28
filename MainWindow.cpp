@@ -400,7 +400,7 @@ int MainWindow::findIntervalItem(int start)
 {
     int size = macrosWidgets.size();
     for(; start < size; ++start) {
-        if(macrosWidgets.at(start)->getTimeMode() == MacrosWidget::INTERVAL) {
+        if(macrosWidgets.at(start)->intervalIsChecked()) {
             return start;
         }
     }
@@ -453,7 +453,7 @@ void MainWindow::openDialog()
     QListIterator<QString> it(fileNames);
     while(it.hasNext()) {
         addMacros();
-        macrosWidgets.last()->macrosEditWidget->openPath(it.next());
+        macrosWidgets.last()->openMacrosFile(it.next());
     }
 }
 
@@ -1117,8 +1117,7 @@ void MainWindow::txHold()
 
 void MainWindow::saveSession()
 {
-    settings->setValue("config/height", height());
-    settings->setValue("config/width", width());
+    settings->setValue("config/size", size());
     settings->setValue("config/position", pos());
     settings->setValue("config/isMaximized", isMaximized());
 
@@ -1160,7 +1159,11 @@ void MainWindow::saveSession()
 
 void MainWindow::loadSession()
 {
-    const QPoint pos = settings->value ("config/position").toPoint();
+    QSize size = settings->value("config/size").toSize();
+    if(size.isValid()) {
+        resize(size);
+    }
+    QPoint pos = settings->value("config/position").toPoint();
     if(!pos.isNull()) {
         move(pos);
     }

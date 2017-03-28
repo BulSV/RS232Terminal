@@ -26,6 +26,7 @@ public:
     const QByteArray &getPackage();
     void saveSettings(QSettings *settings, int macrosIndex);
     void loadSettings(QSettings *settings, int macrosIndex);
+    void openMacrosFile(const QString &fileName);
 private:
     QToolBar *toolBar;
     QAction *actionNew;

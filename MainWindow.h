@@ -154,7 +154,7 @@ private:
     unsigned int index;
     QList<MacrosWidget*> macrosWidgets;
     unsigned int sendCount;
-    unsigned int sendIndex;
+    int sendIndex;
     QStringList echoSlave;
 
     HexEncoder *hexEncoder;
