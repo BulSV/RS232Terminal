@@ -152,7 +152,7 @@ private:
     QStringList echoBuffer;
     QByteArray readBuffer;
     unsigned int index;
-    QList<MacrosWidget*> macrosItemWidgets;
+    QList<MacrosWidget*> macrosWidgets;
     unsigned int sendCount;
     unsigned int sendIndex;
     QStringList echoSlave;

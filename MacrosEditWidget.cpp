@@ -42,8 +42,8 @@ MacrosEditWidget::MacrosEditWidget(QWidget *parent)
     , macrosRawEditWidget(new MacrosRawEditWidget(0))
     , macrosesOpenDir(".")
     , macrosesSaveDir(".")
-    , fileOpenDialog(new QFileDialog(this, tr("Open Macros File"), macrosesOpenDir, "*.tmf"))
-    , fileSaveAsDialog(new QFileDialog(this, tr("Save Macros File"), macrosesOpenDir, "*.tmf"))
+    , fileOpenDialog(new QFileDialog(this, tr("Open Macros File"), macrosesOpenDir, "Terminal Macros File (*.tmf)"))
+    , fileSaveAsDialog(new QFileDialog(this, tr("Save Macros File"), macrosesOpenDir, "Terminal Macros File (*.tmf)"))
 {
     setWindowTitle(tr("Macros Sander - No Name"));
 
@@ -181,6 +181,7 @@ const QByteArray &MacrosEditWidget::getPackage()
 
 void MacrosEditWidget::saveSettings(QSettings *settings, int macrosIndex)
 {
+    QString macrosIndexString = QString::number(macrosIndex);
     if(macrosFileName.isEmpty()) {
         formPackage();
         QString packageString;
@@ -189,19 +190,20 @@ void MacrosEditWidget::saveSettings(QSettings *settings, int macrosIndex)
             packageString.append(QString(package.at(i)));
             packageString.append(" ");
         }
-        settings->setValue("macroses/" + QString::number(macrosIndex) + "/package", packageString);
+        settings->setValue("macroses/" + macrosIndexString + "/package", packageString);
     } else {
-        settings->setValue("macroses/" + QString::number(macrosIndex) + "/path", macrosFileName);
+        settings->setValue("macroses/" + macrosIndexString + "/path", macrosFileName);
     }
-    settings->setValue("macroses/" + QString::number(macrosIndex) + "/position", pos());
-    settings->setValue("macroses/" + QString::number(macrosIndex) + "/size", size());
+    settings->setValue("macroses/" + macrosIndexString + "/position", pos());
+    settings->setValue("macroses/" + macrosIndexString + "/size", size());
 
     macrosRawEditWidget->saveSettings(settings, macrosIndex);
 }
 
 void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
 {
-    QString fileName = settings->value("macroses/" + QString::number(macrosIndex) + "/path").toString();
+    QString macrosIndexString = QString::number(macrosIndex);
+    QString fileName = settings->value("macroses/" + macrosIndexString + "/path").toString();
     if(!fileName.isEmpty()) {
         if(!openMacros.open(fileName)) {
             return;
@@ -213,20 +215,20 @@ void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
         fileName.chop(4);
         setWindowTitle(tr("Macros Sander - ") + fileName);
     } else {
-        QList<QString> packageList = settings->value("macroses/" + QString::number(macrosIndex) + "/package").toString().split(" ");
+        QList<QString> packageList = settings->value("macroses/" + macrosIndexString + "/package").toString().split(" ");
         int dataSize = packageList.size();
         bool ok;
         for(int i = 0; i < dataSize; ++i) {
             package.append(static_cast<char>(packageList.at(i).toInt(&ok, 16)));
         }
     }
-    actionCR->setChecked(settings->value("macroses/" + QString::number(macrosIndex) + "/CR").toBool());
-    actionLF->setChecked(settings->value("macroses/" + QString::number(macrosIndex) + "/LF").toBool());
-    QPoint pos = settings->value("macroses/" + QString::number(macrosIndex) + "/position").toPoint();
+    actionCR->setChecked(settings->value("macroses/" + macrosIndexString + "/CR").toBool());
+    actionLF->setChecked(settings->value("macroses/" + macrosIndexString + "/LF").toBool());
+    QPoint pos = settings->value("macroses/" + macrosIndexString + "/position").toPoint();
     if(!pos.isNull()) {
         move(pos);
     }
-    QSize size = settings->value("macroses/" + QString::number(macrosIndex) + "/size").toSize();
+    QSize size = settings->value("macroses/" + macrosIndexString + "/size").toSize();
     if(size.isValid()) {
         resize(size);
     }

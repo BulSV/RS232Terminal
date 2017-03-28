@@ -13,7 +13,6 @@ SOURCES += main.cpp\
     DecEncoder.cpp \
     RightClickedButton.cpp \
     LimitedItemsListWidget.cpp \
-    Macros.cpp \
     MacrosEditWidget.cpp \
     MacrosWidget.cpp \
     MacrosRawEditWidget.cpp \
@@ -29,7 +28,6 @@ HEADERS  += \
     DecEncoder.h \
     RightClickedButton.h \
     LimitedItemsListWidget.h \
-    Macros.h \
     MacrosEditWidget.h \
     MacrosWidget.h \
     MacrosRawEditWidget.h \

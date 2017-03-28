@@ -8,6 +8,7 @@
 #include <QSpinBox>
 #include <QTimer>
 #include <QSettings>
+#include <QByteArray>
 
 #include "RightClickedButton.h"
 #include "MacrosEditWidget.h"
@@ -16,61 +17,46 @@ class MacrosWidget : public QWidget
 {
     Q_OBJECT
 public:
-    enum DataMode
-    {
-        HEX = 0,
-        ASCII = 1,
-        DEC = 2
-    };
-    enum TimeMode
-    {
-        NONE = 0,
-        INTERVAL = 1,
-        PERIOD = 2
-    };
-
     explicit MacrosWidget(QWidget *parent = 0);
-
-    int getMode() const;
 
     void saveSettings(QSettings *settings, int macrosIndex);
     void loadSettings(QSettings *settings, int macrosIndex);
-    void setTimeMode(int mode);
-    int getTimeMode() const;
+
+    void setCheckedInterval(bool check);
+    bool intervalIsChecked() const;
+    void setCheckedPeriod(bool check);
+    bool periodIsChecked() const;
+
+    void setEnabledInterval(bool enable);
+    bool intervalIsEnabled() const;
+    void setEnabledPeriod(bool enable);
+    bool periodIsEnabled() const;
+
     void setTime(int time);
     int getTime() const;
 
-public slots:
-    void timeChanged();
-    void update(bool enabled, QString buttonText, int t);
-    void activate(bool enabled);
-    void delMac();
-    void sendPeriod();
-    void sendPackage();
+    const QByteArray &getPackage() const;
 signals:
-    void deleteSignal(int);
-    void setSend(QString, int);
-    void setIntervalSend(int, bool);
+    void deleted();
+    void intervalChecked(bool checked);
+    void periodChecked(bool checked);
+    void sendTimeChanged(int time);
     void movedUp();
     void movedDown();
-    void package(const QString& package, int mode);
-private slots:
-    void checkMacros();
 private:
-    QPushButton *del;
-    QCheckBox *interval;
-    QCheckBox *period;
-    QSpinBox *time;
-    RightClickedButton *send;
+    QPushButton *buttonDelete;
+    QCheckBox *checkBoxInterval;
+    QCheckBox *checkBoxPeriod;
+    QSpinBox *spinBoxTime;
+    RightClickedButton *buttonSend;
     QPushButton *buttonUp;
     QPushButton *buttonDown;
-    MacrosEditWidget *macrosWidget;
-    QTimer *tPeriod;
-
-    int mode;
+    MacrosEditWidget *macrosEditWidget;
+    QTimer *timerPeriod;
 
     void view();
     void connections();
+    void deleteMacros();
 };
 
 #endif // MACROS_WIDGET_H

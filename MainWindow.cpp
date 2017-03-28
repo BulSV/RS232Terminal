@@ -344,7 +344,7 @@ void MainWindow::connections()
 
 void MainWindow::changeAllDelays(int time)
 {
-    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    QListIterator<MacrosWidget*> it(macrosWidgets);
     while(it.hasNext()) {
         it.next()->setTime(time);
     }
@@ -360,21 +360,22 @@ void MainWindow::checkAllMacroses()
 
         return;
     }
-    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    QListIterator<MacrosWidget*> it(macrosWidgets);
     MacrosWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
         if(m_cbAllIntervals->isChecked()) {
-            m->setTimeMode(MacrosWidget::INTERVAL);
+            m->setCheckedInterval(true);
 
             continue;
         }
         if(m_cbAllPeriods->isChecked()) {
-            m->setTimeMode(MacrosWidget::PERIOD);
+            m->setCheckedPeriod(true);
 
             continue;
         }
-        m->setTimeMode(MacrosWidget::NONE);
+        m->setCheckedInterval(false);
+        m->setCheckedPeriod(false);
     }
 }
 
@@ -384,22 +385,22 @@ void MainWindow::deleteAllMacroses()
                                        tr("Delete ALL macroses?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
-        QListIterator<MacrosWidget*> it(macrosItemWidgets);
+        QListIterator<MacrosWidget*> it(macrosWidgets);
         MacrosWidget *m = 0;
         while(it.hasNext()) {
             m = it.next();
             delete m;
             m = 0;
         }
-        macrosItemWidgets.clear();
+        macrosWidgets.clear();
     }
 }
 
 int MainWindow::findIntervalItem(int start)
 {
-    int size = macrosItemWidgets.size();
+    int size = macrosWidgets.size();
     for(; start < size; ++start) {
-        if(macrosItemWidgets.at(start)->getTimeMode() == MacrosWidget::INTERVAL) {
+        if(macrosWidgets.at(start)->getTimeMode() == MacrosWidget::INTERVAL) {
             return start;
         }
     }
@@ -409,14 +410,14 @@ int MainWindow::findIntervalItem(int start)
 
 void MainWindow::sendInterval()
 {
-    sendPackage(macrosItemWidgets[sendIndex]->macrosWidget->package->text(),
-                macrosItemWidgets[sendIndex]->getMode());
+    sendPackage(macrosWidgets[sendIndex]->macrosEditWidget->package->text(),
+                macrosWidgets[sendIndex]->getMode());
     sendIndex++;
     sendIndex = findIntervalItem(sendIndex);
     if(sendIndex == -1) {
         sendIndex = findIntervalItem(0);
     }
-    m_tIntervalSending->setInterval(macrosItemWidgets[sendIndex]->time->value());
+    m_tIntervalSending->setInterval(macrosWidgets.at(sendIndex)->getTime());
 }
 
 void MainWindow::hiddenClick()
@@ -452,22 +453,22 @@ void MainWindow::openDialog()
     QListIterator<QString> it(fileNames);
     while(it.hasNext()) {
         addMacros();
-        macrosItemWidgets.last()->macrosWidget->openPath(it.next());
+        macrosWidgets.last()->macrosEditWidget->openPath(it.next());
     }
 }
 
 void MainWindow::addMacros()
 {
-    MacrosWidget *macrosItemWidget = new MacrosWidget(this);
+    MacrosWidget *macrosWidget = new MacrosWidget(this);
     index++;
-    macrosItemWidgets.append(macrosItemWidget);
-    hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosItemWidget);
+    macrosWidgets.append(macrosWidget);
+    hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosWidget);
 
-    connect(macrosItemWidget, &MacrosWidget::deleteSignal, this, &MainWindow::delMacros);
-    connect(macrosItemWidget, &MacrosWidget::setSend, this, &MainWindow::sendPackage);
-    connect(macrosItemWidget, &MacrosWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
-    connect(macrosItemWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
-    connect(macrosItemWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
+    connect(macrosWidget, &MacrosWidget::deleted, this, &MainWindow::delMacros);
+    connect(macrosWidget, &MacrosWidget::setSend, this, &MainWindow::sendPackage);
+    connect(macrosWidget, &MacrosWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
+    connect(macrosWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
+    connect(macrosWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
 }
 
 void MainWindow::moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection direction)
@@ -476,7 +477,7 @@ void MainWindow::moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection 
         return;
     }
 
-    int macrosIndex = macrosItemWidgets.indexOf(macrosItemWidget);
+    int macrosIndex = macrosWidgets.indexOf(macrosItemWidget);
 
     QVBoxLayout* tempLayout = qobject_cast<QVBoxLayout*>(macrosItemWidget->parentWidget()->layout());
     int index = tempLayout->indexOf(macrosItemWidget);
@@ -486,14 +487,14 @@ void MainWindow::moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection 
             return;
         }
 
-        macrosItemWidgets.swap(macrosIndex, macrosIndex - 1);
+        macrosWidgets.swap(macrosIndex, macrosIndex - 1);
         --index;
     } else {
-        if(macrosIndex == macrosItemWidgets.size() - 1) {
+        if(macrosIndex == macrosWidgets.size() - 1) {
             return;
         }
 
-        macrosItemWidgets.swap(macrosIndex, macrosIndex + 1);
+        macrosWidgets.swap(macrosIndex, macrosIndex + 1);
         ++index;
     }
     tempLayout->removeWidget(macrosItemWidget);
@@ -524,7 +525,7 @@ void MainWindow::intervalSendAdded(int index, bool check)
     sendCount++;
     if(sendCount == 1) {
         sendIndex = index;
-        m_tIntervalSending->setInterval(macrosItemWidgets[index]->time->value());
+        m_tIntervalSending->setInterval(macrosWidgets.at(index)->getTime());
         if(m_Port->isOpen()) {
             m_tIntervalSending->start();
         }
@@ -533,7 +534,7 @@ void MainWindow::intervalSendAdded(int index, bool check)
 
 void MainWindow::delMacros(int index)
 {
-    delete macrosItemWidgets.takeAt(index);
+    delete macrosWidgets.takeAt(index);
 }
 
 void MainWindow::writeLogTimeout()
@@ -591,7 +592,7 @@ void MainWindow::startReadLog(bool check)
 
     QString path = fileDialog->getSaveFileName(this,
                                                tr("Save File"),
-                                               QDir::currentPath() + "/(READ)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                               QDir::currentPath() + "/(READ)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
                                                tr("Log Files (*.txt)"));
     if(path.isEmpty()) {
         m_bRecordReadLog->setChecked(false);
@@ -609,7 +610,7 @@ void MainWindow::saveWrite()
 {
     QString fileName = fileDialog->getSaveFileName(this,
                                                    tr("Save File"),
-                                                   QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                                   QDir::currentPath() + "/(WRITE)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
                                                    tr("Log Files (*.txt)"));
 
     if(fileName.isEmpty()) {
@@ -632,7 +633,7 @@ void MainWindow::saveRead()
 {
     QString fileName = fileDialog->getSaveFileName(this,
                                                    tr("Save File"),
-                                                   QDir::currentPath() + "/(READ)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                                   QDir::currentPath() + "/(READ)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
                                                    tr("Log Files (*.txt)"));
 
     if(fileName.isEmpty()) {
@@ -669,22 +670,22 @@ void MainWindow::echoCheckMaster(bool check)
     m_cbEchoMaster->setChecked(check);
     if(check) {
         m_bSendPackage->setChecked(false);
-        QListIterator<MacrosWidget*> it(macrosItemWidgets);
+        QListIterator<MacrosWidget*> it(macrosWidgets);
         MacrosWidget *m = 0;
         while(it.hasNext()) {
-            m->interval->setChecked(false);
-            m->period->setChecked(false);
-            m->interval->setEnabled(false);
-            m->period->setEnabled(false);
+            m->setCheckedInterval(false);
+            m->setCheckedPeriod(false);
+            m->setEnabledInterval(false);
+            m->setEnabledPeriod(false);
         }
 
         return;
     }
-    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    QListIterator<MacrosWidget*> it(macrosWidgets);
     MacrosWidget *m = 0;
     while(it.hasNext()) {
-        m->interval->setEnabled(true);
-        m->period->setEnabled(true);
+        m->setEnabledInterval(true);
+        m->setEnabledPeriod(true);
     }
 }
 
@@ -821,7 +822,7 @@ void MainWindow::start()
     }
 
     if(sendCount != 0) {
-        sendIndex = macrosItemWidgets.first()->index;
+        sendIndex = macrosWidgets.first()->index;
         m_tIntervalSending->start();
     }
 }
@@ -859,7 +860,7 @@ void MainWindow::pause(bool check)
         m_tIntervalSending->start();
     }
 
-    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    QListIterator<MacrosWidget*> it(macrosWidgets);
     MacrosWidget* m = 0;
     while(it.hasNext()) {
         m = it.next();
@@ -1147,14 +1148,14 @@ void MainWindow::saveSession()
 
     settings->remove("macros");
     int macrosIndex = 1;
-    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    QListIterator<MacrosWidget*> it(macrosWidgets);
     MacrosWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
         m->saveSettings(settings, macrosIndex);
         macrosIndex++;
     }
-    settings->setValue("macros/size", macrosIndex-1);
+    settings->setValue("macros/size", macrosIndex - 1);
 }
 
 void MainWindow::loadSession()
@@ -1196,7 +1197,7 @@ void MainWindow::loadSession()
     int size = settings->value("macros/size", 0).toInt();
     for(int macrosIndex = 1; macrosIndex <= size; ++macrosIndex) {
         addMacros();
-        macrosItemWidgets.last()->loadSettings(settings, macrosIndex);
+        macrosWidgets.last()->loadSettings(settings, macrosIndex);
     }
 }
 
@@ -1204,5 +1205,5 @@ void MainWindow::closeEvent(QCloseEvent *e)
 {
     saveSession();
 
-    e->accept();
+    QWidget::closeEvent(e);
 }

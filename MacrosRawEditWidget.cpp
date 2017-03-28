@@ -61,21 +61,23 @@ void MacrosRawEditWidget::setData(const QByteArray &data)
 
 void MacrosRawEditWidget::saveSettings(QSettings *settings, int macrosIndex)
 {
-    settings->setValue("macroses/" + QString::number(macrosIndex) + "/raw_edit/mode", mode->currentIndex());
-    settings->setValue("macroses/" + QString::number(macrosIndex) + "/raw_edit/separator", separator->text());
-    settings->setValue("macroses/" + QString::number(macrosIndex) + "/raw_edit/position", pos());
-    settings->setValue("macroses/" + QString::number(macrosIndex) + "/raw_edit/size", size());
+    QString macrosIndexString = QString::number(macrosIndex);
+    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/mode", mode->currentIndex());
+    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/separator", separator->text());
+    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/position", pos());
+    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/size", size());
 }
 
 void MacrosRawEditWidget::loadSettings(QSettings *settings, int macrosIndex)
 {
-    mode->setCurrentIndex(settings->value("macroses/"+QString::number(macrosIndex)+"/raw_edit/mode").toInt());
-    separator->setText(settings->value("macroses/" + QString::number(macrosIndex) + "/raw_edit/separator").toString());
-    QPoint pos = settings->value("macroses/" + QString::number(macrosIndex) + "/raw_edit/position").toPoint();
+    QString macrosIndexString = QString::number(macrosIndex);
+    mode->setCurrentIndex(settings->value("macroses/" + macrosIndexString + "/raw_edit/mode").toInt());
+    separator->setText(settings->value("macroses/" + macrosIndexString + "/raw_edit/separator").toString());
+    QPoint pos = settings->value("macroses/" + macrosIndexString + "/raw_edit/position").toPoint();
     if(!pos.isNull()) {
         move(pos);
     }
-    QSize size = settings->value("macroses/" + QString::number(macrosIndex) + "/raw_edit/size").toSize();
+    QSize size = settings->value("macroses/" + macrosIndexString + "/raw_edit/size").toSize();
     if(size.isValid()) {
         resize(size);
     }
