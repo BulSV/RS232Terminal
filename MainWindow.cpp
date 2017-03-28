@@ -465,8 +465,8 @@ void MainWindow::addMacros()
     hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosWidget);
 
     connect(macrosWidget, &MacrosWidget::deleted, this, &MainWindow::delMacros);
-    connect(macrosWidget, &MacrosWidget::setSend, this, &MainWindow::sendPackage);
-    connect(macrosWidget, &MacrosWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
+    connect(macrosWidget, &MacrosWidget::packageSended, this, &MainWindow::sendPackage);
+    connect(macrosWidget, &MacrosWidget::intervalChecked, this, &MainWindow::intervalSendAdded);
     connect(macrosWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
     connect(macrosWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
 }
@@ -511,8 +511,13 @@ void MainWindow::moveMacrosDown()
     moveMacros(qobject_cast<MacrosWidget*>(sender()), MoveDown);
 }
 
-void MainWindow::intervalSendAdded(int index, bool check)
+void MainWindow::intervalSendAdded(bool check)
 {
+    MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
+    if(m == 0) {
+        return;
+    }
+    int index = macrosWidgets.indexOf(m);
     if(!check) {
         sendCount--;
         if(sendCount == 0) {

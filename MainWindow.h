@@ -50,7 +50,7 @@ private slots:
     void txHold();
     void breakLine();
     void sendInterval();
-    void intervalSendAdded(int index, bool check);
+    void intervalSendAdded(bool check);
     void hiddenClick();
     void start();
     void stop();

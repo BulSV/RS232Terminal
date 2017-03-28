@@ -41,6 +41,7 @@ signals:
     void deleted();
     void intervalChecked(bool checked);
     void periodChecked(bool checked);
+    void packageSended(const QByteArray &package);
     void sendTimeChanged(int time);
     void movedUp();
     void movedDown();
