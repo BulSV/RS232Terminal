@@ -13,8 +13,13 @@ SOURCES += main.cpp\
     DecEncoder.cpp \
     RightClickedButton.cpp \
     LimitedItemsListWidget.cpp \
+    Macros.cpp \
+    MacrosEditWidget.cpp \
     MacrosWidget.cpp \
-    MacrosItemWidget.cpp
+    MacrosRawEditWidget.cpp \
+    OpenMacros.cpp \
+    SaveMacros.cpp \
+    DataTable.cpp
 
 HEADERS  += \
     MainWindow.h \
@@ -24,8 +29,13 @@ HEADERS  += \
     DecEncoder.h \
     RightClickedButton.h \
     LimitedItemsListWidget.h \
+    Macros.h \
+    MacrosEditWidget.h \
     MacrosWidget.h \
-    MacrosItemWidget.h
+    MacrosRawEditWidget.h \
+    OpenMacros.h \
+    SaveMacros.h \
+    DataTable.h
 
 RESOURCES += \
     Terminal.qrc

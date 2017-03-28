@@ -15,9 +15,9 @@ object_script.*
 
 # Binary files
 *.exe
-RRMControl!/
-RRMControlPro
-RRMControlProd
+Terminal!/
+TerminalPro
+TerminalProd
 
 # Don't needed CodeBlocks files
 *.depend

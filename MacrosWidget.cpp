@@ -1,326 +1,207 @@
-#include <QFileDialog>
-#include <QTextStream>
 #include <QMessageBox>
-#include <QDir>
 
 #include "MacrosWidget.h"
 
 MacrosWidget::MacrosWidget(QWidget *parent)
-    : QMainWindow(parent, Qt::WindowCloseButtonHint)
-    , centralWidget(new QWidget(this))
-    , toolBar(new QToolBar(this))
-    , mainLayout(new QGridLayout())
-    , lbHEX(new QLineEdit(this))
-    , lbDEC(new QLineEdit(this))
-    , lbASCII(new QLineEdit(this))
-    , package(new QLineEdit(this))
-    , rbHEX(new QRadioButton("HEX", this))
-    , rbDEC(new QRadioButton("DEC", this))
-    , rbASCII(new QRadioButton("ASCII", this))
-    , aCR(new QAction("CR", this))
-    , aLF(new QAction("LF", this))
-    , isFromFile(false)
-    , time(50)
+    : QWidget(parent)
+    , del(new QPushButton(this))
+    , interval(new QCheckBox(this))
+    , period(new QCheckBox(this))
+    , time(new QSpinBox(this))
+    , send(new RightClickedButton(tr("Empty"), this))
+    , buttonUp(new QPushButton(this))
+    , buttonDown(new QPushButton(this))
+    , macrosWidget(new MacrosEditWidget(this))
+    , tPeriod(new QTimer(this))
+    , mode(HEX)
 {
-    setWindowTitle(tr("Terminal - Macros: Empty"));
+    time->setRange(0, 999999);
+    time->setValue(0);
+    interval->setEnabled(false);
+    period->setEnabled(false);
 
     view();
     connections();
 }
 
-void MacrosWidget::compute(const QString &str)
+int MacrosWidget::getMode() const
 {
-    if(str.isEmpty()) {
-        lbDEC->clear();
-        lbASCII->clear();
-        lbHEX->clear();
-
-        emit act(false);
-    }
-    if(rbHEX->isChecked()) {
-        QString outDEC;
-        QString outASCII;
-        QStringList list = str.split(" ", QString::SkipEmptyParts);
-        bool ok;
-        unsigned short int count = list.count();
-        for(int i = 0; i < count; i++) {
-            int hex = list[i].toInt(&ok, 16);
-            if(ok) {
-                outDEC.append(QString::number(hex) + " ");
-                lbDEC->setText(outDEC);
-                QChar ch(hex);
-                outASCII.append(ch);
-                lbASCII->setText(outASCII);
-                lbHEX->setText(str);
-            }
-        }
-    }
-    if(rbASCII->isChecked()) {
-        QString outDEC;
-        QString outHEX;
-        unsigned short int count = str.length();
-        for(int i = 0; i < count; i++) {
-            int ascii = str[i].toLatin1();
-            outDEC.append(QString::number(ascii) + " ");
-            lbDEC->setText(outDEC);
-            lbASCII->setText(str);
-            outHEX.append(QString::number(ascii, 16).toUpper() + " ");
-            lbHEX->setText(outHEX);
-        }
-    }
-    if(rbDEC->isChecked()) {
-        QString outASCII;
-        QString outHEX;
-        QStringList list = str.split(" ", QString::SkipEmptyParts);
-        unsigned short int count = list.count();
-        for(int i = 0; i < count; i++) {
-            int dec = list[i].toInt();
-            lbDEC->setText(str);
-            QChar ch(dec);
-            outASCII.append(ch);
-            lbASCII->setText(outASCII);
-            QString hex = QString::number(dec, 16).toUpper();
-            if(hex.length() < 2) {
-                hex.insert(0, "0");
-            }
-            outHEX.append(hex + " ");
-            lbHEX->setText(outHEX);
-        }
-    }
-
-    emit act(true);
-}
-
-void MacrosWidget::update(int time)
-{
-    this->time = time;
-}
-
-void MacrosWidget::hexChecked()
-{
-    package->setText(lbHEX->text());
-}
-
-void MacrosWidget::asciiChecked()
-{
-    package->setText(lbASCII->text());
-}
-
-void MacrosWidget::decChecked()
-{
-    package->setText(lbDEC->text());
-}
-
-void MacrosWidget::reset()
-{
-    package->clear();
-    path.clear();
-
-    emit upd(false, "Empty", 50);
-
-    setWindowTitle(tr("Terminal - Macros: Empty"));
-}
-
-void MacrosWidget::saveAs()
-{
-    QString fileName = QFileDialog::getSaveFileName(this,
-                                                    tr("Save File"),
-                                                    QDir::currentPath()+"/Macros",
-                                                    tr("Macro Files (*.rsmc)"));
-
-    if(fileName.isEmpty()) {
-        return;
-    }
-
-    saveToFile(fileName);
-}
-
-void MacrosWidget::save()
-{
-    if(path.isEmpty()) {
-        saveAs();
-
-        return;
-    }
-
-    saveToFile(path);
-}
-
-void MacrosWidget::openDialog()
-{
-    QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Open File"),
-                                                    QDir::currentPath()+"/Macros",
-                                                    tr("Macro Files (*.rsmc)"));
-    if(fileName.isEmpty()) {
-        return;
-    }
-
-    openFile(fileName);
-}
-
-bool MacrosWidget::openPath(const QString &fileName)
-{
-    if(fileName.isEmpty()) {
-        return false;
-    }
-
-    openFile(fileName);
-
-    return true;
+    return mode;
 }
 
 void MacrosWidget::saveSettings(QSettings *settings, int macrosIndex)
 {
-    if(!isFromFile) {
-        QString mode;
-        if(rbHEX->isChecked()) {
-            mode = "HEX";
-        }
-        if(rbDEC->isChecked()) {
-            mode = "DEC";
-        }
-        if(rbASCII->isChecked()) {
-            mode = "ASCII";
-        }
-        settings->setValue("macros/"+QString::number(macrosIndex)+"/mode", mode);
-        settings->setValue("macros/"+QString::number(macrosIndex)+"/package", package->text());
-    }
-    settings->setValue("macros/"+QString::number(macrosIndex)+"/path", path);
+    macrosWidget->saveSettings(settings, macrosIndex);
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/time", time->value());
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/checked_interval", interval->isChecked());
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/checked_period", period->isChecked());
+    settings->setValue("macros/"+QString::number(macrosIndex)+"/path", m->macrosWidget->path);
 }
 
 void MacrosWidget::loadSettings(QSettings *settings, int macrosIndex)
 {
-    QString mode = settings->value("macros/"+QString::number(macrosIndex)+"/mode").toString();
-    if(mode == "HEX") {
-        rbHEX->setChecked(true);
+    if(!macrosWidget->openPath(settings->value("macros/"+QString::number(macrosIndex)+"/path").toString())) {
+        macrosWidget->loadSettings(settings, macrosIndex);
     }
-    if(mode == "DEC") {
-        rbDEC->setChecked(true);
-    }
-    if(mode == "ASCII") {
-        rbASCII->setChecked(true);
-    }
-    package->setText(settings->value("macros/"+QString::number(macrosIndex)+"/package").toString());
+    time->setValue(settings->value("macros/"+QString::number(macrosIndex)+"/time").toInt());
+    interval->setChecked(settings->value("macros/"+QString::number(macrosIndex)+"/checked_interval").toBool());
+    period->setChecked(settings->value("macros/"+QString::number(macrosIndex)+"/checked_period").toBool());
 }
 
-const QString &MacrosWidget::getPackage() const
+void MacrosWidget::setTimeMode(int mode)
 {
-    return package->text();
+    switch (mode) {
+    case INTERVAL:
+        interval->setChecked(true);
+        period->setChecked(false);
+        break;
+    case PERIOD:
+        interval->setChecked(false);
+        period->setChecked(true);
+        break;
+    default:
+        interval->setChecked(false);
+        period->setChecked(false);
+        break;
+    }
+    checkMacros();
 }
 
-void MacrosWidget::saveToFile(const QString &path)
+int MacrosWidget::getTimeMode() const
 {
-    QFile file(path);
-    if(!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+    if(interval->isChecked()) {
+        return INTERVAL;
+    }
+    if(period->isChecked()) {
+        return PERIOD;
+    }
+    return NONE;
+}
+
+void MacrosWidget::setTime(int time)
+{
+    this->time->setValue(time);
+}
+
+int MacrosWidget::getTime() const
+{
+    return time->value();
+}
+
+void MacrosWidget::sendPeriod()
+{
+    tPeriod->setInterval(time->value());
+
+    emit setSend(macrosWidget->package->text(), mode);
+}
+
+void MacrosWidget::sendPackage()
+{
+    emit package(macrosWidget->getPackage(), getMode());
+}
+
+void MacrosWidget::checkMacros()
+{
+    if(interval->isChecked() && period->isChecked()) {
+        QCheckBox *tempCheckBox = dynamic_cast<QCheckBox*>(sender());
+        if(tempCheckBox) {
+            tempCheckBox->setChecked(false);
+        }
 
         return;
     }
 
-    QTextStream stream(&file);
-    QString mode;
-    if(rbHEX->isChecked()) {
-        mode = "HEX";
-    }
-    if(rbASCII->isChecked()) {
-        mode = "ASCII";
-    }
-    if(rbDEC->isChecked()) {
-        mode = "DEC";
-    }
-    stream << mode + "\n";
-    stream.flush();
-    stream << package->text() + "\n";
-    stream.flush();
-    stream << QString::number(time) + "\n";
-    stream.flush();
-    stream << QString::number(height()) + "\n";
-    stream.flush();
-    stream << QString::number(width());
-    QFileInfo fileInfo(file.fileName());
+    emit setIntervalSend(index, interval->isChecked());
 
-    emit upd(true, fileInfo.baseName(), time);
+    macrosWidget->update(time->value());
 
-    setWindowTitle(tr("Terminal - Macros: ") + fileInfo.baseName());
-    file.close();
-    isFromFile = true;
+    if(period->isChecked()) {
+        tPeriod->start();
+    } else {
+        tPeriod->stop();
+    }
 }
 
-void MacrosWidget::openFile(const QString &path)
+void MacrosWidget::timeChanged()
 {
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-
-        return;
-    }
-
-    QTextStream stream(&file);
-    QString mode = stream.readLine();
-    if(mode == "HEX") {
-        rbHEX->setChecked(true);
-    }
-    if(mode == "ASCII") {
-        rbASCII->setChecked(true);
-    }
-    if(mode == "DEC") {
-        rbDEC->setChecked(true);
-    }
-    package->setText(stream.readLine());
-    time = stream.readLine().toInt();
-    resize(stream.readLine().toInt(), stream.readLine().toInt());
-    QFileInfo fileInfo(file.fileName());
-
-    emit upd(true, fileInfo.baseName(), time);
-
-    setWindowTitle(tr("Terminal - Macros: ") + fileInfo.baseName());
-    file.close();
-    this->path = path;
-    isFromFile = true;
+    macrosWidget->update(time->value());
 }
 
-void MacrosWidget::connections()
+void MacrosWidget::update(bool enabled, QString buttonText, int t)
 {
-    connect(package, SIGNAL(textChanged(QString)), this, SLOT(compute(QString)));
-    connect(rbHEX, SIGNAL(toggled(bool)), this, SLOT(hexChecked()));
-    connect(rbDEC, SIGNAL(toggled(bool)), this, SLOT(decChecked()));
-    connect(rbASCII, SIGNAL(toggled(bool)), this, SLOT(asciiChecked()));
+    send->setText(buttonText);
+    time->setValue(t);
+    activate(enabled);
+}
+
+void MacrosWidget::activate(bool enabled)
+{
+    interval->setEnabled(enabled);
+    period->setEnabled(enabled);
+
+    if(macrosWidget->rbHEX->isChecked()) {
+        mode = HEX;
+    }
+    if(macrosWidget->rbASCII->isChecked()) {
+        mode = ASCII;
+    }
+    if(macrosWidget->rbDEC->isChecked()) {
+        mode = DEC;
+    }
+}
+
+void MacrosWidget::delMac()
+{
+    int button = QMessageBox::question(this, tr("Warning"),
+                                       tr("Delete macros ") + send->text() + " ?",
+                                       QMessageBox::Yes | QMessageBox::No);
+    if(button == QMessageBox::Yes) {
+        emit deleteSignal(index);
+    }
 }
 
 void MacrosWidget::view()
 {
-    addToolBar(Qt::TopToolBarArea, toolBar);
-    toolBar->setMovable(false);
-    toolBar->addAction(tr("New"), this, SLOT(reset()));
-    toolBar->addAction(tr("Load"), this, SLOT(openDialog()));
-    toolBar->addAction(tr("Save"), this, SLOT(save()));
-    toolBar->addAction(tr("Save as"), this, SLOT(saveAs()));
-    aCR->setCheckable(true);
-    aLF->setCheckable(true);
-    QList<QAction*> actionList;
-    actionList << aCR << aLF;
-    toolBar->addActions(actionList);
+    buttonUp->setFixedSize(16, 13);
+    buttonDown->setFixedSize(16, 13);
+    buttonUp->setStyleSheet("border-image: url(:/Resources/arrow-up.png) stretch;");
+    buttonDown->setStyleSheet("border-image: url(:/Resources/arrow-down.png) stretch;");
 
-    centralWidget->setLayout(mainLayout);
-    setCentralWidget(centralWidget);
+    QVBoxLayout *upDownButtonsLayout = new QVBoxLayout;
+    upDownButtonsLayout->setSpacing(1);
+    upDownButtonsLayout->addWidget(buttonUp);
+    upDownButtonsLayout->addWidget(buttonDown);
+
+    QHBoxLayout *mainLayout = new QHBoxLayout;
+    mainLayout->addWidget(del);
+    mainLayout->addWidget(interval);
+    mainLayout->addWidget(period);
+    mainLayout->addWidget(time);
+    mainLayout->addWidget(send);
+    mainLayout->addLayout(upDownButtonsLayout);
     mainLayout->setSpacing(5);
-    mainLayout->addWidget(new QLabel(tr("Formats:"), this), 0, 0);
-    mainLayout->addWidget(package, 0, 1);
-    mainLayout->addWidget(rbHEX, 1, 0);
-    mainLayout->addWidget(lbHEX, 1, 1);
-    mainLayout->addWidget(rbASCII, 2, 0);
-    mainLayout->addWidget(lbASCII, 2, 1);
-    mainLayout->addWidget(rbDEC, 3, 0);
-    mainLayout->addWidget(lbDEC, 3, 1);
 
-    lbHEX->setReadOnly(true);
-    lbDEC->setReadOnly(true);
-    lbASCII->setReadOnly(true);
-    lbHEX->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    lbDEC->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    lbASCII->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    package->setStyleSheet("background: black; color: lightgreen; font-family: \"Lucida Console\"; font-size: 9pt");
-    setMinimumSize(400, 150);
-    rbHEX->setChecked(true);
+    setLayout(mainLayout);
+
+    send->setStyleSheet("font-weight: bold");
+    interval->setFixedWidth(15);
+    period->setFixedWidth(15);
+    send->setFixedWidth(85);
+    del->setFixedSize(15, 15);
+    del->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
+}
+
+void MacrosWidget::connections()
+{
+    connect(interval, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
+    connect(period, SIGNAL(toggled(bool)), this, SLOT(checkMacros()));
+    connect(send, SIGNAL(rightClicked()), macrosWidget, SLOT(show()));
+    connect(send, SIGNAL(clicked()), this, SLOT(sendPeriod()));
+    connect(time, SIGNAL(valueChanged(int)), this, SLOT(timeChanged()));
+    connect(del, SIGNAL(pressed()), this, SLOT(delMac()));
+    connect(macrosWidget, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
+    connect(macrosWidget, SIGNAL(act(bool)), this, SLOT(activate(bool)));
+    connect(tPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
+    connect(buttonUp, &QPushButton::clicked, this, &MacrosWidget::movedUp);
+    connect(buttonDown, &QPushButton::clicked, this, &MacrosWidget::movedDown);
 }

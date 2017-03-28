@@ -1,64 +1,76 @@
 #ifndef MACROS_WIDGET_H
 #define MACROS_WIDGET_H
 
-#include <QMainWindow>
 #include <QWidget>
+#include <QHBoxLayout>
 #include <QPushButton>
-#include <QLineEdit>
-#include <QToolBar>
-#include <QGridLayout>
-#include <QRadioButton>
-#include <QLabel>
-#include <QAction>
+#include <QCheckBox>
+#include <QSpinBox>
+#include <QTimer>
 #include <QSettings>
 
-class MacrosWidget : public QMainWindow
+#include "RightClickedButton.h"
+#include "MacrosEditWidget.h"
+
+class MacrosWidget : public QWidget
 {
     Q_OBJECT
 public:
+    enum DataMode
+    {
+        HEX = 0,
+        ASCII = 1,
+        DEC = 2
+    };
+    enum TimeMode
+    {
+        NONE = 0,
+        INTERVAL = 1,
+        PERIOD = 2
+    };
+
     explicit MacrosWidget(QWidget *parent = 0);
 
-    void update(int time);
+    int getMode() const;
+
     void saveSettings(QSettings *settings, int macrosIndex);
     void loadSettings(QSettings *settings, int macrosIndex);
-    const QString &getPackage() const;
-signals:
-    void packageChanged(const QString &package);
-    void upd(bool, const QString&, int);
-    void act(bool);
+    void setTimeMode(int mode);
+    int getTimeMode() const;
+    void setTime(int time);
+    int getTime() const;
+
 public slots:
-    void hexChecked();
-    void asciiChecked();
-    void decChecked();
-    void compute(const QString &str);
-    void reset();
-    void saveAs();
-    void save();
-    void openDialog();
-    bool openPath(const QString &fileName);
+    void timeChanged();
+    void update(bool enabled, QString buttonText, int t);
+    void activate(bool enabled);
+    void delMac();
+    void sendPeriod();
+    void sendPackage();
+signals:
+    void deleteSignal(int);
+    void setSend(QString, int);
+    void setIntervalSend(int, bool);
+    void movedUp();
+    void movedDown();
+    void package(const QString& package, int mode);
+private slots:
+    void checkMacros();
 private:
-    QWidget *centralWidget;
-    QToolBar *toolBar;
-    QGridLayout *mainLayout;
-    QLineEdit *lbHEX;
-    QLineEdit *lbDEC;
-    QLineEdit *lbASCII;
-    QLineEdit *package;
-    QRadioButton *rbHEX;
-    QRadioButton *rbDEC;
-    QRadioButton *rbASCII;
-    QAction *aCR;
-    QAction *aLF;
+    QPushButton *del;
+    QCheckBox *interval;
+    QCheckBox *period;
+    QSpinBox *time;
+    RightClickedButton *send;
+    QPushButton *buttonUp;
+    QPushButton *buttonDown;
+    MacrosEditWidget *macrosWidget;
+    QTimer *tPeriod;
 
-    bool isFromFile;
-    QString path;
+    int mode;
 
-    int time;
-
-    void saveToFile(const QString &path);
-    void openFile(const QString &path);
-    void connections();
     void view();
+    void connections();
 };
 
 #endif // MACROS_WIDGET_H

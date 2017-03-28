@@ -10,7 +10,7 @@
 #include <QListIterator>
 
 #include "MainWindow.h"
-#include "MacrosItemWidget.h"
+#include "MacrosWidget.h"
 #include "HexEncoder.h"
 #include "AsciiEncoder.h"
 #include "DecEncoder.h"
@@ -344,7 +344,7 @@ void MainWindow::connections()
 
 void MainWindow::changeAllDelays(int time)
 {
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
+    QListIterator<MacrosWidget*> it(macrosItemWidgets);
     while(it.hasNext()) {
         it.next()->setTime(time);
     }
@@ -360,21 +360,21 @@ void MainWindow::checkAllMacroses()
 
         return;
     }
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-    MacrosItemWidget *m = 0;
+    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    MacrosWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
         if(m_cbAllIntervals->isChecked()) {
-            m->setTimeMode(MacrosItemWidget::INTERVAL);
+            m->setTimeMode(MacrosWidget::INTERVAL);
 
             continue;
         }
         if(m_cbAllPeriods->isChecked()) {
-            m->setTimeMode(MacrosItemWidget::PERIOD);
+            m->setTimeMode(MacrosWidget::PERIOD);
 
             continue;
         }
-        m->setTimeMode(MacrosItemWidget::NONE);
+        m->setTimeMode(MacrosWidget::NONE);
     }
 }
 
@@ -384,8 +384,8 @@ void MainWindow::deleteAllMacroses()
                                        tr("Delete ALL macroses?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
-        QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-        MacrosItemWidget *m = 0;
+        QListIterator<MacrosWidget*> it(macrosItemWidgets);
+        MacrosWidget *m = 0;
         while(it.hasNext()) {
             m = it.next();
             delete m;
@@ -399,7 +399,7 @@ int MainWindow::findIntervalItem(int start)
 {
     int size = macrosItemWidgets.size();
     for(; start < size; ++start) {
-        if(macrosItemWidgets.at(start)->getTimeMode() == MacrosItemWidget::INTERVAL) {
+        if(macrosItemWidgets.at(start)->getTimeMode() == MacrosWidget::INTERVAL) {
             return start;
         }
     }
@@ -458,19 +458,19 @@ void MainWindow::openDialog()
 
 void MainWindow::addMacros()
 {
-    MacrosItemWidget *macrosItemWidget = new MacrosItemWidget(this);
+    MacrosWidget *macrosItemWidget = new MacrosWidget(this);
     index++;
     macrosItemWidgets.append(macrosItemWidget);
     hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosItemWidget);
 
-    connect(macrosItemWidget, &MacrosItemWidget::deleteSignal, this, &MainWindow::delMacros);
-    connect(macrosItemWidget, &MacrosItemWidget::setSend, this, &MainWindow::sendPackage);
-    connect(macrosItemWidget, &MacrosItemWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
-    connect(macrosItemWidget, &MacrosItemWidget::movedUp, this, &MainWindow::moveMacrosUp);
-    connect(macrosItemWidget, &MacrosItemWidget::movedDown, this, &MainWindow::moveMacrosDown);
+    connect(macrosItemWidget, &MacrosWidget::deleteSignal, this, &MainWindow::delMacros);
+    connect(macrosItemWidget, &MacrosWidget::setSend, this, &MainWindow::sendPackage);
+    connect(macrosItemWidget, &MacrosWidget::setIntervalSend, this, &MainWindow::intervalSendAdded);
+    connect(macrosItemWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
+    connect(macrosItemWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
 }
 
-void MainWindow::moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction)
+void MainWindow::moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection direction)
 {
     if(!macrosItemWidget) {
         return;
@@ -502,12 +502,12 @@ void MainWindow::moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirect
 
 void MainWindow::moveMacrosUp()
 {
-    moveMacros(qobject_cast<MacrosItemWidget*>(sender()), MoveUp);
+    moveMacros(qobject_cast<MacrosWidget*>(sender()), MoveUp);
 }
 
 void MainWindow::moveMacrosDown()
 {
-    moveMacros(qobject_cast<MacrosItemWidget*>(sender()), MoveDown);
+    moveMacros(qobject_cast<MacrosWidget*>(sender()), MoveDown);
 }
 
 void MainWindow::intervalSendAdded(int index, bool check)
@@ -669,8 +669,8 @@ void MainWindow::echoCheckMaster(bool check)
     m_cbEchoMaster->setChecked(check);
     if(check) {
         m_bSendPackage->setChecked(false);
-        QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-        MacrosItemWidget *m = 0;
+        QListIterator<MacrosWidget*> it(macrosItemWidgets);
+        MacrosWidget *m = 0;
         while(it.hasNext()) {
             m->interval->setChecked(false);
             m->period->setChecked(false);
@@ -680,8 +680,8 @@ void MainWindow::echoCheckMaster(bool check)
 
         return;
     }
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-    MacrosItemWidget *m = 0;
+    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    MacrosWidget *m = 0;
     while(it.hasNext()) {
         m->interval->setEnabled(true);
         m->period->setEnabled(true);
@@ -859,8 +859,8 @@ void MainWindow::pause(bool check)
         m_tIntervalSending->start();
     }
 
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-    MacrosItemWidget* m = 0;
+    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    MacrosWidget* m = 0;
     while(it.hasNext()) {
         m = it.next();
         m->setEnabled(!check);
@@ -936,7 +936,7 @@ void MainWindow::sendPackage(const QString &string, int mode)
     DataEncoder *dataEncoder = 0;
     switch(mode) {
     case HEX:
-        dataEncoder =  hexEncoder;
+        dataEncoder = hexEncoder;
         break;
     case ASCII:
         dataEncoder = asciiEncoder;
@@ -1147,8 +1147,8 @@ void MainWindow::saveSession()
 
     settings->remove("macros");
     int macrosIndex = 1;
-    QListIterator<MacrosItemWidget*> it(macrosItemWidgets);
-    MacrosItemWidget *m = 0;
+    QListIterator<MacrosWidget*> it(macrosItemWidgets);
+    MacrosWidget *m = 0;
     while(it.hasNext()) {
         m = it.next();
         m->saveSettings(settings, macrosIndex);

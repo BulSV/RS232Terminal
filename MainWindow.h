@@ -18,7 +18,7 @@
 
 #include "RightClickedButton.h"
 #include "LimitedItemsListWidget.h"
-#include "MacrosItemWidget.h"
+#include "MacrosWidget.h"
 #include "DataEncoder.h"
 #include "HexEncoder.h"
 #include "DecEncoder.h"
@@ -77,7 +77,7 @@ private slots:
     void changeAllDelays(int time);
     void moveMacrosUp();
     void moveMacrosDown();
-    void moveMacros(MacrosItemWidget *macrosItemWidget, MacrosMoveDirection direction);
+    void moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection direction);
 private:
     QWidget *widget;
     QComboBox *m_cbPort;
@@ -152,7 +152,7 @@ private:
     QStringList echoBuffer;
     QByteArray readBuffer;
     unsigned int index;
-    QList<MacrosItemWidget*> macrosItemWidgets;
+    QList<MacrosWidget*> macrosItemWidgets;
     unsigned int sendCount;
     unsigned int sendIndex;
     QStringList echoSlave;
