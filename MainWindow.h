@@ -48,13 +48,12 @@ private slots:
     void rxHold();
     void txHold();
     void breakLine();
-    void sendInterval();
-    void intervalSendAdded(bool check);
-    void hiddenClick();
+    void hiddenClicked();
     void start();
     void stop();
     void pause(bool check);
     void echo();
+    void saveReadWriteLog(bool writeLog);
     void saveWrite();
     void saveRead();
     void writeLogTimeout();
@@ -66,10 +65,10 @@ private slots:
     void echoCheckSlave(bool check);
     void received();
     void singleSend();
-    void startSending(bool checked);
+    void startSending(bool checked = true);
     void addMacros();
     void openDialog();
-    void delMacros(int index);
+    void deleteMacros();
     void sendPackage(const QByteArray &data, bool macros = true);
     void deleteAllMacroses();
     void checkAllMacroses();
@@ -148,14 +147,13 @@ private:
     bool logRead;
 
     bool echoWaiting;
-    QStringList echoBuffer;
+    QByteArray echoBuffer;
     QByteArray readBuffer;
-    int index;
     QList<MacrosWidget*> macrosWidgets;
     QList<int> indexesOfIntervals;
     int sendCount;
     int currentIntervalIndex;
-    QStringList echoSlave;
+    QByteArray echoSlave;
 
     HexEncoder *hexEncoder;
     DecEncoder *decEncoder;
@@ -165,7 +163,6 @@ private:
     void saveSession();
     void loadSession();
     void connections();
-    int findIntervalItem(int start);
 
     void portBaudSetting();
     void portDataBitsSetting();
@@ -173,7 +170,7 @@ private:
     void portStopBitsSetting();
 
     void updateIntervalsList(bool add);
-    void updateIntervalsTimer();
+    void sendNextMacros();
     void displayWrittenData(const QByteArray &writeData, bool macros);
     DataEncoder *getEncoder(int mode);
 };

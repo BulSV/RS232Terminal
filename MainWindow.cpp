@@ -104,10 +104,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     rxCount = 0;
     logWrite = false;
     logRead = false;
-    index = 0;
     echoWaiting = false;
     sendCount = 0;
-    currentIntervalIndex = 0;
+    currentIntervalIndex = -1;
 
     m_bNewMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
@@ -320,7 +319,7 @@ void MainWindow::connections()
     connect(m_bPause, SIGNAL(toggled(bool)), this, SLOT(pause(bool)));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
-    connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClick()));
+    connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClicked()));
     connect(m_bRecordWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
     connect(m_bRecordReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
     connect(m_bDeleteAllMacroses, SIGNAL(clicked()), this, SLOT(deleteAllMacroses()));
@@ -328,7 +327,7 @@ void MainWindow::connections()
     connect(m_cbEchoMaster, SIGNAL(toggled(bool)), this, SLOT(echoCheckMaster(bool)));
     connect(m_cbEchoSlave, SIGNAL(toggled(bool)), this, SLOT(echoCheckSlave(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
-    connect(m_leSendPackage, SIGNAL(returnPressed()), m_bSendPackage, SLOT(click()));
+    connect(m_leSendPackage, &QLineEdit::returnPressed, [this](){startSending();});
     connect(m_bNewMacros, SIGNAL(clicked()), this, SLOT(addMacros()));
     connect(m_bLoadMacroses, SIGNAL(clicked()), this, SLOT(openDialog()));
     connect(m_cbAllIntervals, SIGNAL(toggled(bool)), this, SLOT(checkAllMacroses()));
@@ -397,31 +396,7 @@ void MainWindow::deleteAllMacroses()
     }
 }
 
-int MainWindow::findIntervalItem(int start)
-{
-    int size = macrosWidgets.size();
-    for(; start < size; ++start) {
-        if(macrosWidgets.at(start)->intervalIsChecked()) {
-            return start;
-        }
-    }
-
-    return -1;
-}
-
-void MainWindow::sendInterval()
-{
-    sendPackage(macrosWidgets[currentIntervalIndex]->macrosEditWidget->package->text(),
-                macrosWidgets[currentIntervalIndex]->getMode());
-    currentIntervalIndex++;
-    currentIntervalIndex = findIntervalItem(currentIntervalIndex);
-    if(currentIntervalIndex == -1) {
-        currentIntervalIndex = findIntervalItem(0);
-    }
-    m_tIntervalSending->setInterval(macrosWidgets.at(currentIntervalIndex)->getTime());
-}
-
-void MainWindow::hiddenClick()
+void MainWindow::hiddenClicked()
 {
     if(m_gbHiddenGroup->isHidden()) {
         m_gbHiddenGroup->show();
@@ -461,12 +436,11 @@ void MainWindow::openDialog()
 void MainWindow::addMacros()
 {
     MacrosWidget *macrosWidget = new MacrosWidget(this);
-    index++;
     macrosWidgets.append(macrosWidget);
     hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosWidget);
 
-    connect(macrosWidget, &MacrosWidget::deleted, this, &MainWindow::delMacros);
-    connect(macrosWidget, &MacrosWidget::packageSended, this, &MainWindow::sendPackage);
+    connect(macrosWidget, &MacrosWidget::deleted, this, &MainWindow::deleteMacros);
+    connect(macrosWidget, &MacrosWidget::packageSended, [this](const QByteArray &writeData){sendPackage(writeData);});
     connect(macrosWidget, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
     connect(macrosWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
     connect(macrosWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
@@ -512,35 +486,16 @@ void MainWindow::moveMacrosDown()
     moveMacros(qobject_cast<MacrosWidget*>(sender()), MoveDown);
 }
 
-void MainWindow::intervalSendAdded(bool check)
+void MainWindow::deleteMacros()
 {
     MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
     if(m == 0) {
         return;
     }
-    int index = macrosWidgets.indexOf(m);
-    if(!check) {
-        sendCount--;
-        if(sendCount == 0) {
-            m_tIntervalSending->stop();
-        }
-
-        return;
-    }
-
-    sendCount++;
-    if(sendCount == 1) {
-        currentIntervalIndex = index;
-        m_tIntervalSending->setInterval(macrosWidgets.at(index)->getTime());
-        if(m_Port->isOpen()) {
-            m_tIntervalSending->start();
-        }
-    }
-}
-
-void MainWindow::delMacros(int index)
-{
-    delete macrosWidgets.takeAt(index);
+    macrosWidgets.removeOne(m);
+    m->setCheckedInterval(false);
+    m->setCheckedPeriod(false);
+    delete m;
 }
 
 void MainWindow::writeLogTimeout()
@@ -610,52 +565,6 @@ void MainWindow::startReadLog(bool check)
     m_tReadLog->start();
     logRead = true;
     m_bRecordReadLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
-}
-
-void MainWindow::saveWrite()
-{
-    QString fileName = fileDialog->getSaveFileName(this,
-                                                   tr("Save File"),
-                                                   QDir::currentPath() + "/(WRITE)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
-                                                   tr("Log Files (*.txt)"));
-
-    if(fileName.isEmpty()) {
-        return;
-    }
-    QFile file(fileName);
-    if(!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
-
-        return;
-    }
-    QTextStream stream(&file);
-    for(int i = 0; i < m_eLogWrite->count(); ++i) {
-        stream << m_eLogWrite->item(i)->text() + "\n";
-    }
-    file.close();
-}
-
-void MainWindow::saveRead()
-{
-    QString fileName = fileDialog->getSaveFileName(this,
-                                                   tr("Save File"),
-                                                   QDir::currentPath() + "/(READ)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
-                                                   tr("Log Files (*.txt)"));
-
-    if(fileName.isEmpty()) {
-        return;
-    }
-    QFile file(fileName);
-    if(!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
-
-        return;
-    }
-    QTextStream stream(&file);
-    for(int i = 0; i < m_eLogRead->count(); ++i) {
-        stream << m_eLogRead->item(i)->text() + "\n";
-    }
-    file.close();
 }
 
 void MainWindow::textChanged(const QString &text)
@@ -811,16 +720,15 @@ void MainWindow::updateIntervalsList(bool add)
     indexesOfIntervals.removeOne(index);
 }
 
-void MainWindow::updateIntervalsTimer()
+void MainWindow::sendNextMacros()
 {
-    MacrosWidget *m = macrosWidgets.at(indexesOfIntervals.at(currentIntervalIndex++));
-    if(currentIntervalIndex >= indexesOfIntervals.size()) {
-        currentIntervalIndex = 0;
-    }
-    sendPackage(m->getPackage());
-    m_tIntervalSending->setInterval(m->getTime());
     if(m_Port->isOpen()) {
-        m_tIntervalSending->start();
+        MacrosWidget *m = macrosWidgets.at(indexesOfIntervals.at(currentIntervalIndex++));
+        if(currentIntervalIndex >= indexesOfIntervals.size()) {
+            currentIntervalIndex = 0;
+        }
+        sendPackage(m->getPackage());
+        m_tIntervalSending->start(m->getTime());
     }
 }
 
@@ -853,14 +761,7 @@ void MainWindow::start()
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
 
-    if(!m_leSendPackage->text().isEmpty()) {
-        m_bSendPackage->setEnabled(true);
-    }
-
-    if(sendCount != 0) {
-        currentIntervalIndex = macrosWidgets.first()->index;
-        m_tIntervalSending->start();
-    }
+    sendNextMacros();
 }
 
 void MainWindow::stop()
@@ -925,17 +826,55 @@ void MainWindow::singleSend()
 void MainWindow::echo()
 {
     if(m_cbEchoMaster->isChecked()) {
-        sendPackage(echoBuffer.join(" "), 2);
+        sendPackage(echoBuffer);
     }
 
     if(m_cbEchoSlave->isChecked()) {
-        sendPackage(echoSlave.takeFirst(), 2);
+        sendPackage(echoSlave);
         m_tEcho->setInterval(m_sbEchoInterval->value());
 
         if(echoSlave.isEmpty()) {
             m_tEcho->stop();
         }
     }
+}
+
+void MainWindow::saveReadWriteLog(bool writeLog)
+{
+    QString fileName = fileDialog->getSaveFileName(this,
+                                                   tr("Save File"),
+                                                   QDir::currentPath() + (writeLog ? "/(WRITE)_" : "/(READ)_") + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
+                                                   tr("Log Files (*.txt)"));
+    if(fileName.isEmpty()) {
+        return;
+    }
+    QFile file(fileName);
+    if(!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
+
+        return;
+    }
+    QTextStream stream(&file);
+    if(writeLog) {
+        for(int i = 0; i < m_eLogWrite->count(); ++i) {
+            stream << m_eLogWrite->item(i)->text() + "\n";
+        }
+    } else {
+        for(int i = 0; i < m_eLogRead->count(); ++i) {
+            stream << m_eLogRead->item(i)->text() + "\n";
+        }
+    }
+    file.close();
+}
+
+void MainWindow::saveWrite()
+{
+    saveReadWriteLog(true);
+}
+
+void MainWindow::saveRead()
+{
+    saveReadWriteLog(false);
 }
 
 void MainWindow::startSending(bool checked)
@@ -960,12 +899,12 @@ void MainWindow::startSending(bool checked)
 
 void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
 {
-    if(!m_Port->isOpen() || m_Port->openMode() == QSerialPort::ReadOnly || writeData.isEmpty()) {
+    if(!m_Port->isOpen() || writeData.isEmpty()) {
         return;
     }
 
     QByteArray modifiedData = writeData;
-    if(macros) {
+    if(!macros) {
         m_tSend->setInterval(m_sbRepeatSendInterval->value());
 
         if(m_chbCR->isChecked()) {
@@ -986,10 +925,10 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
         m_tTx->setSingleShot(true);
     }
 
-    // if(m_cbEchoMaster->isChecked()) {
-    // echoBuffer = writeList;
-    // echoWaiting = true;
-    // }
+    if(m_cbEchoMaster->isChecked()) {
+        echoBuffer = modifiedData;
+        echoWaiting = true;
+    }
 }
 
 void MainWindow::displayWrittenData(const QByteArray &writeData, bool macros)
@@ -998,7 +937,7 @@ void MainWindow::displayWrittenData(const QByteArray &writeData, bool macros)
         return;
     }
 
-    int mode = macros ? m_cbWriteMode->currentIndex() : m_cbWriteMode->currentIndex();
+    int mode = macros ? m_cbWriteMode->currentIndex() : m_cbSendMode->currentIndex();
     DataEncoder *dataEncoder = getEncoder(mode);
     dataEncoder->setData(writeData);
     QString displayString = dataEncoder->encodedStringList().join(" ");
@@ -1212,8 +1151,8 @@ void MainWindow::loadSession()
     m_cbDisplayWrite->setChecked(settings->value("config/write_display", true).toBool());
     m_cbDisplayRead->setChecked(settings->value("config/read_display", true).toBool());
 
-    int size = settings->value("macros/size", 0).toInt();
-    for(int macrosIndex = 1; macrosIndex <= size; ++macrosIndex) {
+    int MacrosesCount = settings->value("macros/count", 0).toInt();
+    for(int macrosIndex = 1; macrosIndex <= MacrosesCount; ++macrosIndex) {
         addMacros();
         macrosWidgets.last()->loadSettings(settings, macrosIndex);
     }
