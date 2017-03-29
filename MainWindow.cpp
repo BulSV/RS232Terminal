@@ -389,6 +389,9 @@ void MainWindow::deleteAllMacroses()
         MacrosWidget *m = 0;
         while(it.hasNext()) {
             m = it.next();
+            m->setCheckedInterval(false);
+            m->setCheckedPeriod(false);
+            delete m;
             delete m;
             m = 0;
         }
@@ -492,9 +495,9 @@ void MainWindow::deleteMacros()
     if(m == 0) {
         return;
     }
-    macrosWidgets.removeOne(m);
     m->setCheckedInterval(false);
     m->setCheckedPeriod(false);
+    macrosWidgets.removeOne(m);
     delete m;
 }
 
