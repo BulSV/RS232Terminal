@@ -8,6 +8,7 @@
 #include <QScrollBar>
 #include <QDir>
 #include <QListIterator>
+#include <algorithm>
 
 #include "MainWindow.h"
 #include "MacrosWidget.h"
@@ -17,8 +18,8 @@
 
 #include <QDebug>
 
-const int BLINKTIMETX = 200;
-const int BLINKTIMERX = 200;
+const int BLINK_TIME_TX = 200;
+const int BLINK_TIME_RX = 200;
 
 #define CR 0x0D
 #define LF 0x0A
@@ -106,7 +107,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     index = 0;
     echoWaiting = false;
     sendCount = 0;
-    sendIndex = 0;
+    currentIntervalIndex = 0;
 
     m_bNewMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
@@ -136,8 +137,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_lRx->setStyleSheet("font: bold; font-size: 10pt; qproperty-alignment: AlignCenter");
 
     QStringList buffer;
-    foreach(QSerialPortInfo portsAvailable, QSerialPortInfo::availablePorts()) {
-        buffer << portsAvailable.portName();
+    foreach(QSerialPortInfo availablePort, QSerialPortInfo::availablePorts()) {
+        buffer << availablePort.portName();
     }
     m_cbPort->addItems(buffer);
     m_cbPort->setEditable(true);
@@ -162,10 +163,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbWriteMode->addItems(buffer);
 
     QDir dir;
-    if(!dir.exists(dir.currentPath()+"/Macros")) {
-        dir.mkpath(dir.currentPath()+"/Macros");
+    if(!dir.exists(dir.currentPath() + "/Macros")) {
+        dir.mkpath(dir.currentPath() + "/Macros");
     }
-    fileDialog->setDirectory(dir.currentPath()+"/Macros");
+    fileDialog->setDirectory(dir.currentPath() + "/Macros");
     fileDialog->setFileMode(QFileDialog::ExistingFiles);
     fileDialog->setNameFilter(trUtf8("Macro Files (*.rsmc)"));
 
@@ -334,7 +335,7 @@ void MainWindow::connections()
     connect(m_cbAllPeriods, SIGNAL(toggled(bool)), this, SLOT(checkAllMacroses()));
     connect(m_sbAllDelays, SIGNAL(valueChanged(int)), this, SLOT(changeAllDelays(int)));
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
-    connect(m_tSend, SIGNAL(timeout()), this, SLOT(sendSingle()));
+    connect(m_tSend, SIGNAL(timeout()), this, SLOT(singleSend()));
     connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
     connect(m_tDelay, SIGNAL(timeout()), this, SLOT(breakLine()));
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
@@ -410,14 +411,14 @@ int MainWindow::findIntervalItem(int start)
 
 void MainWindow::sendInterval()
 {
-    sendPackage(macrosWidgets[sendIndex]->macrosEditWidget->package->text(),
-                macrosWidgets[sendIndex]->getMode());
-    sendIndex++;
-    sendIndex = findIntervalItem(sendIndex);
-    if(sendIndex == -1) {
-        sendIndex = findIntervalItem(0);
+    sendPackage(macrosWidgets[currentIntervalIndex]->macrosEditWidget->package->text(),
+                macrosWidgets[currentIntervalIndex]->getMode());
+    currentIntervalIndex++;
+    currentIntervalIndex = findIntervalItem(currentIntervalIndex);
+    if(currentIntervalIndex == -1) {
+        currentIntervalIndex = findIntervalItem(0);
     }
-    m_tIntervalSending->setInterval(macrosWidgets.at(sendIndex)->getTime());
+    m_tIntervalSending->setInterval(macrosWidgets.at(currentIntervalIndex)->getTime());
 }
 
 void MainWindow::hiddenClick()
@@ -466,21 +467,21 @@ void MainWindow::addMacros()
 
     connect(macrosWidget, &MacrosWidget::deleted, this, &MainWindow::delMacros);
     connect(macrosWidget, &MacrosWidget::packageSended, this, &MainWindow::sendPackage);
-    connect(macrosWidget, &MacrosWidget::intervalChecked, this, &MainWindow::intervalSendAdded);
+    connect(macrosWidget, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
     connect(macrosWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
     connect(macrosWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
 }
 
-void MainWindow::moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection direction)
+void MainWindow::moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction)
 {
-    if(!macrosItemWidget) {
+    if(!macrosWidget) {
         return;
     }
 
-    int macrosIndex = macrosWidgets.indexOf(macrosItemWidget);
+    int macrosIndex = macrosWidgets.indexOf(macrosWidget);
 
-    QVBoxLayout* tempLayout = qobject_cast<QVBoxLayout*>(macrosItemWidget->parentWidget()->layout());
-    int index = tempLayout->indexOf(macrosItemWidget);
+    QVBoxLayout* tempLayout = qobject_cast<QVBoxLayout*>(macrosWidget->parentWidget()->layout());
+    int index = tempLayout->indexOf(macrosWidget);
 
     if(direction == MoveUp) {
         if(macrosIndex == 0) {
@@ -497,8 +498,8 @@ void MainWindow::moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection 
         macrosWidgets.swap(macrosIndex, macrosIndex + 1);
         ++index;
     }
-    tempLayout->removeWidget(macrosItemWidget);
-    tempLayout->insertWidget(index, macrosItemWidget);
+    tempLayout->removeWidget(macrosWidget);
+    tempLayout->insertWidget(index, macrosWidget);
 }
 
 void MainWindow::moveMacrosUp()
@@ -529,7 +530,7 @@ void MainWindow::intervalSendAdded(bool check)
 
     sendCount++;
     if(sendCount == 1) {
-        sendIndex = index;
+        currentIntervalIndex = index;
         m_tIntervalSending->setInterval(macrosWidgets.at(index)->getTime());
         if(m_Port->isOpen()) {
             m_tIntervalSending->start();
@@ -793,6 +794,36 @@ void MainWindow::portStopBitsSetting()
     }
 }
 
+void MainWindow::updateIntervalsList(bool add)
+{
+    MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
+    if(m == 0) {
+        return;
+    }
+    int index = macrosWidgets.indexOf(m);
+    if(add) {
+        indexesOfIntervals.append(index);
+        std::sort(indexesOfIntervals.begin(), indexesOfIntervals.end(), qLess<int>());
+
+        return;
+    }
+
+    indexesOfIntervals.removeOne(index);
+}
+
+void MainWindow::updateIntervalsTimer()
+{
+    MacrosWidget *m = macrosWidgets.at(indexesOfIntervals.at(currentIntervalIndex++));
+    if(currentIntervalIndex >= indexesOfIntervals.size()) {
+        currentIntervalIndex = 0;
+    }
+    sendPackage(m->getPackage());
+    m_tIntervalSending->setInterval(m->getTime());
+    if(m_Port->isOpen()) {
+        m_tIntervalSending->start();
+    }
+}
+
 void MainWindow::start()
 {
     m_Port->close();
@@ -827,7 +858,7 @@ void MainWindow::start()
     }
 
     if(sendCount != 0) {
-        sendIndex = macrosWidgets.first()->index;
+        currentIntervalIndex = macrosWidgets.first()->index;
         m_tIntervalSending->start();
     }
 }
@@ -884,9 +915,11 @@ void MainWindow::received()
     m_lRxCount->setText("Rx: " + QString::number(rxCount));
 }
 
-void MainWindow::sendSingle()
+void MainWindow::singleSend()
 {
-    sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
+    DataEncoder *dataEncoder = getEncoder(m_cbWriteMode->currentIndex());
+    dataEncoder->setData(m_leSendPackage->text(), " ");
+    sendPackage(dataEncoder->encodedByteArray(), false);
 }
 
 void MainWindow::echo()
@@ -920,25 +953,69 @@ void MainWindow::startSending(bool checked)
 
             return;
         }
-        sendPackage(m_leSendPackage->text(), m_cbSendMode->currentIndex());
         m_bSendPackage->setChecked(false);
+        singleSend();
     }
 }
 
-void MainWindow::sendPackage(const QString &string, int mode)
+void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
 {
-    if(!m_Port->isOpen() || m_Port->openMode() == QSerialPort::ReadOnly || string.isEmpty()) {
+    if(!m_Port->isOpen() || m_Port->openMode() == QSerialPort::ReadOnly || writeData.isEmpty()) {
         return;
     }
 
-    m_tSend->setInterval(m_sbRepeatSendInterval->value());
+    QByteArray modifiedData = writeData;
+    if(macros) {
+        m_tSend->setInterval(m_sbRepeatSendInterval->value());
+
+        if(m_chbCR->isChecked()) {
+            modifiedData.append(CR);
+        }
+        if(m_chbLF->isChecked()) {
+            modifiedData.append(LF);
+        }
+    }
+
+    displayWrittenData(modifiedData, macros);
+    txCount += m_Port->write(modifiedData);
+    m_lTxCount->setText("Tx: " + QString::number(txCount));
 
     if(!m_tTx->isSingleShot()) {
         m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
-        m_tTx->singleShot(BLINKTIMETX, this, SLOT(txNone()));
+        m_tTx->singleShot(BLINK_TIME_TX, this, SLOT(txNone()));
         m_tTx->setSingleShot(true);
     }
 
+    // if(m_cbEchoMaster->isChecked()) {
+    // echoBuffer = writeList;
+    // echoWaiting = true;
+    // }
+}
+
+void MainWindow::displayWrittenData(const QByteArray &writeData, bool macros)
+{
+    if (!m_cbDisplayWrite->isChecked()) {
+        return;
+    }
+
+    int mode = macros ? m_cbWriteMode->currentIndex() : m_cbWriteMode->currentIndex();
+    DataEncoder *dataEncoder = getEncoder(mode);
+    dataEncoder->setData(writeData);
+    QString displayString = dataEncoder->encodedStringList().join(" ");
+    m_eLogWrite->addItem(displayString);
+
+    if(logWrite) {
+        QTextStream writeStream (&writeLogFile);
+        writeStream << displayString + "\n";
+    }
+
+    if(m_cbWriteScroll->isChecked()) {
+        m_eLogWrite->scrollToBottom();
+    }
+}
+
+DataEncoder *MainWindow::getEncoder(int mode)
+{
     DataEncoder *dataEncoder = 0;
     switch(mode) {
     case HEX:
@@ -951,76 +1028,9 @@ void MainWindow::sendPackage(const QString &string, int mode)
         dataEncoder = decEncoder;
     }
 
-    dataEncoder->setData(string);
-    QByteArray writeArray = dataEncoder->encodedByteArray();
-    QStringList writeList = dataEncoder->encodedStringList();
-
-    if(m_chbCR->isChecked()) {
-        writeArray.append(CR);
-        writeList.append("\r");
-    }
-    if(m_chbLF->isChecked()) {
-        writeArray.append(LF);
-        writeList.append("\n");
-    }
-
-    m_Port->write(writeArray);
-    displayWriteData(writeList);
-
-    if(m_cbEchoMaster->isChecked()) {
-        echoBuffer = writeList;
-        echoWaiting = true;
-    }
-
-    txCount += writeList.count();
-    m_lTxCount->setText("Tx: " + QString::number(txCount));
+    return dataEncoder;
 }
 
-void MainWindow::displayWriteData(QStringList list)
-{
-    if (!m_cbDisplayWrite->isChecked()) {
-        return;
-    }
-
-    QTextStream writeStream (&writeLogFile);
-    QString out;
-    int count = list.size();
-    for(int i = 0; i < count; i++) {
-        bool ok;
-        int num = list.at(i).toInt(&ok);
-        if(!ok) {
-            num = list.at(i).toStdString().at(0);
-        }
-        switch (m_cbWriteMode->currentIndex()) {
-        case HEX: {
-            QString hex = QString::number(num, 16).toUpper();
-            if(hex.length() < 2) {
-                hex.insert(0, "0");
-            }
-            out.append(hex + " ");
-            break;
-        }
-        case ASCII: {
-            QChar ch(num);
-            out.append(ch);
-            break;
-        }
-        case DEC: {
-            QString dec = QString::number(num).toUpper();
-            out.append(dec + " ");
-        }
-        }
-    }
-
-    m_eLogWrite->addItem(out);
-    if(logWrite) {
-        writeStream << out + "\n";
-    }
-
-    if(m_cbWriteScroll->isChecked()) {
-        m_eLogWrite->scrollToBottom();
-    }
-}
 // Перевод строки при приеме данных
 // Срабатывает по таймеру m_tDelay
 // Определяет отображаемую длину принятого пакета
@@ -1030,7 +1040,7 @@ void MainWindow::breakLine()
 
     if(!m_tRx->isSingleShot()) {
         m_lRx->setStyleSheet("background: red; font: bold; font-size: 10pt");
-        m_tRx->singleShot(BLINKTIMERX, this, SLOT(rxNone()));
+        m_tRx->singleShot(BLINK_TIME_RX, this, SLOT(rxNone()));
         m_tRx->setSingleShot(true);
     }
 
@@ -1101,13 +1111,13 @@ void MainWindow::breakLine()
 void MainWindow::rxNone()
 {
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_tRx->singleShot(BLINKTIMERX, this, SLOT(rxHold()));
+    m_tRx->singleShot(BLINK_TIME_RX, this, SLOT(rxHold()));
 }
 
 void MainWindow::txNone()
 {
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_tTx->singleShot(BLINKTIMETX, this, SLOT(txHold()));
+    m_tTx->singleShot(BLINK_TIME_TX, this, SLOT(txHold()));
 }
 
 void MainWindow::rxHold()

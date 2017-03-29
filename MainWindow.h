@@ -39,7 +39,6 @@ class MainWindow : public QMainWindow
         MoveDown = 1
     };
 public:
-    void displayWriteData(QStringList list);
     explicit MainWindow(QString title, QWidget *parent = 0);
 protected:
     virtual void closeEvent(QCloseEvent *e);
@@ -66,18 +65,18 @@ private slots:
     void echoCheckMaster(bool check);
     void echoCheckSlave(bool check);
     void received();
-    void sendSingle();
+    void singleSend();
     void startSending(bool checked);
     void addMacros();
     void openDialog();
     void delMacros(int index);
-    void sendPackage(const QString &string, int mode);
+    void sendPackage(const QByteArray &data, bool macros = true);
     void deleteAllMacroses();
     void checkAllMacroses();
     void changeAllDelays(int time);
     void moveMacrosUp();
     void moveMacrosDown();
-    void moveMacros(MacrosWidget *macrosItemWidget, MacrosMoveDirection direction);
+    void moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction);
 private:
     QWidget *widget;
     QComboBox *m_cbPort;
@@ -151,10 +150,11 @@ private:
     bool echoWaiting;
     QStringList echoBuffer;
     QByteArray readBuffer;
-    unsigned int index;
+    int index;
     QList<MacrosWidget*> macrosWidgets;
-    unsigned int sendCount;
-    int sendIndex;
+    QList<int> indexesOfIntervals;
+    int sendCount;
+    int currentIntervalIndex;
     QStringList echoSlave;
 
     HexEncoder *hexEncoder;
@@ -171,6 +171,11 @@ private:
     void portDataBitsSetting();
     void portParitySetting();
     void portStopBitsSetting();
+
+    void updateIntervalsList(bool add);
+    void updateIntervalsTimer();
+    void displayWrittenData(const QByteArray &writeData, bool macros);
+    DataEncoder *getEncoder(int mode);
 };
 
 #endif // MAIN_WINDOW_H
