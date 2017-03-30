@@ -59,6 +59,7 @@ private:
     void view();
     void connections();
     void deleteMacros();
+    void sendPackage();
 };
 
 #endif // MACROS_WIDGET_H

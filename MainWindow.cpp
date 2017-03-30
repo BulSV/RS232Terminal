@@ -280,16 +280,16 @@ void MainWindow::view()
     scrollArea->setWidgetResizable(true);
     scrollAreaLayout->addWidget(scrollArea);
 
-    hiddenLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     hiddenLayout->setSpacing(0);
     hiddenLayout->setContentsMargins(0, 0, 0, 0);
+    hiddenLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     m_gbHiddenGroup->setLayout(scrollAreaLayout);
     m_gbHiddenGroup->setFixedWidth(300);
 
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
-    allLayouts->setContentsMargins(0, 0, 0, 0);
+    allLayouts->setContentsMargins(5, 5, 5, 5);
     allLayouts->addLayout(configLayout, 0, 0);
     allLayouts->addLayout(dataLayout, 0, 1);
     m_bHiddenGroup->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
@@ -721,7 +721,7 @@ void MainWindow::start()
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
 
-    sendNextMacros();
+//    sendNextMacros();
 }
 
 void MainWindow::stop()
@@ -737,7 +737,6 @@ void MainWindow::stop()
     m_cbBits->setEnabled(true);
     m_cbParity->setEnabled(true);
     m_cbStopBits->setEnabled(true);
-    m_bSendPackage->setEnabled(false);
     m_bSendPackage->setChecked(false);
     m_tSend->stop();
     m_tDelay->stop();
@@ -1015,7 +1014,7 @@ void MainWindow::saveSession()
     settings->setValue("config/CR", m_chbCR->isChecked());
     settings->setValue("config/LF", m_chbLF->isChecked());
 
-    settings->remove("macros");
+    settings->remove("macroses");
     int macrosIndex = 1;
     QListIterator<MacrosWidget*> it(macrosWidgets);
     MacrosWidget *m = 0;
@@ -1024,7 +1023,7 @@ void MainWindow::saveSession()
         m->saveSettings(settings, macrosIndex);
         macrosIndex++;
     }
-    settings->setValue("macros/size", macrosIndex - 1);
+    settings->setValue("macroses/count", macrosIndex - 1);
 }
 
 void MainWindow::loadSession()
@@ -1066,7 +1065,7 @@ void MainWindow::loadSession()
     m_cbDisplayWrite->setChecked(settings->value("config/write_display", true).toBool());
     m_cbDisplayRead->setChecked(settings->value("config/read_display", true).toBool());
 
-    int MacrosesCount = settings->value("macros/count", 0).toInt();
+    int MacrosesCount = settings->value("macroses/count", 0).toInt();
     for(int macrosIndex = 1; macrosIndex <= MacrosesCount; ++macrosIndex) {
         addMacros();
         macrosWidgets.last()->loadSettings(settings, macrosIndex);

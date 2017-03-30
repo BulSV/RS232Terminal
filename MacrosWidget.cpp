@@ -113,6 +113,11 @@ void MacrosWidget::deleteMacros()
     }
 }
 
+void MacrosWidget::sendPackage()
+{
+    emit packageSended(macrosEditWidget->getPackage());
+}
+
 void MacrosWidget::view()
 {
     buttonUp->setFixedSize(16, 13);
@@ -135,6 +140,8 @@ void MacrosWidget::view()
     mainLayout->setSpacing(5);
 
     setLayout(mainLayout);
+    layout()->setSpacing(0);
+    layout()->setContentsMargins(0, 0, 0, 0);
 
     buttonSend->setStyleSheet("font-weight: bold");
     checkBoxInterval->setFixedWidth(15);
@@ -149,12 +156,10 @@ void MacrosWidget::connections()
     connect(checkBoxInterval, &QCheckBox::toggled, this, &MacrosWidget::intervalChecked);
     connect(checkBoxPeriod, &QCheckBox::toggled, this, &MacrosWidget::periodChecked);
     connect(buttonSend, &RightClickedButton::rightClicked, macrosEditWidget, &MacrosEditWidget::show);
-//    connect(buttonSend, &RightClickedButton::clicked, macrosEditWidget, &MacrosEditWidget::sendPeriod());
-    connect(spinBoxTime, SIGNAL(valueChanged(int)), this, SLOT(timeChanged()));
-    connect(buttonDelete, SIGNAL(pressed()), this, SLOT(deleteMacros()));
-    connect(macrosEditWidget, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));
-    connect(macrosEditWidget, SIGNAL(act(bool)), this, SLOT(activate(bool)));
-    connect(timerPeriod, SIGNAL(timeout()), this, SLOT(sendPeriod()));
+    connect(buttonSend, &RightClickedButton::clicked, this, &MacrosWidget::sendPackage);
+    connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MacrosWidget::sendTimeChanged);
+    connect(buttonDelete, &QPushButton::pressed, this, &MacrosWidget::deleteMacros);
+    connect(timerPeriod, &QTimer::timeout, this, &MacrosWidget::sendPackage);
     connect(buttonUp, &QPushButton::clicked, this, &MacrosWidget::movedUp);
     connect(buttonDown, &QPushButton::clicked, this, &MacrosWidget::movedDown);
 }
