@@ -23,6 +23,7 @@ class MacrosEditWidget : public QMainWindow
     Q_OBJECT
 public:
     explicit MacrosEditWidget(QWidget *parent = 0);
+    virtual ~MacrosEditWidget();
     const QByteArray &getPackage();
     void saveSettings(QSettings *settings, int macrosIndex);
     void loadSettings(QSettings *settings, int macrosIndex);
@@ -89,9 +90,6 @@ private:
     void openMacrosFile();
     void saveMacrosFile();
     void saveAsMacrosFile();
-    // QWidget interface
-protected:
-    virtual void closeEvent(QCloseEvent *e);
 };
 
 #endif // MACROS_EDIT_WIDGET_H

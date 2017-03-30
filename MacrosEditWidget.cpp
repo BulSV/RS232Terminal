@@ -45,7 +45,7 @@ MacrosEditWidget::MacrosEditWidget(QWidget *parent)
     , fileOpenDialog(new QFileDialog(this, tr("Open Macros File"), macrosesOpenDir, "Terminal Macros File (*.tmf)"))
     , fileSaveAsDialog(new QFileDialog(this, tr("Save Macros File"), macrosesOpenDir, "Terminal Macros File (*.tmf)"))
 {
-    setWindowTitle(tr("Macros Sander - No Name"));
+    setWindowTitle(tr("Macros Edit - No Name"));
 
     emit titleChanged(QString(tr("No Name")));
 
@@ -85,6 +85,12 @@ MacrosEditWidget::MacrosEditWidget(QWidget *parent)
     connections();
 }
 
+MacrosEditWidget::~MacrosEditWidget()
+{
+    delete macrosRawEditWidget;
+    macrosRawEditWidget = 0;
+}
+
 void MacrosEditWidget::addCR_LF()
 {
     if(CR) {
@@ -104,7 +110,7 @@ void MacrosEditWidget::newMacrosFile()
     clearSelectedGroup();
     macrosFileName.clear();
     package.clear();
-    setWindowTitle(tr("Macros Sander - No Name"));
+    setWindowTitle(tr("Macros Edit - No Name"));
 
     emit titleChanged(QString(tr("No Name")));
 }
@@ -141,7 +147,7 @@ void MacrosEditWidget::saveAsMacrosFile()
     QFileInfo fileInfo(fileName);
     fileName = fileInfo.fileName();
     fileName.chop(4);
-    setWindowTitle(tr("Macros Sander - ") + fileName);
+    setWindowTitle(tr("Macros Edit - ") + fileName);
 
     emit titleChanged(fileName);
 }
@@ -207,7 +213,7 @@ void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
         QFileInfo fileInfo(fileName);
         fileName = fileInfo.fileName();
         fileName.chop(4);
-        setWindowTitle(tr("Macros Sander - ") + fileName);
+        setWindowTitle(tr("Macros Edit - ") + fileName);
 
         emit titleChanged(fileName);
     } else {
@@ -245,7 +251,7 @@ void MacrosEditWidget::openMacrosFile(const QString &fileName)
     QFileInfo fileInfo(fileName);
     QString title = fileInfo.fileName();
     title.chop(4);
-    setWindowTitle(tr("Macros Sander - ") + title);
+    setWindowTitle(tr("Macros Edit - ") + title);
 
     emit titleChanged(title);
 }
@@ -590,12 +596,4 @@ void MacrosEditWidget::onEditRawData()
     macrosRawEditWidget->setData(package);
     macrosRawEditWidget->setWindowTitle(windowTitle());
     macrosRawEditWidget->show();
-}
-
-void MacrosEditWidget::closeEvent(QCloseEvent *e)
-{
-    delete macrosRawEditWidget;
-    macrosRawEditWidget = 0;
-
-    QMainWindow::closeEvent(e);
 }
