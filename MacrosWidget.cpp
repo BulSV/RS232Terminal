@@ -149,7 +149,7 @@ void MacrosWidget::connections()
     connect(checkBoxInterval, &QCheckBox::toggled, this, &MacrosWidget::intervalChecked);
     connect(checkBoxPeriod, &QCheckBox::toggled, this, &MacrosWidget::periodChecked);
     connect(buttonSend, &RightClickedButton::rightClicked, macrosEditWidget, &MacrosEditWidget::show);
-    connect(buttonSend, &RightClickedButton::clicked, macrosEditWidget, &MacrosEditWidget::sendPeriod());
+//    connect(buttonSend, &RightClickedButton::clicked, macrosEditWidget, &MacrosEditWidget::sendPeriod());
     connect(spinBoxTime, SIGNAL(valueChanged(int)), this, SLOT(timeChanged()));
     connect(buttonDelete, SIGNAL(pressed()), this, SLOT(deleteMacros()));
     connect(macrosEditWidget, SIGNAL(upd(bool, QString, int)), this, SLOT(update(bool, QString, int)));

@@ -35,7 +35,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbReadMode(new QComboBox(this))
     , m_cbWriteMode(new QComboBox(this))
     , m_tSend(new QTimer(this))
-    , m_tEcho(new QTimer(this))
     , m_tWriteLog(new QTimer(this))
     , m_tReadLog(new QTimer(this))
     , m_tIntervalSending(new QTimer(this))
@@ -63,12 +62,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_eLogRead(new LimitedItemsListWidget(this))
     , m_eLogWrite(new LimitedItemsListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
-    , m_sbEchoInterval(new QSpinBox(this))
     , m_sbDelay(new QSpinBox(this))
     , m_sbAllDelays(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , m_cbEchoMaster(new QCheckBox(tr("Echo master"), this))
-    , m_cbEchoSlave(new QCheckBox(tr("Echo slave"), this))
     , m_cbReadScroll(new QCheckBox(tr("Scrolling"), this))
     , m_cbWriteScroll(new QCheckBox(tr("Scrolling"), this))
     , m_cbAllIntervals(new QCheckBox(tr("Interval"), this))
@@ -104,7 +100,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     rxCount = 0;
     logWrite = false;
     logRead = false;
-    echoWaiting = false;
     sendCount = 0;
     currentIntervalIndex = -1;
 
@@ -119,12 +114,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_bRecordReadLog->setCheckable(true);
     m_bSendPackage->setCheckable(true);
     m_bPause->setCheckable(true);
-    m_bSendPackage->setEnabled(false);
     m_bStop->setEnabled(false);
     m_bPause->setEnabled(false);
     m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
-    m_sbEchoInterval->setRange(0, 100000);
     m_sbDelay->setRange(1, 100000);
     m_sbDelay->setValue(10);
     m_sbAllDelays->setRange(0, 999999);
@@ -188,16 +181,13 @@ void MainWindow::view()
     configLayout->addWidget(m_cbParity, 6, 1);
     configLayout->addWidget(new QLabel(tr("Stop bits:"), this), 7, 0);
     configLayout->addWidget(m_cbStopBits, 7, 1);
-    configLayout->addWidget(m_cbEchoMaster, 8, 0);
-    configLayout->addWidget(m_sbEchoInterval, 8, 1);
-    configLayout->addWidget(m_cbEchoSlave, 9, 0);
-    configLayout->addWidget(new QLabel(tr("Delay:"), this), 10, 0);
-    configLayout->addWidget(m_sbDelay, 10, 1);
-    configLayout->addWidget(m_bStart, 11, 0);
-    configLayout->addWidget(m_bStop, 11, 1);
+    configLayout->addWidget(new QLabel(tr("Delay:"), this), 8, 0);
+    configLayout->addWidget(m_sbDelay, 8, 1);
+    configLayout->addWidget(m_bStart, 9, 0);
+    configLayout->addWidget(m_bStop, 9, 1);
+    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 10, 0);
     configLayout->addWidget(m_lTxCount, 14, 0);
     configLayout->addWidget(m_lRxCount, 14, 1);
-    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 12, 0);
     configLayout->setSpacing(5);
 
     QHBoxLayout *sendPackageLayout = new QHBoxLayout;
@@ -259,20 +249,21 @@ void MainWindow::view()
     dataLayout->setSpacing(0);
     dataLayout->setContentsMargins(0, 0, 0, 0);
 
-    QHBoxLayout *hiddenAllCheck = new QHBoxLayout;
     m_bDeleteAllMacroses->setFixedSize(15, 15);
     m_bDeleteAllMacroses->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
-    hiddenAllCheck->addWidget(m_bDeleteAllMacroses);
     m_cbAllIntervals->setFixedWidth(58);
-    hiddenAllCheck->addWidget(m_cbAllIntervals);
     m_cbAllPeriods->setFixedWidth(50);
+    m_bNewMacros->setToolTip(tr("New Macros"));
+    m_bLoadMacroses->setWhatsThis(tr("Load Macroses"));
+    m_bPause->setFixedWidth(38);
+
+    QHBoxLayout *hiddenAllCheck = new QHBoxLayout;
+    hiddenAllCheck->addWidget(m_bDeleteAllMacroses);
+    hiddenAllCheck->addWidget(m_cbAllIntervals);
     hiddenAllCheck->addWidget(m_cbAllPeriods);
     hiddenAllCheck->addWidget(m_sbAllDelays);
     hiddenAllCheck->addWidget(m_bNewMacros);
-    m_bNewMacros->setToolTip(tr("New Macros"));
     hiddenAllCheck->addWidget(m_bLoadMacroses);
-    m_bLoadMacroses->setWhatsThis(tr("Load Macroses"));
-    m_bPause->setFixedWidth(38);
     hiddenAllCheck->addWidget(m_bPause);
     hiddenAllCheck->setSpacing(5);
     hiddenAllCheck->setContentsMargins(0, 0, 0, 0);
@@ -324,8 +315,6 @@ void MainWindow::connections()
     connect(m_bRecordReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
     connect(m_bDeleteAllMacroses, SIGNAL(clicked()), this, SLOT(deleteAllMacroses()));
     connect(m_bSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
-    connect(m_cbEchoMaster, SIGNAL(toggled(bool)), this, SLOT(echoCheckMaster(bool)));
-    connect(m_cbEchoSlave, SIGNAL(toggled(bool)), this, SLOT(echoCheckSlave(bool)));
     connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_leSendPackage, &QLineEdit::returnPressed, [this](){startSending();});
     connect(m_bNewMacros, SIGNAL(clicked()), this, SLOT(addMacros()));
@@ -335,7 +324,6 @@ void MainWindow::connections()
     connect(m_sbAllDelays, SIGNAL(valueChanged(int)), this, SLOT(changeAllDelays(int)));
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(singleSend()));
-    connect(m_tEcho, SIGNAL(timeout()), this, SLOT(echo()));
     connect(m_tDelay, SIGNAL(timeout()), this, SLOT(breakLine()));
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
@@ -582,37 +570,6 @@ void MainWindow::textChanged(const QString &text)
     m_bSendPackage->setCheckable(false);
 }
 
-void MainWindow::echoCheckMaster(bool check)
-{
-    m_cbEchoSlave->setChecked(false);
-    m_cbEchoMaster->setChecked(check);
-    if(check) {
-        m_bSendPackage->setChecked(false);
-        QListIterator<MacrosWidget*> it(macrosWidgets);
-        MacrosWidget *m = 0;
-        while(it.hasNext()) {
-            m->setCheckedInterval(false);
-            m->setCheckedPeriod(false);
-            m->setEnabledInterval(false);
-            m->setEnabledPeriod(false);
-        }
-
-        return;
-    }
-    QListIterator<MacrosWidget*> it(macrosWidgets);
-    MacrosWidget *m = 0;
-    while(it.hasNext()) {
-        m->setEnabledInterval(true);
-        m->setEnabledPeriod(true);
-    }
-}
-
-void MainWindow::echoCheckSlave(bool check)
-{
-    m_cbEchoMaster->setChecked(false);
-    m_cbEchoSlave->setChecked(check);
-}
-
 void MainWindow::portBaudSetting()
 {
     switch(m_cbBaud->currentIndex()) {
@@ -783,7 +740,6 @@ void MainWindow::stop()
     m_bSendPackage->setEnabled(false);
     m_bSendPackage->setChecked(false);
     m_tSend->stop();
-    m_tEcho->stop();
     m_tDelay->stop();
     m_tIntervalSending->stop();
     txCount = 0;
@@ -824,22 +780,6 @@ void MainWindow::singleSend()
     DataEncoder *dataEncoder = getEncoder(m_cbWriteMode->currentIndex());
     dataEncoder->setData(m_leSendPackage->text(), " ");
     sendPackage(dataEncoder->encodedByteArray(), false);
-}
-
-void MainWindow::echo()
-{
-    if(m_cbEchoMaster->isChecked()) {
-        sendPackage(echoBuffer);
-    }
-
-    if(m_cbEchoSlave->isChecked()) {
-        sendPackage(echoSlave);
-        m_tEcho->setInterval(m_sbEchoInterval->value());
-
-        if(echoSlave.isEmpty()) {
-            m_tEcho->stop();
-        }
-    }
 }
 
 void MainWindow::saveReadWriteLog(bool writeLog)
@@ -889,7 +829,7 @@ void MainWindow::startSending(bool checked)
     }
 
     if(m_Port->isOpen()) {
-        if(m_sbRepeatSendInterval->value() != 0 && !m_cbEchoMaster->isChecked()) {
+        if(m_sbRepeatSendInterval->value() != 0) {
             m_tSend->setInterval(m_sbRepeatSendInterval->value());
             m_tSend->start();
 
@@ -926,11 +866,6 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
         m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
         m_tTx->singleShot(BLINK_TIME_TX, this, SLOT(txNone()));
         m_tTx->setSingleShot(true);
-    }
-
-    if(m_cbEchoMaster->isChecked()) {
-        echoBuffer = modifiedData;
-        echoWaiting = true;
     }
 }
 
@@ -1023,27 +958,6 @@ void MainWindow::breakLine()
             break;
         }
     }
-    if(m_cbEchoMaster->isChecked() && echoWaiting) {
-        if(QString::compare(echoBuffer.join(" "), outDEC.remove(outDEC.length() - 1, 1), Qt::CaseInsensitive) == 0) {
-            m_eLogWrite->setItemColor(m_eLogWrite->count() - 1, Qt::green);
-            m_eLogRead->setItemColor(m_eLogWrite->count() - 1, Qt::green);
-        } else {
-            m_eLogWrite->setItemColor(m_eLogWrite->count() - 1, Qt::red);
-            m_eLogRead->setItemColor(m_eLogWrite->count() - 1, Qt::red);
-        }
-        if(m_sbEchoInterval->value() != 0) {
-            m_tEcho->singleShot(m_sbEchoInterval->value(), this, SLOT(echo()));
-        }
-        echoWaiting = false;
-    }
-    if(m_cbEchoSlave->isChecked()) {
-        echoSlave.append(outDEC);
-        if(!m_tEcho->isActive()) {
-            m_tEcho->setInterval(m_sbEchoInterval->value());
-            m_tEcho->start();
-        }
-    }
-    readBuffer.clear();
 
     if(m_cbReadScroll->isChecked()) {
         m_eLogRead->scrollToBottom();
@@ -1093,7 +1007,6 @@ void MainWindow::saveSession()
     settings->setValue("config/parity", m_cbParity->currentIndex());
     settings->setValue("config/stop_bits", m_cbStopBits->currentIndex());
 
-    settings->setValue("config/echo_interval", m_sbEchoInterval->value());
     settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
 
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
@@ -1136,7 +1049,6 @@ void MainWindow::loadSession()
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
     m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
     m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
-    m_sbEchoInterval->setValue(settings->value("config/echo_interval").toInt());
     m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
     m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());

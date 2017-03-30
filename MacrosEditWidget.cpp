@@ -235,9 +235,9 @@ void MacrosEditWidget::openMacrosFile(const QString &fileName)
     macrosFileName = fileName;
     setRawData(openMacros.getData());
     QFileInfo fileInfo(fileName);
-    fileName = fileInfo.fileName();
-    fileName.chop(4);
-    setWindowTitle(tr("Macros Sander - ") + fileName);
+    QString title = fileInfo.fileName();
+    title.chop(4);
+    setWindowTitle(tr("Macros Sander - ") + title);
 }
 
 void MacrosEditWidget::connections()
@@ -245,7 +245,7 @@ void MacrosEditWidget::connections()
     connect(actionNew, &QAction::triggered, this, &MacrosEditWidget::newMacrosFile);
 
     connect(actionLoad, &QAction::triggered, fileOpenDialog, &QFileDialog::show);
-    connect(fileOpenDialog, &QFileDialog::accepted, this, &MacrosEditWidget::openMacrosFile);
+    connect(fileOpenDialog, &QFileDialog::accepted, [this](){openMacrosFile();});
 
     connect(actionSave, &QAction::triggered, this, &MacrosEditWidget::saveMacrosFile);
 

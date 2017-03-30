@@ -52,7 +52,6 @@ private slots:
     void start();
     void stop();
     void pause(bool check);
-    void echo();
     void saveReadWriteLog(bool writeLog);
     void saveWrite();
     void saveRead();
@@ -61,8 +60,6 @@ private slots:
     void startWriteLog(bool check);
     void startReadLog(bool check);
     void textChanged(const QString &text);
-    void echoCheckMaster(bool check);
-    void echoCheckSlave(bool check);
     void received();
     void singleSend();
     void startSending(bool checked = true);
@@ -87,7 +84,6 @@ private:
     QComboBox *m_cbReadMode;
     QComboBox *m_cbWriteMode;
     QTimer *m_tSend;
-    QTimer *m_tEcho;
     QTimer *m_tWriteLog;
     QTimer *m_tReadLog;
     QTimer *m_tIntervalSending;
@@ -115,12 +111,9 @@ private:
     LimitedItemsListWidget *m_eLogRead;
     LimitedItemsListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
-    QSpinBox *m_sbEchoInterval;
     QSpinBox *m_sbDelay;
     QSpinBox *m_sbAllDelays;
     QLineEdit *m_leSendPackage;
-    QCheckBox *m_cbEchoMaster;
-    QCheckBox *m_cbEchoSlave;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
     QCheckBox *m_cbAllIntervals;
@@ -146,14 +139,11 @@ private:
     bool logWrite;
     bool logRead;
 
-    bool echoWaiting;
-    QByteArray echoBuffer;
     QByteArray readBuffer;
     QList<MacrosWidget*> macrosWidgets;
     QList<int> indexesOfIntervals;
     int sendCount;
     int currentIntervalIndex;
-    QByteArray echoSlave;
 
     HexEncoder *hexEncoder;
     DecEncoder *decEncoder;
