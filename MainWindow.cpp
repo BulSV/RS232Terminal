@@ -804,9 +804,10 @@ void MainWindow::singleSend()
 
 void MainWindow::saveReadWriteLog(bool writeLog)
 {
+    QString defaultFileName = (writeLog ? "(WRITE)_" : "(READ)_") + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt";
     QString fileName = fileDialog->getSaveFileName(this,
                                                    tr("Save File"),
-                                                   QDir::currentPath() + (writeLog ? "/(WRITE)_" : "/(READ)_") + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
+                                                   QDir::currentPath() + "/" + defaultFileName,
                                                    tr("Log Files (*.txt)"));
     if(fileName.isEmpty()) {
         return;
