@@ -107,7 +107,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
     m_bNewMacros->setFixedSize(20, 20);
     m_bLoadMacroses->setFixedSize(20, 20);
-    m_sbAllDelays->setValue(50);
     m_bRecordReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     m_bRecordWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     m_bRecordWriteLog->setCheckable(true);
@@ -1006,10 +1005,10 @@ void MainWindow::saveSession()
     settings->setValue("config/parity", m_cbParity->currentIndex());
     settings->setValue("config/stop_bits", m_cbStopBits->currentIndex());
 
-    settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
-
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
+    settings->setValue("config/all_delays", m_sbAllDelays->value());
 
+    settings->setValue("config/single_send_interval", m_sbRepeatSendInterval->value());
     settings->setValue("config/mode", m_cbSendMode->currentIndex());
     settings->setValue("config/CR", m_chbCR->isChecked());
     settings->setValue("config/LF", m_chbLF->isChecked());
@@ -1048,13 +1047,16 @@ void MainWindow::loadSession()
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
     m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
     m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
-    m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
+
     m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
     m_tReadLog->setInterval(settings->value("config/read_log_timeout", 600000).toInt());
-    m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
 
+    m_gbHiddenGroup->setHidden(settings->value("config/hidden_group_isHidden", true).toBool());
+    m_sbAllDelays->setValue(settings->value("config/all_delays", 50).toInt());
+
+    m_sbRepeatSendInterval->setValue(settings->value("config/single_send_interval").toInt());
     m_chbCR->setChecked(settings->value("config/CR", false).toBool());
     m_chbLF->setChecked(settings->value("config/LF", false).toBool());
     if(!m_gbHiddenGroup->isHidden()) {

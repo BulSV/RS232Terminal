@@ -28,7 +28,7 @@ void MacrosWidget::saveSettings(QSettings *settings, int macrosIndex)
     QString macrosIndexString = QString::number(macrosIndex);
     settings->setValue("macroses/" + macrosIndexString + "/interval", intervalIsChecked());
     settings->setValue("macroses/" + macrosIndexString + "/period", periodIsChecked());
-    settings->setValue("macroses/" + macrosIndexString + "time", getTime());
+    settings->setValue("macroses/" + macrosIndexString + "/time", getTime());
 
     macrosEditWidget->saveSettings(settings, macrosIndex);
 }
