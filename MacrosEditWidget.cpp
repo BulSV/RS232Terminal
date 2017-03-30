@@ -187,9 +187,10 @@ void MacrosEditWidget::saveSettings(QSettings *settings, int macrosIndex)
         QString packageString;
         int packageSize = package.size();
         for(int i = 0; i < packageSize; ++i) {
-            packageString.append(QString(package.at(i)));
+            packageString.append(QString::number((unsigned char)package.at(i), 16).toUpper());
             packageString.append(" ");
         }
+        packageString.chop(1);
         settings->setValue("macroses/" + macrosIndexString + "/package", packageString);
     } else {
         settings->setValue("macroses/" + macrosIndexString + "/path", macrosFileName);
@@ -223,6 +224,7 @@ void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
         for(int i = 0; i < dataSize; ++i) {
             package.append(static_cast<char>(packageList.at(i).toInt(&ok, 16)));
         }
+        setRawData(package);
     }
     actionCR->setChecked(settings->value("macroses/" + macrosIndexString + "/CR").toBool());
     actionLF->setChecked(settings->value("macroses/" + macrosIndexString + "/LF").toBool());
