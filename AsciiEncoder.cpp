@@ -9,15 +9,17 @@ void AsciiEncoder::setData(const QString &data, const QString &sep)
     for(int i = 0; i < count; i++) {
         int n = data.at(i).toLatin1();
         byteData.append(static_cast<char>(n));
-        stringListData.append(data.at(i));
     }
+    stringListData.append(data);
 }
 
 void AsciiEncoder::setData(const QByteArray &data)
 {
     DataEncoder::setData(data);
 
+    QString dataString;
     for(int i = 0; i < byteData.size(); ++i) {
-        stringListData.append(QString(byteData.at(i)));
+        dataString.append(QString(byteData.at(i)));
     }
+    stringListData.append(dataString);
 }
