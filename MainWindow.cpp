@@ -378,7 +378,12 @@ void MainWindow::deleteAllMacroses()
             m = it.next();
             m->setCheckedInterval(false);
             m->setCheckedPeriod(false);
-            delete m;
+            hiddenLayout->removeWidget(m);
+            disconnect(m, &MacrosWidget::deleted, this, &MainWindow::deleteMacros);
+            disconnect(m, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
+            disconnect(m, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
+            disconnect(m, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
+            disconnect(m, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
             delete m;
             m = 0;
         }
@@ -430,7 +435,7 @@ void MainWindow::addMacros()
     hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosWidget);
 
     connect(macrosWidget, &MacrosWidget::deleted, this, &MainWindow::deleteMacros);
-    connect(macrosWidget, &MacrosWidget::packageSended, [this](const QByteArray &writeData){sendPackage(writeData);});
+    connect(macrosWidget, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
     connect(macrosWidget, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
     connect(macrosWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
     connect(macrosWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
@@ -485,7 +490,24 @@ void MainWindow::deleteMacros()
     m->setCheckedInterval(false);
     m->setCheckedPeriod(false);
     macrosWidgets.removeOne(m);
+    hiddenLayout->removeWidget(m);
+    disconnect(m, &MacrosWidget::deleted, this, &MainWindow::deleteMacros);
+    disconnect(m, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
+    disconnect(m, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
+    disconnect(m, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
+    disconnect(m, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
     delete m;
+}
+
+void MainWindow::sendPackage(const QByteArray &data)
+{
+    MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
+    QPushButton *b = qobject_cast<QPushButton*>(sender());
+    if(m == 0 && b == 0) {
+        return;
+    }
+    bool macros = b == 0 ? true : false;
+    sendPackage(data, macros);
 }
 
 void MainWindow::writeLogTimeout()
@@ -686,7 +708,7 @@ void MainWindow::sendNextMacros()
         if(currentIntervalIndex >= indexesOfIntervals.size()) {
             currentIntervalIndex = 0;
         }
-        sendPackage(m->getPackage());
+        sendPackage(m->getPackage(), true);
         m_tIntervalSending->start(m->getTime());
     }
 }

@@ -2,6 +2,8 @@
 
 #include "MacrosWidget.h"
 
+const int MAX_SYMBOLS_COUNT = 20;
+
 MacrosWidget::MacrosWidget(QWidget *parent)
 : QWidget(parent)
 , buttonDelete(new QPushButton(this))
@@ -118,6 +120,14 @@ void MacrosWidget::sendPackage()
     emit packageSended(macrosEditWidget->getPackage());
 }
 
+void MacrosWidget::titleChanged()
+{
+    int symbolsCount = buttonSend->text().size();
+    if(symbolsCount > MAX_SYMBOLS_COUNT) {
+        buttonSend->setText(buttonSend->text().mid(0, MAX_SYMBOLS_COUNT));
+    }
+}
+
 void MacrosWidget::view()
 {
     buttonUp->setFixedSize(16, 13);
@@ -143,12 +153,14 @@ void MacrosWidget::view()
     layout()->setSpacing(0);
     layout()->setContentsMargins(0, 0, 0, 0);
 
+    buttonDelete->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
     buttonSend->setStyleSheet("font-weight: bold");
+
+    buttonDelete->setFixedSize(15, 15);
     checkBoxInterval->setFixedWidth(15);
     checkBoxPeriod->setFixedWidth(15);
     spinBoxTime->setFixedWidth(60);
-    buttonDelete->setFixedSize(15, 15);
-    buttonDelete->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
+    buttonSend->setMaximumWidth(150);
 }
 
 void MacrosWidget::connections()
@@ -163,4 +175,5 @@ void MacrosWidget::connections()
     connect(buttonUp, &QPushButton::clicked, this, &MacrosWidget::movedUp);
     connect(buttonDown, &QPushButton::clicked, this, &MacrosWidget::movedDown);
     connect(macrosEditWidget, &MacrosEditWidget::titleChanged, buttonSend, &RightClickedButton::setText);
+    connect(macrosEditWidget, &MacrosEditWidget::titleChanged, this, &MacrosWidget::titleChanged);
 }

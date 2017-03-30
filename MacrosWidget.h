@@ -60,6 +60,7 @@ private:
     void connections();
     void deleteMacros();
     void sendPackage();
+    void titleChanged();
 };
 
 #endif // MACROS_WIDGET_H

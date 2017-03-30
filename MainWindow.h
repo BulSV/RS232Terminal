@@ -66,7 +66,8 @@ private slots:
     void addMacros();
     void openDialog();
     void deleteMacros();
-    void sendPackage(const QByteArray &data, bool macros = true);
+    void sendPackage(const QByteArray &data);
+    void sendPackage(const QByteArray &data, bool macros);
     void deleteAllMacroses();
     void checkAllMacroses();
     void changeAllDelays(int time);
