@@ -990,6 +990,8 @@ void MainWindow::saveSession()
     settings->setValue("config/position", pos());
     settings->setValue("config/isMaximized", isMaximized());
 
+    settings->setValue("config/write_mode", m_cbWriteMode->currentIndex());
+    settings->setValue("config/read_mode", m_cbReadMode->currentIndex());
     settings->setValue("config/max_write_log_rows", m_eLogWrite->itemsLimit());
     settings->setValue("config/max_read_log_rows", m_eLogRead->itemsLimit());
     settings->setValue("config/write_display", m_cbDisplayWrite->isChecked());
@@ -1048,6 +1050,8 @@ void MainWindow::loadSession()
     m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
     m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
 
+    m_cbWriteMode->setCurrentIndex(settings->value("config/write_mode", 0).toInt());
+    m_cbReadMode->setCurrentIndex(settings->value("config/read_mode", 0).toInt());
     m_cbWriteScroll->setChecked(settings->value("config/write_autoscroll", true).toBool());
     m_cbReadScroll->setChecked(settings->value("config/read_autoscroll", true).toBool());
     m_tWriteLog->setInterval(settings->value("config/write_log_timeout", 600000).toInt());
