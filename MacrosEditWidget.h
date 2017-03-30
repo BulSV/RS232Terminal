@@ -27,6 +27,8 @@ public:
     void saveSettings(QSettings *settings, int macrosIndex);
     void loadSettings(QSettings *settings, int macrosIndex);
     void openMacrosFile(const QString &fileName);
+signals:
+    void titleChanged(const QString &title);
 private:
     QToolBar *toolBar;
     QAction *actionNew;

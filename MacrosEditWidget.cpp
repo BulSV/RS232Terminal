@@ -47,6 +47,8 @@ MacrosEditWidget::MacrosEditWidget(QWidget *parent)
 {
     setWindowTitle(tr("Macros Sander - No Name"));
 
+    emit titleChanged(QString(tr("No Name")));
+
     actionCR->setCheckable(true);
     actionLF->setCheckable(true);
 
@@ -103,6 +105,8 @@ void MacrosEditWidget::newMacrosFile()
     macrosFileName.clear();
     package.clear();
     setWindowTitle(tr("Macros Sander - No Name"));
+
+    emit titleChanged(QString(tr("No Name")));
 }
 
 void MacrosEditWidget::openMacrosFile()
@@ -138,6 +142,8 @@ void MacrosEditWidget::saveAsMacrosFile()
     fileName = fileInfo.fileName();
     fileName.chop(4);
     setWindowTitle(tr("Macros Sander - ") + fileName);
+
+    emit titleChanged(fileName);
 }
 
 void MacrosEditWidget::formPackage()
@@ -202,6 +208,8 @@ void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
         fileName = fileInfo.fileName();
         fileName.chop(4);
         setWindowTitle(tr("Macros Sander - ") + fileName);
+
+        emit titleChanged(fileName);
     } else {
         QList<QString> packageList = settings->value("macroses/" + macrosIndexString + "/package").toString().split(" ");
         int dataSize = packageList.size();
@@ -238,6 +246,8 @@ void MacrosEditWidget::openMacrosFile(const QString &fileName)
     QString title = fileInfo.fileName();
     title.chop(4);
     setWindowTitle(tr("Macros Sander - ") + title);
+
+    emit titleChanged(title);
 }
 
 void MacrosEditWidget::connections()

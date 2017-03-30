@@ -146,7 +146,7 @@ void MacrosWidget::view()
     buttonSend->setStyleSheet("font-weight: bold");
     checkBoxInterval->setFixedWidth(15);
     checkBoxPeriod->setFixedWidth(15);
-    buttonSend->setFixedWidth(85);
+    spinBoxTime->setFixedWidth(60);
     buttonDelete->setFixedSize(15, 15);
     buttonDelete->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
 }
@@ -162,4 +162,5 @@ void MacrosWidget::connections()
     connect(timerPeriod, &QTimer::timeout, this, &MacrosWidget::sendPackage);
     connect(buttonUp, &QPushButton::clicked, this, &MacrosWidget::movedUp);
     connect(buttonDown, &QPushButton::clicked, this, &MacrosWidget::movedDown);
+    connect(macrosEditWidget, &MacrosEditWidget::titleChanged, buttonSend, &RightClickedButton::setText);
 }

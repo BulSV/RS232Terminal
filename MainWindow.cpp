@@ -720,7 +720,7 @@ void MainWindow::start()
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
 
-//    sendNextMacros();
+    sendNextMacros();
 }
 
 void MainWindow::stop()
