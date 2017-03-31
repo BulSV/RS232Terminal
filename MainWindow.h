@@ -17,7 +17,7 @@
 #include <QList>
 
 #include "RightClickedButton.h"
-#include "LimitedItemsListWidget.h"
+#include "LimitedTextEdit.h"
 #include "MacrosWidget.h"
 #include "DataEncoder.h"
 #include "HexEncoder.h"
@@ -109,8 +109,8 @@ private:
     QLabel *m_lRx;
     QLabel *m_lTxCount;
     QLabel *m_lRxCount;
-    LimitedItemsListWidget *m_eLogRead;
-    LimitedItemsListWidget *m_eLogWrite;
+    LimitedTextEdit *m_eLogRead;
+    LimitedTextEdit *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbDelayBetweenPackets;
     QSpinBox *m_sbAllDelays;

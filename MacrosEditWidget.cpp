@@ -37,8 +37,6 @@ MacrosEditWidget::MacrosEditWidget(QWidget *parent)
     , asciiEncoder(new AsciiEncoder)
     , hexEncoder(new HexEncoder)
     , decEncoder(new DecEncoder)
-    , CR(false)
-    , LF(false)
     , macrosRawEditWidget(new MacrosRawEditWidget(0))
     , macrosesOpenDir(".")
     , macrosesSaveDir(".")
@@ -93,11 +91,12 @@ MacrosEditWidget::~MacrosEditWidget()
 
 void MacrosEditWidget::addCR_LF()
 {
-    if(CR) {
-        package.append(::CR);
+    package_CR_LF = package;
+    if(actionCR->isChecked()) {
+        package_CR_LF.append(CR);
     }
-    if(LF) {
-        package.append(::LF);
+    if(actionLF->isChecked()) {
+        package_CR_LF.append(LF);
     }
 }
 
@@ -176,7 +175,7 @@ const QByteArray &MacrosEditWidget::getPackage()
 {
     addCR_LF();
 
-    return package;
+    return package_CR_LF;
 }
 
 void MacrosEditWidget::saveSettings(QSettings *settings, int macrosIndex)
@@ -195,6 +194,8 @@ void MacrosEditWidget::saveSettings(QSettings *settings, int macrosIndex)
     } else {
         settings->setValue("macroses/" + macrosIndexString + "/path", macrosFileName);
     }
+    settings->setValue("macroses/" + macrosIndexString + "/CR", actionCR->isChecked());
+    settings->setValue("macroses/" + macrosIndexString + "/LF", actionLF->isChecked());
     settings->setValue("macroses/" + macrosIndexString + "/position", pos());
     settings->setValue("macroses/" + macrosIndexString + "/size", size());
 
@@ -272,8 +273,6 @@ void MacrosEditWidget::connections()
 
     connect(actionRawEdit, &QAction::triggered, this, &MacrosEditWidget::onEditRawData);
     connect(actionClearSelectedGroup, &QAction::triggered, this, &MacrosEditWidget::clearSelectedGroup);
-    connect(actionCR, &QAction::triggered, this, &MacrosEditWidget::addCR);
-    connect(actionLF, &QAction::triggered, this, &MacrosEditWidget::addLF);
     connect(actionAddGroup, &QAction::triggered, this, &MacrosEditWidget::addGroup);
     connect(actionDeleteGroup, &QAction::triggered, this, &MacrosEditWidget::deleteGroup);
 
@@ -527,16 +526,6 @@ void MacrosEditWidget::fillEmptyBytes(DataTable *dataTable)
         result.prepend(dataString);
     }
     dataTable->setData(result);
-}
-
-void MacrosEditWidget::addCR(bool CR)
-{
-    this->CR = CR;
-}
-
-void MacrosEditWidget::addLF(bool LF)
-{
-    this->LF = LF;
 }
 
 QString MacrosEditWidget::fromStringListToString(DataTable *dataTable)

@@ -59,8 +59,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_lRx(new QLabel("Rx", this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
-    , m_eLogRead(new LimitedItemsListWidget(this))
-    , m_eLogWrite(new LimitedItemsListWidget(this))
+    , m_eLogRead(new LimitedTextEdit(this))
+    , m_eLogWrite(new LimitedTextEdit(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbDelayBetweenPackets(new QSpinBox(this))
     , m_sbAllDelays(new QSpinBox(this))
@@ -824,13 +824,9 @@ void MainWindow::saveReadWriteLog(bool writeLog)
     }
     QTextStream stream(&file);
     if(writeLog) {
-        for(int i = 0; i < m_eLogWrite->count(); ++i) {
-            stream << m_eLogWrite->item(i)->text() + "\n";
-        }
+        stream << m_eLogWrite->toPlainText();
     } else {
-        for(int i = 0; i < m_eLogRead->count(); ++i) {
-            stream << m_eLogRead->item(i)->text() + "\n";
-        }
+        stream << m_eLogRead->toPlainText();
     }
     file.close();
 }
@@ -904,16 +900,16 @@ void MainWindow::displayWrittenData(const QByteArray &writeData, bool macros)
     DataEncoder *dataEncoder = getEncoder(mode);
     dataEncoder->setData(writeData);
     QString displayString = dataEncoder->encodedStringList().join(" ");
-    m_eLogWrite->addItem(displayString);
+    m_eLogWrite->addLine(displayString);
 
     if(logWrite) {
         QTextStream writeStream (&writeLogFile);
         writeStream << displayString + "\n";
     }
 
-    if(m_cbWriteScroll->isChecked()) {
-        m_eLogWrite->scrollToBottom();
-    }
+//    if(m_cbWriteScroll->isChecked()) {
+//        m_eLogWrite->scrollToBottom();
+//    }
 }
 
 DataEncoder *MainWindow::getEncoder(int mode)
@@ -953,7 +949,7 @@ void MainWindow::delayBetweenPacketsEnded()
         dataEncoder->setData(readBuffer);
 
         if(m_cbDisplayRead->isChecked()) {
-            m_eLogRead->addItem(dataEncoder->encodedStringList().join(" "));
+            m_eLogRead->addLine(dataEncoder->encodedStringList().join(" "));
         }
 
         if(logRead) {
@@ -963,9 +959,9 @@ void MainWindow::delayBetweenPacketsEnded()
     }
     readBuffer.clear();
 
-    if(m_cbReadScroll->isChecked()) {
-        m_eLogRead->scrollToBottom();
-    }
+//    if(m_cbReadScroll->isChecked()) {
+//        m_eLogRead->scrollToBottom();
+//    }
 }
 
 void MainWindow::rxNone()
@@ -998,8 +994,8 @@ void MainWindow::saveSession()
 
     settings->setValue("config/write_mode", m_cbWriteMode->currentIndex());
     settings->setValue("config/read_mode", m_cbReadMode->currentIndex());
-    settings->setValue("config/max_write_log_rows", m_eLogWrite->itemsLimit());
-    settings->setValue("config/max_read_log_rows", m_eLogRead->itemsLimit());
+    settings->setValue("config/max_write_log_rows", m_eLogWrite->linesLimit());
+    settings->setValue("config/max_read_log_rows", m_eLogRead->linesLimit());
     settings->setValue("config/write_display", m_cbDisplayWrite->isChecked());
     settings->setValue("config/read_display", m_cbDisplayRead->isChecked());
     settings->setValue("config/write_autoscroll", m_cbWriteScroll->isChecked());
@@ -1047,8 +1043,8 @@ void MainWindow::loadSession()
         showMaximized();
     }
 
-    m_eLogRead->setItemsLimit(settings->value("config/max_write_log_rows", 1000).toInt());
-    m_eLogWrite->setItemsLimit(settings->value("config/max_read_log_rows", 1000).toInt());
+    m_eLogRead->setLinesLimit(settings->value("config/max_write_log_rows", 1000).toInt());
+    m_eLogWrite->setLinesLimit(settings->value("config/max_read_log_rows", 1000).toInt());
 
     m_cbPort->setCurrentText(settings->value("config/port").toString());
     m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());

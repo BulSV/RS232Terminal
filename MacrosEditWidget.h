@@ -52,8 +52,7 @@ private:
     HexEncoder *hexEncoder;
     DecEncoder *decEncoder;
     QByteArray package;
-    bool CR;
-    bool LF;
+    QByteArray package_CR_LF;
     MacrosRawEditWidget *macrosRawEditWidget;
     OpenMacros openMacros;
     SaveMacros saveMacros;
@@ -78,8 +77,6 @@ private:
     void nonPrintableCharacters();
     QList<QString> getAsciiString();
     void fillEmptyBytes(DataTable *dataTable);
-    void addCR(bool CR);
-    void addLF(bool LF);
     QString fromStringListToString(DataTable *dataTable);
     void fillEditGroup();
     void setRawData(const QByteArray &rawData);
