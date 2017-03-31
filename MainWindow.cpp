@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QListIterator>
 #include <algorithm>
+#include <QGroupBox>
 
 #include "MainWindow.h"
 #include "MacrosWidget.h"
@@ -199,47 +200,38 @@ void MainWindow::view()
     sendPackageLayout->addWidget(m_bSendPackage);
 
     QGridLayout *writeLayout = new QGridLayout;
-    writeLayout->addWidget(new QLabel(tr("Write :"), this), 0, 0);
-    m_cbWriteMode->setFixedWidth(55);
-    writeLayout->addWidget(m_cbWriteMode, 0, 1);
-    m_cbWriteScroll->setFixedWidth(65);
-    writeLayout->addWidget(m_cbWriteScroll, 0, 2);
-    writeLayout->addWidget(m_cbDisplayWrite, 0, 3);
-    m_bRecordWriteLog->setFixedWidth(35);
+    writeLayout->addWidget(m_cbWriteMode, 0, 0);
+    writeLayout->addWidget(m_cbWriteScroll, 0, 1);
+    writeLayout->addWidget(m_cbDisplayWrite, 0, 2);
     writeLayout->addWidget(m_bRecordWriteLog, 1, 0);
-    m_bSaveWriteLog->setFixedWidth(50);
     writeLayout->addWidget(m_bSaveWriteLog, 1, 1);
-    m_bWriteLogClear->setFixedWidth(50);
     writeLayout->addWidget(m_bWriteLogClear, 1, 2);
-    writeLayout->addWidget(m_eLogWrite, 2, 0, 1, 6);
+    writeLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 3, 2);
+    writeLayout->addWidget(m_eLogWrite, 2, 0, 1, 4);
     writeLayout->setSpacing(5);
-    writeLayout->setContentsMargins(2, 2, 2, 2);
+    writeLayout->setContentsMargins(5, 5, 5, 5);
+
+    QGroupBox *gbWrite = new QGroupBox(tr("Write"), this);
+    gbWrite->setLayout(writeLayout);
 
     QGridLayout *readLayout = new QGridLayout;
-    readLayout->addWidget(new QLabel(tr("Read:"), this), 0, 0);
-    m_cbReadMode->setFixedWidth(55);
-    readLayout->addWidget(m_cbReadMode, 0, 1);
-    m_cbReadScroll->setFixedWidth(65);
-    readLayout->addWidget(m_cbReadScroll, 0, 2);
-    readLayout->addWidget(m_cbDisplayRead, 0, 3);
-    m_bRecordReadLog->setFixedWidth(35);
+    readLayout->addWidget(m_cbReadMode, 0, 0);
+    readLayout->addWidget(m_cbReadScroll, 0, 1);
+    readLayout->addWidget(m_cbDisplayRead, 0, 2);
     readLayout->addWidget(m_bRecordReadLog, 1, 0);
-    m_bSaveReadLog->setFixedWidth(50);
     readLayout->addWidget(m_bSaveReadLog, 1, 1);
-    m_bReadLogClear->setFixedWidth(50);
     readLayout->addWidget(m_bReadLogClear, 1, 2);
-    readLayout->addWidget(m_eLogRead, 2, 0, 1, 6);
+    readLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 3, 2);
+    readLayout->addWidget(m_eLogRead, 2, 0, 1, 4);
     readLayout->setSpacing(5);
-    readLayout->setContentsMargins(2, 2, 2, 2);
+    readLayout->setContentsMargins(5, 5, 5, 5);
 
-    QWidget *wWrite = new QWidget;
-    wWrite->setLayout(writeLayout);
-    QWidget *wRead = new QWidget;
-    wRead->setLayout(readLayout);
+    QGroupBox *gbRead = new QGroupBox(tr("Read"), this);
+    gbRead->setLayout(readLayout);
 
     QSplitter *splitter = new QSplitter;
-    splitter->addWidget(wWrite);
-    splitter->addWidget(wRead);
+    splitter->addWidget(gbWrite);
+    splitter->addWidget(gbRead);
     splitter->setHandleWidth(1);
 
     QGridLayout *dataLayout = new QGridLayout;
