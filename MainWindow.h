@@ -47,7 +47,7 @@ private slots:
     void txNone();
     void rxHold();
     void txHold();
-    void breakLine();
+    void delayBetweenPacketsEnded();
     void hiddenClicked();
     void start();
     void stop();
@@ -88,7 +88,7 @@ private:
     QTimer *m_tWriteLog;
     QTimer *m_tReadLog;
     QTimer *m_tIntervalSending;
-    QTimer *m_tDelay;
+    QTimer *m_timerDelayBetweenPackets;
     QTimer *m_tTx;
     QTimer *m_tRx;
     QPushButton *m_bStart;
@@ -112,7 +112,7 @@ private:
     LimitedItemsListWidget *m_eLogRead;
     LimitedItemsListWidget *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
-    QSpinBox *m_sbDelay;
+    QSpinBox *m_sbDelayBetweenPackets;
     QSpinBox *m_sbAllDelays;
     QLineEdit *m_leSendPackage;
     QCheckBox *m_cbReadScroll;

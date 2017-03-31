@@ -38,7 +38,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tWriteLog(new QTimer(this))
     , m_tReadLog(new QTimer(this))
     , m_tIntervalSending(new QTimer(this))
-    , m_tDelay(new QTimer(this))
+    , m_timerDelayBetweenPackets(new QTimer(this))
     , m_tTx(new QTimer(this))
     , m_tRx(new QTimer(this))
     , m_bStart(new QPushButton(tr("Start"), this))
@@ -62,7 +62,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_eLogRead(new LimitedItemsListWidget(this))
     , m_eLogWrite(new LimitedItemsListWidget(this))
     , m_sbRepeatSendInterval(new QSpinBox(this))
-    , m_sbDelay(new QSpinBox(this))
+    , m_sbDelayBetweenPackets(new QSpinBox(this))
     , m_sbAllDelays(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
     , m_cbReadScroll(new QCheckBox(tr("Scrolling"), this))
@@ -117,8 +117,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_bPause->setEnabled(false);
     m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
-    m_sbDelay->setRange(1, 100000);
-    m_sbDelay->setValue(10);
+    m_sbDelayBetweenPackets->setRange(0, 10);
+    m_sbDelayBetweenPackets->setValue(10);
     m_sbAllDelays->setRange(0, 999999);
 
     m_lTxCount->setStyleSheet("border-style: outset; border-width: 1px; border-color: black;");
@@ -159,7 +159,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     }
     fileDialog->setDirectory(dir.currentPath() + "/Macros");
     fileDialog->setFileMode(QFileDialog::ExistingFiles);
-    fileDialog->setNameFilter(trUtf8("Macro Files (*.rsmc)"));
+    fileDialog->setNameFilter(tr("Terminal Macros File (*.tmf)"));
 
     loadSession();
 }
@@ -180,8 +180,8 @@ void MainWindow::view()
     configLayout->addWidget(m_cbParity, 6, 1);
     configLayout->addWidget(new QLabel(tr("Stop bits:"), this), 7, 0);
     configLayout->addWidget(m_cbStopBits, 7, 1);
-    configLayout->addWidget(new QLabel(tr("Delay:"), this), 8, 0);
-    configLayout->addWidget(m_sbDelay, 8, 1);
+    configLayout->addWidget(new QLabel(tr("Delay between packets:"), this), 8, 0);
+    configLayout->addWidget(m_sbDelayBetweenPackets, 8, 1);
     configLayout->addWidget(m_bStart, 9, 0);
     configLayout->addWidget(m_bStop, 9, 1);
     configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 10, 0);
@@ -253,7 +253,7 @@ void MainWindow::view()
     m_cbAllIntervals->setFixedWidth(58);
     m_cbAllPeriods->setFixedWidth(50);
     m_bNewMacros->setToolTip(tr("New Macros"));
-    m_bLoadMacroses->setWhatsThis(tr("Load Macroses"));
+    m_bLoadMacroses->setToolTip(tr("Load Macroses"));
     m_bPause->setFixedWidth(38);
 
     QHBoxLayout *hiddenAllCheck = new QHBoxLayout;
@@ -323,7 +323,7 @@ void MainWindow::connections()
     connect(m_sbAllDelays, SIGNAL(valueChanged(int)), this, SLOT(changeAllDelays(int)));
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(singleSend()));
-    connect(m_tDelay, SIGNAL(timeout()), this, SLOT(breakLine()));
+    connect(m_timerDelayBetweenPackets, &QTimer::timeout, this, &MainWindow::delayBetweenPacketsEnded);
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
     connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
@@ -760,7 +760,7 @@ void MainWindow::stop()
     m_cbStopBits->setEnabled(true);
     m_bSendPackage->setChecked(false);
     m_tSend->stop();
-    m_tDelay->stop();
+    m_timerDelayBetweenPackets->stop();
     m_tIntervalSending->stop();
     txCount = 0;
     m_lTxCount->setText("Tx: 0");
@@ -789,10 +789,14 @@ void MainWindow::pause(bool check)
 
 void MainWindow::received()
 {
-    m_tDelay->start(m_sbDelay->value());
     readBuffer += m_Port->readAll();
-    rxCount++;
-    m_lRxCount->setText("Rx: " + QString::number(rxCount));
+    int delayBetweenPackets = m_sbDelayBetweenPackets->value();
+    if(delayBetweenPackets == 0) {
+        delayBetweenPacketsEnded();
+
+        return;
+    }
+    m_timerDelayBetweenPackets->start(delayBetweenPackets);
 }
 
 void MainWindow::singleSend()
@@ -930,55 +934,34 @@ DataEncoder *MainWindow::getEncoder(int mode)
 }
 
 // Перевод строки при приеме данных
-// Срабатывает по таймеру m_tDelay
+// Срабатывает по таймеру m_timerDelayBetweenPackets
 // Определяет отображаемую длину принятого пакета
-void MainWindow::breakLine()
+void MainWindow::delayBetweenPacketsEnded()
 {
-    m_tDelay->stop();
+    m_timerDelayBetweenPackets->stop();
 
     if(!m_tRx->isSingleShot()) {
         m_lRx->setStyleSheet("background: red; font: bold; font-size: 10pt");
         m_tRx->singleShot(BLINK_TIME_RX, this, SLOT(rxNone()));
         m_tRx->setSingleShot(true);
     }
+    rxCount+=readBuffer.size();
+    m_lRxCount->setText("Rx: " + QString::number(rxCount));
 
-    QTextStream readStream(&readLogFile);
-    QString in = QString(readBuffer.toHex()).toUpper();
-    for(int i = 2; !(i >= in.length()); i += 3) {
-        in.insert(i, " ");
-    }
-    QStringList list = in.split(" ", QString::SkipEmptyParts);
-    QString outDEC;
-    int count = list.size();
-    for(int i = 0; i < count; i++) {
-        bool ok;
-        int dec = list[i].toInt(&ok, 16);
-        if(ok) {
-            outDEC.append(QString::number(dec) + " ");
+    if(m_cbDisplayRead->isChecked() || logRead) {
+        DataEncoder *dataEncoder = getEncoder(m_cbReadMode->currentIndex());
+        dataEncoder->setData(readBuffer);
+
+        if(m_cbDisplayRead->isChecked()) {
+            m_eLogRead->addItem(dataEncoder->encodedStringList().join(" "));
+        }
+
+        if(logRead) {
+            QTextStream readStream(&readLogFile);
+            readStream << dataEncoder->encodedStringList().join(" ") + "\n";
         }
     }
-    if(m_cbDisplayRead->isChecked()) {
-        switch (m_cbReadMode->currentIndex()) {
-        case HEX:
-            m_eLogRead->addItem(in);
-            if(logRead) {
-                readStream << in + "\n";
-            }
-            break;
-        case ASCII:
-            m_eLogRead->addItem(QString(readBuffer));
-            if(logRead) {
-                readStream << QString(readBuffer) + "\n";
-            }
-            break;
-        case DEC:
-            m_eLogRead->addItem(outDEC);
-            if(logRead) {
-                readStream << outDEC + "\n";
-            }
-            break;
-        }
-    }
+    readBuffer.clear();
 
     if(m_cbReadScroll->isChecked()) {
         m_eLogRead->scrollToBottom();
