@@ -793,7 +793,7 @@ void MainWindow::received()
 
 void MainWindow::singleSend()
 {
-    DataEncoder *dataEncoder = getEncoder(m_cbWriteMode->currentIndex());
+    DataEncoder *dataEncoder = getEncoder(m_cbSendMode->currentIndex());
     dataEncoder->setData(m_leSendPackage->text(), " ");
     sendPackage(dataEncoder->encodedByteArray(), false);
 }
@@ -871,7 +871,7 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
         }
     }
 
-    displayWrittenData(modifiedData, macros);
+    displayWrittenData(modifiedData);
     txCount += m_Port->write(modifiedData);
     m_lTxCount->setText("Tx: " + QString::number(txCount));
 
@@ -882,14 +882,13 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
     }
 }
 
-void MainWindow::displayWrittenData(const QByteArray &writeData, bool macros)
+void MainWindow::displayWrittenData(const QByteArray &writeData)
 {
     if (!m_cbDisplayWrite->isChecked()) {
         return;
     }
 
-    int mode = macros ? m_cbWriteMode->currentIndex() : m_cbSendMode->currentIndex();
-    DataEncoder *dataEncoder = getEncoder(mode);
+    DataEncoder *dataEncoder = getEncoder(m_cbWriteMode->currentIndex());
     dataEncoder->setData(writeData);
     QString displayString = dataEncoder->encodedStringList().join(" ");
     m_eLogWrite->addLine(displayString);

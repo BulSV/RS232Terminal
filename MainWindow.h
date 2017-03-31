@@ -162,7 +162,7 @@ private:
 
     void updateIntervalsList(bool add);
     void sendNextMacros();
-    void displayWrittenData(const QByteArray &writeData, bool macros);
+    void displayWrittenData(const QByteArray &writeData);
     DataEncoder *getEncoder(int mode);
 };
 
