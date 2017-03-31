@@ -907,9 +907,10 @@ void MainWindow::displayWrittenData(const QByteArray &writeData, bool macros)
         writeStream << displayString + "\n";
     }
 
-//    if(m_cbWriteScroll->isChecked()) {
-//        m_eLogWrite->scrollToBottom();
-//    }
+    if(m_cbWriteScroll->isChecked()) {
+        QScrollBar *sb = m_eLogWrite->verticalScrollBar();
+        sb->setValue(sb->maximum());
+    }
 }
 
 DataEncoder *MainWindow::getEncoder(int mode)
@@ -959,9 +960,10 @@ void MainWindow::delayBetweenPacketsEnded()
     }
     readBuffer.clear();
 
-//    if(m_cbReadScroll->isChecked()) {
-//        m_eLogRead->scrollToBottom();
-//    }
+    if(m_cbReadScroll->isChecked()) {
+        QScrollBar *sb = m_eLogRead->verticalScrollBar();
+        sb->setValue(sb->maximum());
+    }
 }
 
 void MainWindow::rxNone()
