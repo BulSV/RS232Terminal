@@ -15,6 +15,7 @@
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QList>
+#include <QAction>
 
 #include "RightClickedButton.h"
 #include "LimitedTextEdit.h"
@@ -23,6 +24,7 @@
 #include "HexEncoder.h"
 #include "DecEncoder.h"
 #include "AsciiEncoder.h"
+#include "ComPortConfigure.h"
 
 class MainWindow : public QMainWindow
 {
@@ -76,11 +78,8 @@ private slots:
     void moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction);
 private:
     QWidget *widget;
-    QComboBox *m_cbPort;
-    QComboBox *m_cbBaud;
-    QComboBox *m_cbBits;
-    QComboBox *m_cbParity;
-    QComboBox *m_cbStopBits;
+    QToolBar *toolBar;
+    QAction *actionPortConfigure;
     QComboBox *m_cbSendMode;
     QComboBox *m_cbReadMode;
     QComboBox *m_cbWriteMode;
@@ -124,7 +123,8 @@ private:
     QCheckBox *m_chbCR;
     QCheckBox *m_chbLF;
 
-    QSerialPort *m_Port;
+    QSerialPort *m_port;
+    ComPortConfigure *comPortConfigure;
     QSettings *settings;
     QFileDialog *fileDialog;
     QGroupBox *m_gbHiddenGroup;
@@ -154,11 +154,6 @@ private:
     void saveSession();
     void loadSession();
     void connections();
-
-    void portBaudSetting();
-    void portDataBitsSetting();
-    void portParitySetting();
-    void portStopBitsSetting();
 
     void updateIntervalsList(bool add);
     void sendNextMacros();

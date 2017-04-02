@@ -27,11 +27,8 @@ const int BLINK_TIME_RX = 200;
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
-    , m_cbPort(new QComboBox(this))
-    , m_cbBaud(new QComboBox(this))
-    , m_cbBits(new QComboBox(this))
-    , m_cbParity(new QComboBox(this))
-    , m_cbStopBits(new QComboBox(this))
+    , toolBar(new QToolBar(this))
+    , actionPortConfigure(new QAction(tr("Port configure"), this))
     , m_cbSendMode(new QComboBox(this))
     , m_cbReadMode(new QComboBox(this))
     , m_cbWriteMode(new QComboBox(this))
@@ -74,7 +71,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_cbDisplayRead(new QCheckBox(tr("Display"), this))
     , m_chbCR(new QCheckBox("CR", this))
     , m_chbLF(new QCheckBox("LF", this))
-    , m_Port(new QSerialPort(this))
+    , m_port(new QSerialPort(this))
+    , comPortConfigure(new ComPortConfigure(m_port, this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
     , m_gbHiddenGroup(new QGroupBox(this))
@@ -87,15 +85,13 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , asciiEncoder(new AsciiEncoder)
 {
     setWindowTitle(title);
-    resize(settings->value("config/width").toInt(),
-           settings->value("config/height").toInt());
 
     view();
     connections();
 
     setMinimumWidth(665);
 
-    m_Port->setReadBufferSize(1);
+    m_port->setReadBufferSize(1);
 
     txCount = 0;
     rxCount = 0;
@@ -109,6 +105,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_eLogWrite->displayTime("mm:ss.zzz");
     m_eLogWrite->setReadOnly(true);
 
+    comPortConfigure->setWindowTitle(tr("Port configure"));
+    comPortConfigure->setModal(true);
+
     m_bNewMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
     m_bNewMacros->setFixedSize(20, 20);
@@ -121,7 +120,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_bPause->setCheckable(true);
     m_bStop->setEnabled(false);
     m_bPause->setEnabled(false);
-    m_cbPort->setEditable(true);
     m_sbRepeatSendInterval->setRange(0, 100000);
     m_sbDelayBetweenPackets->setRange(0, 10);
     m_sbDelayBetweenPackets->setValue(10);
@@ -134,26 +132,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_lRx->setStyleSheet("font: bold; font-size: 10pt; qproperty-alignment: AlignCenter");
 
     QStringList buffer;
-    foreach(QSerialPortInfo availablePort, QSerialPortInfo::availablePorts()) {
-        buffer << availablePort.portName();
-    }
-    m_cbPort->addItems(buffer);
-    m_cbPort->setEditable(true);
-
-    buffer.clear();
-    buffer << "1200" << "2400" << "4800" << "9600" << "19200" << "38400"
-           << "57600" << "115200" << "230400" << "460800" << "921600";
-    m_cbBaud->addItems(buffer);
-    buffer.clear();
-    buffer << "8" << "7" << "6" << "5";
-    m_cbBits->addItems(buffer);
-    buffer.clear();
-    buffer << "None" << "Odd" << "Even" << "Mark" << "Space";
-    m_cbParity->addItems(buffer);
-    buffer.clear();
-    buffer << "1" << "1.5" << "2";
-    m_cbStopBits->addItems(buffer);
-    buffer.clear();
     buffer << "HEX" << "ASCII" << "DEC";
     m_cbSendMode->addItems(buffer);
     m_cbReadMode->addItems(buffer);
@@ -172,25 +150,21 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
 void MainWindow::view()
 {
+    QList<QAction*> actions;
+    actions << actionPortConfigure;
+    addToolBar(Qt::TopToolBarArea, toolBar);
+    toolBar->setMovable(false);
+    toolBar->addActions(actions);
+
     QGridLayout *configLayout = new QGridLayout;
     configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='160'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
     configLayout->addWidget(m_lTx, 2, 0);
     configLayout->addWidget(m_lRx, 2, 1);
-    configLayout->addWidget(new QLabel(tr("Port:"), this), 3, 0);
-    configLayout->addWidget(m_cbPort, 3, 1);
-    configLayout->addWidget(new QLabel(tr("Baud:"), this), 4, 0);
-    configLayout->addWidget(m_cbBaud, 4, 1);
-    configLayout->addWidget(new QLabel(tr("Data bits:"), this), 5, 0);
-    configLayout->addWidget(m_cbBits, 5, 1);
-    configLayout->addWidget(new QLabel(tr("Parity:"), this), 6, 0);
-    configLayout->addWidget(m_cbParity, 6, 1);
-    configLayout->addWidget(new QLabel(tr("Stop bits:"), this), 7, 0);
-    configLayout->addWidget(m_cbStopBits, 7, 1);
-    configLayout->addWidget(new QLabel(tr("Delay between\npackets, ms:"), this), 8, 0);
-    configLayout->addWidget(m_sbDelayBetweenPackets, 8, 1);
-    configLayout->addWidget(m_bStart, 9, 0);
-    configLayout->addWidget(m_bStop, 9, 1);
-    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 10, 0);
+    configLayout->addWidget(new QLabel(tr("Delay between\npackets, ms:"), this), 3, 0);
+    configLayout->addWidget(m_sbDelayBetweenPackets, 3, 1);
+    configLayout->addWidget(m_bStart, 4, 0);
+    configLayout->addWidget(m_bStop, 4, 1);
+    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 5, 0);
     configLayout->addWidget(m_lTxCount, 14, 0);
     configLayout->addWidget(m_lRxCount, 14, 1);
     configLayout->setSpacing(5);
@@ -299,6 +273,7 @@ void MainWindow::view()
 
 void MainWindow::connections()
 {
+    connect(actionPortConfigure, &QAction::triggered, comPortConfigure, &ComPortConfigure::show);
     connect(m_bReadLogClear, SIGNAL(clicked()), m_eLogRead, SLOT(clear()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
     connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
@@ -323,7 +298,7 @@ void MainWindow::connections()
     connect(m_timerDelayBetweenPackets, &QTimer::timeout, this, &MainWindow::delayBetweenPacketsEnded);
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
-    connect(m_Port, SIGNAL(readyRead()), this, SLOT(received()));
+    connect(m_port, SIGNAL(readyRead()), this, SLOT(received()));
 }
 
 void MainWindow::changeAllDelays(int time)
@@ -588,99 +563,6 @@ void MainWindow::textChanged(const QString &text)
     m_bSendPackage->setCheckable(false);
 }
 
-void MainWindow::portBaudSetting()
-{
-    switch(m_cbBaud->currentIndex()) {
-    case 0:
-        m_Port->setBaudRate(QSerialPort::Baud1200);
-        break;
-    case 1:
-        m_Port->setBaudRate(QSerialPort::Baud2400);
-        break;
-    case 2:
-        m_Port->setBaudRate(QSerialPort::Baud4800);
-        break;
-    case 3:
-        m_Port->setBaudRate(QSerialPort::Baud9600);
-        break;
-    case 4:
-        m_Port->setBaudRate(QSerialPort::Baud19200);
-        break;
-    case 5:
-        m_Port->setBaudRate(QSerialPort::Baud38400);
-        break;
-    case 6:
-        m_Port->setBaudRate(QSerialPort::Baud57600);
-        break;
-    case 7:
-        m_Port->setBaudRate(QSerialPort::Baud115200);
-        break;
-    case 8:
-        m_Port->setBaudRate(QSerialPort::Baud230400);
-        break;
-    case 9:
-        m_Port->setBaudRate(QSerialPort::Baud460800);
-        break;
-    case 10:
-        m_Port->setBaudRate(QSerialPort::Baud921600);
-        break;
-    }
-}
-
-void MainWindow::portDataBitsSetting()
-{
-    switch(m_cbBits->currentIndex()) {
-    case 0:
-        m_Port->setDataBits(QSerialPort::Data5);
-        break;
-    case 1:
-        m_Port->setDataBits(QSerialPort::Data6);
-        break;
-    case 2:
-        m_Port->setDataBits(QSerialPort::Data7);
-        break;
-    case 3:
-        m_Port->setDataBits(QSerialPort::Data8);
-        break;
-    }
-}
-
-void MainWindow::portParitySetting()
-{
-    switch(m_cbParity->currentIndex()) {
-    case 0:
-        m_Port->setParity(QSerialPort::NoParity);
-        break;
-    case 1:
-        m_Port->setParity(QSerialPort::OddParity);
-        break;
-    case 2:
-        m_Port->setParity(QSerialPort::EvenParity);
-        break;
-    case 3:
-        m_Port->setParity(QSerialPort::MarkParity);
-        break;
-    case 4:
-        m_Port->setParity(QSerialPort::SpaceParity);
-        break;
-    }
-}
-
-void MainWindow::portStopBitsSetting()
-{
-    switch(m_cbStopBits->currentIndex()) {
-    case 0:
-        m_Port->setStopBits(QSerialPort::OneStop);
-        break;
-    case 1:
-        m_Port->setStopBits(QSerialPort::OneAndHalfStop);
-        break;
-    case 2:
-        m_Port->setStopBits(QSerialPort::TwoStop);
-        break;
-    }
-}
-
 void MainWindow::updateIntervalsList(bool add)
 {
     MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
@@ -700,7 +582,7 @@ void MainWindow::updateIntervalsList(bool add)
 
 void MainWindow::sendNextMacros()
 {
-    if(m_Port->isOpen()) {
+    if(m_port->isOpen()) {
         MacrosWidget *m = macrosWidgets.at(indexesOfIntervals.at(currentIntervalIndex++));
         if(currentIntervalIndex >= indexesOfIntervals.size()) {
             currentIntervalIndex = 0;
@@ -712,30 +594,20 @@ void MainWindow::sendNextMacros()
 
 void MainWindow::start()
 {
-    m_Port->close();
-    m_Port->setPortName(m_cbPort->currentText());
+    m_port->close();
 
-    if(!m_Port->open(QSerialPort::ReadWrite)) {
+    if(!m_port->open(QSerialPort::ReadWrite)) {
         m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
         m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
 
         return;
     }
-    portBaudSetting();
-    portDataBitsSetting();
-    portParitySetting();
-    portStopBitsSetting();
 
-    m_Port->setFlowControl(QSerialPort::NoFlowControl);
+    m_port->setFlowControl(QSerialPort::NoFlowControl);
 
     m_bStart->setEnabled(false);
     m_bStop->setEnabled(true);
     m_bPause->setEnabled(true);
-    m_cbPort->setEnabled(false);
-    m_cbBaud->setEnabled(false);
-    m_cbBits->setEnabled(false);
-    m_cbParity->setEnabled(false);
-    m_cbStopBits->setEnabled(false);
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
 
@@ -744,17 +616,12 @@ void MainWindow::start()
 
 void MainWindow::stop()
 {
-    m_Port->close();
+    m_port->close();
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_bStop->setEnabled(false);
     m_bPause->setEnabled(false);
     m_bStart->setEnabled(true);
-    m_cbPort->setEnabled(true);
-    m_cbBaud->setEnabled(true);
-    m_cbBits->setEnabled(true);
-    m_cbParity->setEnabled(true);
-    m_cbStopBits->setEnabled(true);
     m_bSendPackage->setChecked(false);
     m_tSend->stop();
     m_timerDelayBetweenPackets->stop();
@@ -786,7 +653,7 @@ void MainWindow::pause(bool check)
 
 void MainWindow::received()
 {
-    readBuffer += m_Port->readAll();
+    readBuffer += m_port->readAll();
     int delayBetweenPackets = m_sbDelayBetweenPackets->value();
     if(delayBetweenPackets == 0) {
         delayBetweenPacketsEnded();
@@ -846,7 +713,7 @@ void MainWindow::startSending(bool checked)
         return;
     }
 
-    if(m_Port->isOpen()) {
+    if(m_port->isOpen()) {
         if(m_sbRepeatSendInterval->value() != 0) {
             m_tSend->setInterval(m_sbRepeatSendInterval->value());
             m_tSend->start();
@@ -860,7 +727,7 @@ void MainWindow::startSending(bool checked)
 
 void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
 {
-    if(!m_Port->isOpen() || writeData.isEmpty()) {
+    if(!m_port->isOpen() || writeData.isEmpty()) {
         return;
     }
 
@@ -877,7 +744,7 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
     }
 
     displayWrittenData(modifiedData);
-    txCount += m_Port->write(modifiedData);
+    txCount += m_port->write(modifiedData);
     m_lTxCount->setText("Tx: " + QString::number(txCount));
 
     if(!m_tTx->isSingleShot()) {
@@ -1001,11 +868,7 @@ void MainWindow::saveSession()
     settings->setValue("config/write_log_timeout", m_tWriteLog->interval());
     settings->setValue("config/read_log_timeout", m_tReadLog->interval());
 
-    settings->setValue("config/port", m_cbPort->currentText());
-    settings->setValue("config/baud", m_cbBaud->currentIndex());
-    settings->setValue("config/data_bits", m_cbBits->currentIndex());
-    settings->setValue("config/parity", m_cbParity->currentIndex());
-    settings->setValue("config/stop_bits", m_cbStopBits->currentIndex());
+    comPortConfigure->saveSettings(settings);
 
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
     settings->setValue("config/all_delays", m_sbAllDelays->value());
@@ -1044,11 +907,7 @@ void MainWindow::loadSession()
     m_eLogRead->setLinesLimit(settings->value("config/max_write_log_rows", 1000).toInt());
     m_eLogWrite->setLinesLimit(settings->value("config/max_read_log_rows", 1000).toInt());
 
-    m_cbPort->setCurrentText(settings->value("config/port").toString());
-    m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
-    m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
-    m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
-    m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
+    comPortConfigure->loadSettings(settings);
 
     m_cbWriteMode->setCurrentIndex(settings->value("config/write_mode", 0).toInt());
     m_cbReadMode->setCurrentIndex(settings->value("config/read_mode", 0).toInt());
