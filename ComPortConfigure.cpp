@@ -61,6 +61,11 @@ void ComPortConfigure::loadSettings(QSettings *settings)
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
     m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
     m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
+
+    portNameSetting();
+    portBaudSetting();
+    portDataBitsSetting();
+    portParitySetting();
 }
 
 void ComPortConfigure::view()

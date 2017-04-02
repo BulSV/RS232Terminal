@@ -605,7 +605,9 @@ void MainWindow::start()
 
     actionStart->setEnabled(false);
     actionStop->setEnabled(true);
+    actionPortConfigure->setEnabled(false);
     m_bPause->setEnabled(true);
+
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
 
@@ -622,9 +624,11 @@ void MainWindow::stop()
     m_port->close();
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    actionStop->setEnabled(false);
-    m_bPause->setEnabled(false);
+
     actionStart->setEnabled(true);
+    actionStop->setEnabled(false);
+    actionPortConfigure->setEnabled(true);
+    m_bPause->setEnabled(false);
     m_bSendPackage->setChecked(false);
     m_tSend->stop();
     m_timerDelayBetweenPackets->stop();
