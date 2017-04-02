@@ -105,7 +105,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     currentIntervalIndex = -1;
 
     m_eLogRead->displayTime("mm:ss.zzz");
+    m_eLogRead->setReadOnly(true);
     m_eLogWrite->displayTime("mm:ss.zzz");
+    m_eLogWrite->setReadOnly(true);
 
     m_bNewMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
