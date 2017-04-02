@@ -80,6 +80,8 @@ private:
     QWidget *widget;
     QToolBar *toolBar;
     QAction *actionPortConfigure;
+    QAction *actionStart;
+    QAction *actionStop;
     QComboBox *m_cbSendMode;
     QComboBox *m_cbReadMode;
     QComboBox *m_cbWriteMode;
@@ -90,8 +92,6 @@ private:
     QTimer *m_timerDelayBetweenPackets;
     QTimer *m_tTx;
     QTimer *m_tRx;
-    QPushButton *m_bStart;
-    QPushButton *m_bStop;
     QPushButton *m_bPause;
     QPushButton *m_bWriteLogClear;
     QPushButton *m_bReadLogClear;

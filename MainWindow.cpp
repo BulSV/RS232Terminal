@@ -29,6 +29,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
     , toolBar(new QToolBar(this))
     , actionPortConfigure(new QAction(tr("Port configure"), this))
+    , actionStart(new QAction(tr("Start"), this))
+    , actionStop(new QAction(tr("Stop"), this))
     , m_cbSendMode(new QComboBox(this))
     , m_cbReadMode(new QComboBox(this))
     , m_cbWriteMode(new QComboBox(this))
@@ -39,8 +41,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_timerDelayBetweenPackets(new QTimer(this))
     , m_tTx(new QTimer(this))
     , m_tRx(new QTimer(this))
-    , m_bStart(new QPushButton(tr("Start"), this))
-    , m_bStop(new QPushButton(tr("Stop"), this))
     , m_bPause(new QPushButton(tr("Pause"), this))
     , m_bWriteLogClear(new QPushButton(tr("Clear"), this))
     , m_bReadLogClear(new QPushButton(tr("Clear"), this))
@@ -118,7 +118,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_bRecordReadLog->setCheckable(true);
     m_bSendPackage->setCheckable(true);
     m_bPause->setCheckable(true);
-    m_bStop->setEnabled(false);
+    actionStop->setEnabled(false);
     m_bPause->setEnabled(false);
     m_sbRepeatSendInterval->setRange(0, 100000);
     m_sbDelayBetweenPackets->setRange(0, 10);
@@ -151,7 +151,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 void MainWindow::view()
 {
     QList<QAction*> actions;
-    actions << actionPortConfigure;
+    actions << actionPortConfigure << actionStart << actionStop;
     addToolBar(Qt::TopToolBarArea, toolBar);
     toolBar->setMovable(false);
     toolBar->addActions(actions);
@@ -162,9 +162,7 @@ void MainWindow::view()
     configLayout->addWidget(m_lRx, 2, 1);
     configLayout->addWidget(new QLabel(tr("Delay between\npackets, ms:"), this), 3, 0);
     configLayout->addWidget(m_sbDelayBetweenPackets, 3, 1);
-    configLayout->addWidget(m_bStart, 4, 0);
-    configLayout->addWidget(m_bStop, 4, 1);
-    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 5, 0);
+    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 4, 0);
     configLayout->addWidget(m_lTxCount, 14, 0);
     configLayout->addWidget(m_lRxCount, 14, 1);
     configLayout->setSpacing(5);
@@ -276,8 +274,8 @@ void MainWindow::connections()
     connect(actionPortConfigure, &QAction::triggered, comPortConfigure, &ComPortConfigure::show);
     connect(m_bReadLogClear, SIGNAL(clicked()), m_eLogRead, SLOT(clear()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
-    connect(m_bStart, SIGNAL(clicked()), this, SLOT(start()));
-    connect(m_bStop, SIGNAL(clicked()), this, SLOT(stop()));
+    connect(actionStart, &QAction::triggered, this, &MainWindow::start);
+    connect(actionStop, &QAction::triggered, this, &MainWindow::stop);
     connect(m_bPause, SIGNAL(toggled(bool)), this, SLOT(pause(bool)));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
@@ -553,7 +551,7 @@ void MainWindow::startReadLog(bool check)
 
 void MainWindow::textChanged(const QString &text)
 {
-    if(!text.isEmpty() && m_bStop->isEnabled()) {
+    if(!text.isEmpty() && actionStop->isEnabled()) {
         m_bSendPackage->setEnabled(true);
         m_bSendPackage->setCheckable(true);
 
@@ -605,11 +603,16 @@ void MainWindow::start()
 
     m_port->setFlowControl(QSerialPort::NoFlowControl);
 
-    m_bStart->setEnabled(false);
-    m_bStop->setEnabled(true);
+    actionStart->setEnabled(false);
+    actionStop->setEnabled(true);
     m_bPause->setEnabled(true);
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+
+    txCount = 0;
+    m_lTxCount->setText("Tx: 0");
+    rxCount = 0;
+    m_lRxCount->setText("Rx: 0");
 
 //    sendNextMacros(); // FIXME
 }
@@ -619,17 +622,13 @@ void MainWindow::stop()
     m_port->close();
     m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
     m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_bStop->setEnabled(false);
+    actionStop->setEnabled(false);
     m_bPause->setEnabled(false);
-    m_bStart->setEnabled(true);
+    actionStart->setEnabled(true);
     m_bSendPackage->setChecked(false);
     m_tSend->stop();
     m_timerDelayBetweenPackets->stop();
     m_tIntervalSending->stop();
-    txCount = 0;
-    m_lTxCount->setText("Tx: 0");
-    rxCount = 0;
-    m_lRxCount->setText("Rx: 0");
 }
 
 void MainWindow::pause(bool check)
