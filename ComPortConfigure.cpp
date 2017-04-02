@@ -26,7 +26,7 @@ ComPortConfigure::ComPortConfigure(QSerialPort *port, QWidget *parent)
            << "57600" << "115200" << "230400" << "460800" << "921600";
     m_cbBaud->addItems(buffer);
     buffer.clear();
-    buffer << "8" << "7" << "6" << "5";
+    buffer << "5" << "6" << "7" << "8";
     m_cbBits->addItems(buffer);
     buffer.clear();
     buffer << "None" << "Odd" << "Even" << "Mark" << "Space";

@@ -25,12 +25,24 @@ const int BLINK_TIME_RX = 200;
 #define CR 0x0D
 #define LF 0x0A
 
+QString PORT = QObject::tr("Port: ");
+QString BAUD = QObject::tr("Baud: ");
+QString BITS = QObject::tr("Data bits: ");
+QString PARITY = QObject::tr("Parity: ");
+QString STOP_BITS = QObject::tr("Stop bits: ");
+
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
     , toolBar(new QToolBar(this))
     , actionPortConfigure(new QAction(tr("Port configure"), this))
     , actionStart(new QAction(tr("Start"), this))
     , actionStop(new QAction(tr("Stop"), this))
+    , statusBar(new QStatusBar(this))
+    , portName(new QLabel(PORT + tr("None"), this))
+    , baud(new QLabel(BAUD + tr("None"), this))
+    , bits(new QLabel(BITS + tr("None"), this))
+    , parity(new QLabel(PARITY + tr("None"), this))
+    , stopBits(new QLabel(STOP_BITS + tr("None"), this))
     , m_cbSendMode(new QComboBox(this))
     , m_cbReadMode(new QComboBox(this))
     , m_cbWriteMode(new QComboBox(this))
@@ -155,6 +167,13 @@ void MainWindow::view()
     addToolBar(Qt::TopToolBarArea, toolBar);
     toolBar->setMovable(false);
     toolBar->addActions(actions);
+
+    statusBar->addWidget(portName);
+    statusBar->addWidget(baud);
+    statusBar->addWidget(bits);
+    statusBar->addWidget(parity);
+    statusBar->addWidget(stopBits);
+    setStatusBar(statusBar);
 
     QGridLayout *configLayout = new QGridLayout;
     configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='160'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
@@ -615,6 +634,11 @@ void MainWindow::start()
     m_lTxCount->setText("Tx: 0");
     rxCount = 0;
     m_lRxCount->setText("Rx: 0");
+    portName->setText(PORT + m_port->portName());
+    baud->setText(BAUD + baudToString(m_port->baudRate()));
+    bits->setText(BITS + bitsToString(m_port->dataBits()));
+    parity->setText(PARITY + parityToString(m_port->parity()));
+    stopBits->setText(STOP_BITS + stopBitsToString(m_port->stopBits()));
 
 //    sendNextMacros(); // FIXME
 }
@@ -633,6 +657,11 @@ void MainWindow::stop()
     m_tSend->stop();
     m_timerDelayBetweenPackets->stop();
     m_tIntervalSending->stop();
+    portName->setText(PORT + m_port->portName());
+    baud->setText(BAUD + baudToString(m_port->baudRate()));
+    bits->setText(BITS + bitsToString(m_port->dataBits()));
+    parity->setText(PARITY + parityToString(m_port->parity()));
+    stopBits->setText(STOP_BITS + stopBitsToString(m_port->stopBits()));
 }
 
 void MainWindow::pause(bool check)
@@ -794,6 +823,111 @@ DataEncoder *MainWindow::getEncoder(int mode)
     }
 
     return dataEncoder;
+}
+
+QString MainWindow::baudToString(int baud)
+{
+    QString baudString;
+    switch(baud) {
+    case QSerialPort::Baud1200:
+        baudString = "1200";
+        break;
+    case QSerialPort::Baud2400:
+        baudString = "2400";
+        break;
+    case QSerialPort::Baud4800:
+        baudString = "4800";
+        break;
+    case QSerialPort::Baud9600:
+        baudString = "9600";
+        break;
+    case QSerialPort::Baud19200:
+        baudString = "19200";
+        break;
+    case QSerialPort::Baud38400:
+        baudString = "38400";
+        break;
+    case QSerialPort::Baud57600:
+        baudString = "57600";
+        break;
+    case QSerialPort::Baud115200:
+        baudString = "115200";
+        break;
+    case QSerialPort::Baud230400:
+        baudString = "230400";
+        break;
+    case QSerialPort::Baud460800:
+        baudString = "460800";
+        break;
+    default:
+        baudString = "921600";
+        break;
+    }
+
+    return baudString;
+}
+
+QString MainWindow::bitsToString(int bits)
+{
+    QString bitsString;
+    switch(bits) {
+    case QSerialPort::Data5:
+       bitsString = "5";
+        break;
+    case QSerialPort::Data6:
+        bitsString = "6";
+        break;
+    case QSerialPort::Data7:
+        bitsString = "7";
+        break;
+    default:
+        bitsString = "8";
+        break;
+    }
+
+    return bitsString;
+}
+
+QString MainWindow::parityToString(int parity)
+{
+    QString parityString;
+    switch(parity) {
+    case QSerialPort::NoParity:
+        parityString = "None";
+        break;
+    case QSerialPort::OddParity:
+        parityString = "Odd";
+        break;
+    case QSerialPort::EvenParity:
+        parityString = "Even";
+        break;
+    case QSerialPort::MarkParity:
+        parityString = "Mark";
+        break;
+    default:
+        parityString = "Space";
+        break;
+    }
+
+    return parityString;
+}
+
+QString MainWindow::stopBitsToString(int stopBits)
+{
+    QString stopBitsString;
+    switch(stopBits) {
+    case QSerialPort::OneStop:
+        stopBitsString = "1";
+        break;
+    case QSerialPort::OneAndHalfStop:
+        stopBitsString = "1.5";
+        break;
+    default:
+        stopBitsString = "2";
+        break;
+    }
+
+    return stopBitsString;
 }
 
 // Перевод строки при приеме данных

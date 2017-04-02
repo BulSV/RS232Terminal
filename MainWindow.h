@@ -16,6 +16,7 @@
 #include <QScrollArea>
 #include <QList>
 #include <QAction>
+#include <QStatusBar>
 
 #include "RightClickedButton.h"
 #include "LimitedTextEdit.h"
@@ -82,6 +83,12 @@ private:
     QAction *actionPortConfigure;
     QAction *actionStart;
     QAction *actionStop;
+    QStatusBar *statusBar;
+    QLabel *portName;
+    QLabel *baud;
+    QLabel *bits;
+    QLabel *parity;
+    QLabel *stopBits;
     QComboBox *m_cbSendMode;
     QComboBox *m_cbReadMode;
     QComboBox *m_cbWriteMode;
@@ -159,6 +166,10 @@ private:
     void sendNextMacros();
     void displayWrittenData(const QByteArray &writeData);
     DataEncoder *getEncoder(int mode);
+    QString baudToString(int baud);
+    QString bitsToString(int bits);
+    QString parityToString(int parity);
+    QString stopBitsToString(int stopBits);
 };
 
 #endif // MAIN_WINDOW_H
