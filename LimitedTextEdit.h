@@ -2,6 +2,7 @@
 #define LIMITED_TEXT_EDIT_H
 
 #include <QTextEdit>
+#include <QTime>
 
 class LimitedTextEdit : public QTextEdit
 {
@@ -9,13 +10,14 @@ class LimitedTextEdit : public QTextEdit
 public:
     explicit LimitedTextEdit(QWidget *parent = 0);
     void addLine(const QString &line);
-    void clear();
     void setLinesLimit(int maxLinesCount);
     int linesLimit();
     int linesCount();
+    void displayTime(const QString &format);
 private:
     int maxLinesCount;
-    int currentLinesCount;
+    QString timeFormat;
+    QTime time;
 
 };
 

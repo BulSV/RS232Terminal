@@ -104,6 +104,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     sendCount = 0;
     currentIntervalIndex = -1;
 
+    m_eLogRead->displayTime("mm:ss.zzz");
+    m_eLogWrite->displayTime("mm:ss.zzz");
+
     m_bNewMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
     m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
     m_bNewMacros->setFixedSize(20, 20);
@@ -181,7 +184,7 @@ void MainWindow::view()
     configLayout->addWidget(m_cbParity, 6, 1);
     configLayout->addWidget(new QLabel(tr("Stop bits:"), this), 7, 0);
     configLayout->addWidget(m_cbStopBits, 7, 1);
-    configLayout->addWidget(new QLabel(tr("Delay between packets:"), this), 8, 0);
+    configLayout->addWidget(new QLabel(tr("Delay between\npackets, ms:"), this), 8, 0);
     configLayout->addWidget(m_sbDelayBetweenPackets, 8, 1);
     configLayout->addWidget(m_bStart, 9, 0);
     configLayout->addWidget(m_bStop, 9, 1);
