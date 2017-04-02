@@ -893,7 +893,7 @@ QString MainWindow::parityToString(int parity)
     QString parityString;
     switch(parity) {
     case QSerialPort::NoParity:
-        parityString = "None";
+        parityString = "No";
         break;
     case QSerialPort::OddParity:
         parityString = "Odd";
