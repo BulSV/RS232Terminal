@@ -111,8 +111,6 @@ private:
     QPushButton *m_bRecordWriteLog;
     QPushButton *m_bRecordReadLog;
     QPushButton *m_bSendPackage;
-    QLabel *m_lTx;
-    QLabel *m_lRx;
     QLabel *m_lTxCount;
     QLabel *m_lRxCount;
     LimitedTextEdit *m_eLogRead;

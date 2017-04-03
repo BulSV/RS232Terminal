@@ -26,7 +26,7 @@ const int BLINK_TIME_RX = 200;
 #define LF 0x0A
 
 QString PORT = QObject::tr("Port: ");
-QString BAUD = QObject::tr("Baud: ");
+QString BAUD = QObject::tr("Baud rate: ");
 QString BITS = QObject::tr("Data bits: ");
 QString PARITY = QObject::tr("Parity: ");
 QString STOP_BITS = QObject::tr("Stop bits: ");
@@ -65,8 +65,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_bRecordWriteLog(new QPushButton(this))
     , m_bRecordReadLog(new QPushButton(this))
     , m_bSendPackage(new QPushButton(tr("Send"), this))
-    , m_lTx(new QLabel("Tx", this))
-    , m_lRx(new QLabel("Rx", this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
     , m_eLogRead(new LimitedTextEdit(this))
@@ -137,11 +135,20 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_sbDelayBetweenPackets->setValue(10);
     m_sbAllDelays->setRange(0, 999999);
 
-    m_lTxCount->setStyleSheet("border-style: outset; border-width: 1px; border-color: black;");
-    m_lRxCount->setStyleSheet("border-style: outset; border-width: 1px; border-color: black;");
-
-    m_lTx->setStyleSheet("font: bold; font-size: 10pt; qproperty-alignment: AlignCenter");
-    m_lRx->setStyleSheet("font: bold; font-size: 10pt; qproperty-alignment: AlignCenter");
+    portName->setFrameStyle(QFrame::Sunken);
+    portName->setFrameShape(QFrame::Box);
+    baud->setFrameStyle(QFrame::Sunken);
+    baud->setFrameShape(QFrame::Box);
+    bits->setFrameStyle(QFrame::Sunken);
+    bits->setFrameShape(QFrame::Box);
+    parity->setFrameStyle(QFrame::Sunken);
+    parity->setFrameShape(QFrame::Box);
+    stopBits->setFrameStyle(QFrame::Sunken);
+    stopBits->setFrameShape(QFrame::Box);
+    m_lTxCount->setFrameStyle(QFrame::Sunken);
+    m_lTxCount->setFrameShape(QFrame::Box);
+    m_lRxCount->setFrameStyle(QFrame::Sunken);
+    m_lRxCount->setFrameShape(QFrame::Box);
 
     QStringList buffer;
     buffer << "HEX" << "ASCII" << "DEC";
@@ -173,20 +180,13 @@ void MainWindow::view()
     statusBar->addWidget(bits);
     statusBar->addWidget(parity);
     statusBar->addWidget(stopBits);
+    statusBar->addWidget(m_lTxCount);
+    statusBar->addWidget(m_lRxCount);
     setStatusBar(statusBar);
 
-    QGridLayout *configLayout = new QGridLayout;
-    configLayout->addWidget(new QLabel("<img src=':/Resources/elisat.png' height='40' width='160'/>", this), 0, 0, 2, 2, Qt::AlignCenter);
-    configLayout->addWidget(m_lTx, 2, 0);
-    configLayout->addWidget(m_lRx, 2, 1);
-    configLayout->addWidget(new QLabel(tr("Delay between\npackets, ms:"), this), 3, 0);
-    configLayout->addWidget(m_sbDelayBetweenPackets, 3, 1);
-    configLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 4, 0);
-    configLayout->addWidget(m_lTxCount, 14, 0);
-    configLayout->addWidget(m_lRxCount, 14, 1);
-    configLayout->setSpacing(5);
-
     QHBoxLayout *sendPackageLayout = new QHBoxLayout;
+    sendPackageLayout->addWidget(new QLabel(tr("Delay between\nread packets, ms:"), this));
+    sendPackageLayout->addWidget(m_sbDelayBetweenPackets);
     sendPackageLayout->addWidget(new QLabel(tr("Mode:"), this));
     sendPackageLayout->addWidget(m_cbSendMode);
     sendPackageLayout->addWidget(m_leSendPackage);
@@ -277,12 +277,11 @@ void MainWindow::view()
     QGridLayout *allLayouts = new QGridLayout;
     allLayouts->setSpacing(5);
     allLayouts->setContentsMargins(5, 5, 5, 5);
-    allLayouts->addLayout(configLayout, 0, 0);
-    allLayouts->addLayout(dataLayout, 0, 1);
+    allLayouts->addLayout(dataLayout, 0, 0);
     m_bHiddenGroup->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     m_bHiddenGroup->setFixedWidth(15);
-    allLayouts->addWidget(m_bHiddenGroup, 0, 2);
-    allLayouts->addWidget(m_gbHiddenGroup, 0, 3);
+    allLayouts->addWidget(m_bHiddenGroup, 0, 1);
+    allLayouts->addWidget(m_gbHiddenGroup, 0, 2);
     widget = new QWidget(this);
     widget->setLayout(allLayouts);
     setCentralWidget(widget);
@@ -614,8 +613,8 @@ void MainWindow::start()
     m_port->close();
 
     if(!m_port->open(QSerialPort::ReadWrite)) {
-        m_lTx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
-        m_lRx->setStyleSheet("background: yellow; font: bold; font-size: 10pt");
+        m_lTxCount->setStyleSheet("background: none");
+        m_lRxCount->setStyleSheet("background: none");
 
         return;
     }
@@ -627,8 +626,8 @@ void MainWindow::start()
     actionPortConfigure->setEnabled(false);
     m_bPause->setEnabled(true);
 
-    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_lTxCount->setStyleSheet("background: yellow");
+    m_lRxCount->setStyleSheet("background: yellow");
 
     txCount = 0;
     m_lTxCount->setText("Tx: 0");
@@ -646,8 +645,8 @@ void MainWindow::start()
 void MainWindow::stop()
 {
     m_port->close();
-    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
-    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_lTxCount->setStyleSheet("background: none");
+    m_lRxCount->setStyleSheet("background: none");
 
     actionStart->setEnabled(true);
     actionStop->setEnabled(false);
@@ -780,7 +779,7 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macros)
     m_lTxCount->setText("Tx: " + QString::number(txCount));
 
     if(!m_tTx->isSingleShot()) {
-        m_lTx->setStyleSheet("background: green; font: bold; font-size: 10pt");
+        m_lTxCount->setStyleSheet("background: green");
         m_tTx->singleShot(BLINK_TIME_TX, this, SLOT(txNone()));
         m_tTx->setSingleShot(true);
     }
@@ -938,7 +937,7 @@ void MainWindow::delayBetweenPacketsEnded()
     m_timerDelayBetweenPackets->stop();
 
     if(!m_tRx->isSingleShot()) {
-        m_lRx->setStyleSheet("background: red; font: bold; font-size: 10pt");
+        m_lRxCount->setStyleSheet("background: red");
         m_tRx->singleShot(BLINK_TIME_RX, this, SLOT(rxNone()));
         m_tRx->setSingleShot(true);
     }
@@ -968,13 +967,13 @@ void MainWindow::delayBetweenPacketsEnded()
 
 void MainWindow::rxNone()
 {
-    m_lRx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_lRxCount->setStyleSheet("background: yellow");
     m_tRx->singleShot(BLINK_TIME_RX, this, SLOT(rxHold()));
 }
 
 void MainWindow::txNone()
 {
-    m_lTx->setStyleSheet("background: none; font: bold; font-size: 10pt");
+    m_lTxCount->setStyleSheet("background: yellow");
     m_tTx->singleShot(BLINK_TIME_TX, this, SLOT(txHold()));
 }
 

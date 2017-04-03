@@ -48,7 +48,7 @@ ComPortConfigure::ComPortConfigure(QSerialPort *port, QWidget *parent)
 void ComPortConfigure::saveSettings(QSettings *settings)
 {
     settings->setValue("config/port", m_cbPort->currentText());
-    settings->setValue("config/baud", m_cbBaud->currentIndex());
+    settings->setValue("config/baud_rate", m_cbBaud->currentIndex());
     settings->setValue("config/data_bits", m_cbBits->currentIndex());
     settings->setValue("config/parity", m_cbParity->currentIndex());
     settings->setValue("config/stop_bits", m_cbStopBits->currentIndex());
@@ -57,7 +57,7 @@ void ComPortConfigure::saveSettings(QSettings *settings)
 void ComPortConfigure::loadSettings(QSettings *settings)
 {
     m_cbPort->setCurrentText(settings->value("config/port").toString());
-    m_cbBaud->setCurrentIndex(settings->value("config/baud").toInt());
+    m_cbBaud->setCurrentIndex(settings->value("config/baud_rate").toInt());
     m_cbBits->setCurrentIndex(settings->value("config/data_bits").toInt());
     m_cbParity->setCurrentIndex(settings->value("config/parity").toInt());
     m_cbStopBits->setCurrentIndex(settings->value("config/stop_bits").toInt());
@@ -73,7 +73,7 @@ void ComPortConfigure::view()
     QGridLayout *configLayout = new QGridLayout;
     configLayout->addWidget(new QLabel(tr("Port:"), this), 0, 0);
     configLayout->addWidget(m_cbPort, 0, 1);
-    configLayout->addWidget(new QLabel(tr("Baud:"), this), 1, 0);
+    configLayout->addWidget(new QLabel(tr("Baud rate:"), this), 1, 0);
     configLayout->addWidget(m_cbBaud, 1, 1);
     configLayout->addWidget(new QLabel(tr("Data bits:"), this), 2, 0);
     configLayout->addWidget(m_cbBits, 2, 1);
