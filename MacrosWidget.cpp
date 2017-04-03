@@ -132,8 +132,8 @@ void MacrosWidget::view()
 {
     buttonUp->setFixedSize(16, 13);
     buttonDown->setFixedSize(16, 13);
-    buttonUp->setStyleSheet("border-image: url(:/Resources/arrow-up.png) stretch;");
-    buttonDown->setStyleSheet("border-image: url(:/Resources/arrow-down.png) stretch;");
+    buttonUp->setIcon(QIcon(":/Resources/arrow-up.png"));
+    buttonDown->setIcon(QIcon(":/Resources/arrow-down.png"));
 
     QVBoxLayout *upDownButtonsLayout = new QVBoxLayout;
     upDownButtonsLayout->setSpacing(1);
@@ -153,10 +153,10 @@ void MacrosWidget::view()
     layout()->setSpacing(0);
     layout()->setContentsMargins(0, 0, 0, 0);
 
-    buttonDelete->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
+    buttonDelete->setIcon(QIcon(":/Resources/Delete.png"));
     buttonSend->setStyleSheet("font-weight: bold");
 
-    buttonDelete->setFixedSize(15, 15);
+    buttonDelete->setFixedWidth(25);
     checkBoxInterval->setFixedWidth(15);
     checkBoxPeriod->setFixedWidth(15);
     spinBoxTime->setFixedWidth(60);

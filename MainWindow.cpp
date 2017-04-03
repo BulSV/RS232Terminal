@@ -34,9 +34,9 @@ QString STOP_BITS = QObject::tr("Stop bits: ");
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
     , toolBar(new QToolBar(this))
-    , actionPortConfigure(new QAction(tr("Port configure"), this))
-    , actionStart(new QAction(tr("Start"), this))
-    , actionStop(new QAction(tr("Stop"), this))
+    , actionPortConfigure(new QAction(QIcon(":/Resources/ComPort.png"), tr("Port configure"), this))
+    , actionStart(new QAction(QIcon(":/Resources/Play.png"), tr("Start"), this))
+    , actionStop(new QAction(QIcon(":/Resources/Stop.png"), tr("Stop"), this))
     , statusBar(new QStatusBar(this))
     , portName(new QLabel(PORT + tr("None"), this))
     , baud(new QLabel(BAUD + tr("None"), this))
@@ -53,7 +53,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_timerDelayBetweenPackets(new QTimer(this))
     , m_tTx(new QTimer(this))
     , m_tRx(new QTimer(this))
-    , m_bPause(new QPushButton(tr("Pause"), this))
+    , m_bPause(new QPushButton(this))
     , m_bWriteLogClear(new QPushButton(tr("Clear"), this))
     , m_bReadLogClear(new QPushButton(tr("Clear"), this))
     , m_bSaveWriteLog(new QPushButton(tr("Save"), this))
@@ -64,7 +64,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_bLoadMacroses(new QPushButton(this))
     , m_bRecordWriteLog(new QPushButton(this))
     , m_bRecordReadLog(new QPushButton(this))
-    , m_bSendPackage(new QPushButton(tr("Send"), this))
+    , m_bSendPackage(new QPushButton(this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
     , m_eLogRead(new LimitedTextEdit(this))
@@ -118,12 +118,14 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     comPortConfigure->setWindowTitle(tr("Port configure"));
     comPortConfigure->setModal(true);
 
-    m_bNewMacros->setStyleSheet("border-image: url(:/Resources/add.png) stretch;");
-    m_bLoadMacroses->setStyleSheet("border-image: url(:/Resources/open.png) stretch;");
+    m_bNewMacros->setIcon(QIcon(":/Resources/Add.png"));
+    m_bLoadMacroses->setIcon(QIcon(":/Resources/Open.png"));
     m_bNewMacros->setFixedSize(20, 20);
     m_bLoadMacroses->setFixedSize(20, 20);
     m_bRecordReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
     m_bRecordWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
+    m_bSendPackage->setIcon(QIcon(":/Resources/Send.png"));
+    m_bSendPackage->setToolTip(tr("Send packet"));
     m_bRecordWriteLog->setCheckable(true);
     m_bRecordReadLog->setCheckable(true);
     m_bSendPackage->setCheckable(true);
@@ -237,12 +239,13 @@ void MainWindow::view()
     dataLayout->setContentsMargins(0, 0, 0, 0);
 
     m_bDeleteAllMacroses->setFixedSize(15, 15);
-    m_bDeleteAllMacroses->setStyleSheet("border-image: url(:/Resources/del.png) stretch;");
+    m_bDeleteAllMacroses->setIcon(QIcon(":/Resources/Delete.png"));
     m_cbAllIntervals->setFixedWidth(58);
     m_cbAllPeriods->setFixedWidth(50);
     m_bNewMacros->setToolTip(tr("New Macros"));
     m_bLoadMacroses->setToolTip(tr("Load Macroses"));
     m_bPause->setFixedWidth(38);
+    m_bPause->setIcon(QIcon(":/Resources/Pause.png"));
 
     QHBoxLayout *hiddenAllCheck = new QHBoxLayout;
     hiddenAllCheck->addWidget(m_bDeleteAllMacroses);

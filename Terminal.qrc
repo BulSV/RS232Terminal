@@ -1,14 +1,27 @@
 <RCC>
     <qresource prefix="/">
         <file>Resources/elisat.png</file>
-		<file>Resources/del.png</file>
-		<file>Resources/add.png</file>
-		<file>Resources/open.png</file>
-		<file>Resources/save.png</file>
-		<file>Resources/startRecToFile.png</file>
-		<file>Resources/startRecToFileBlink.png</file>
-		<file>Resources/terminal.ico</file>
-		<file>Resources/arrow-up.png</file>
-		<file>Resources/arrow-down.png</file>
+        <file>Resources/Add.png</file>
+        <file>Resources/startRecToFile.png</file>
+        <file>Resources/startRecToFileBlink.png</file>
+        <file>Resources/Terminal.ico</file>
+        <file>Resources/Terminal.png</file>
+        <file>Resources/arrow-up.png</file>
+        <file>Resources/arrow-down.png</file>
+        <file>Resources/Clear.png</file>
+        <file>Resources/New.png</file>
+        <file>Resources/Open.png</file>
+        <file>Resources/Pause.png</file>
+        <file>Resources/Play.png</file>
+        <file>Resources/Save.png</file>
+        <file>Resources/SaveAs.png</file>
+        <file>Resources/Stop.png</file>
+        <file>Resources/Delete.png</file>
+        <file>Resources/CR.png</file>
+        <file>Resources/LF.png</file>
+        <file>Resources/RawEdit.png</file>
+        <file>Resources/Macros.png</file>
+        <file>Resources/Send.png</file>
+        <file>Resources/ComPort.png</file>
     </qresource>
 </RCC>
