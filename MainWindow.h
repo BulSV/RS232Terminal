@@ -17,6 +17,7 @@
 #include <QList>
 #include <QAction>
 #include <QStatusBar>
+#include <QDockWidget>
 
 #include "RightClickedButton.h"
 #include "LimitedTextEdit.h"
@@ -26,6 +27,7 @@
 #include "DecEncoder.h"
 #include "AsciiEncoder.h"
 #include "ComPortConfigure.h"
+#include "Macroses.h"
 
 class MainWindow : public QMainWindow
 {
@@ -84,6 +86,7 @@ private:
     QAction *actionPortConfigure;
     QAction *actionStart;
     QAction *actionStop;
+    QAction *actionMacroses;
     QStatusBar *statusBar;
     QLabel *portName;
     QLabel *baud;
@@ -100,6 +103,8 @@ private:
     QTimer *m_timerDelayBetweenPackets;
     QTimer *m_tTx;
     QTimer *m_tRx;
+    Macroses *macroses;
+    QDockWidget *macrosesDockWidget;
     QPushButton *m_bPause;
     QPushButton *m_bWriteLogClear;
     QPushButton *m_bReadLogClear;

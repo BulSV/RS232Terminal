@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     SaveMacros.cpp \
     DataTable.cpp \
     LimitedTextEdit.cpp \
-    ComPortConfigure.cpp
+    ComPortConfigure.cpp \
+    Macroses.cpp
 
 HEADERS  += \
     MainWindow.h \
@@ -35,7 +36,8 @@ HEADERS  += \
     SaveMacros.h \
     DataTable.h \
     LimitedTextEdit.h \
-    ComPortConfigure.h
+    ComPortConfigure.h \
+    Macroses.h
 
 RESOURCES += \
     Terminal.qrc

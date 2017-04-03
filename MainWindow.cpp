@@ -37,6 +37,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , actionPortConfigure(new QAction(QIcon(":/Resources/ComPort.png"), tr("Port configure"), this))
     , actionStart(new QAction(QIcon(":/Resources/Play.png"), tr("Start"), this))
     , actionStop(new QAction(QIcon(":/Resources/Stop.png"), tr("Stop"), this))
+    , actionMacroses(new QAction(QIcon(":/Resources/Macros.png"), tr("Macroses"), this))
     , statusBar(new QStatusBar(this))
     , portName(new QLabel(PORT + tr("None"), this))
     , baud(new QLabel(BAUD + tr("None"), this))
@@ -53,6 +54,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_timerDelayBetweenPackets(new QTimer(this))
     , m_tTx(new QTimer(this))
     , m_tRx(new QTimer(this))
+    , macroses(new Macroses)
+    , macrosesDockWidget(new QDockWidget(tr("Macroses"), this, Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint))
     , m_bPause(new QPushButton(this))
     , m_bWriteLogClear(new QPushButton(QIcon(":/Resources/Clear.png"), tr("Clear"), this))
     , m_bReadLogClear(new QPushButton(QIcon(":/Resources/Clear.png"), tr("Clear"), this))
@@ -118,6 +121,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     comPortConfigure->setWindowTitle(tr("Port configure"));
     comPortConfigure->setModal(true);
 
+    macrosesDockWidget->setWidget(macroses);
+    macrosesDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, macrosesDockWidget);
+
     m_bNewMacros->setIcon(QIcon(":/Resources/Add.png"));
     m_bLoadMacroses->setIcon(QIcon(":/Resources/Open.png"));
     m_bNewMacros->setFixedSize(20, 20);
@@ -168,7 +175,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 void MainWindow::view()
 {
     QList<QAction*> actions;
-    actions << actionPortConfigure << actionStart << actionStop;
+    actions << actionPortConfigure << actionStart << actionStop << actionMacroses;
     addToolBar(Qt::TopToolBarArea, toolBar);
     toolBar->setMovable(false);
     toolBar->addActions(actions);
@@ -294,6 +301,7 @@ void MainWindow::connections()
     connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
     connect(actionStart, &QAction::triggered, this, &MainWindow::start);
     connect(actionStop, &QAction::triggered, this, &MainWindow::stop);
+    connect(actionMacroses, &QAction::triggered, macrosesDockWidget, &QDockWidget::show);
     connect(m_bPause, SIGNAL(toggled(bool)), this, SLOT(pause(bool)));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
