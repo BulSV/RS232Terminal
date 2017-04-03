@@ -54,17 +54,17 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tTx(new QTimer(this))
     , m_tRx(new QTimer(this))
     , m_bPause(new QPushButton(this))
-    , m_bWriteLogClear(new QPushButton(tr("Clear"), this))
-    , m_bReadLogClear(new QPushButton(tr("Clear"), this))
-    , m_bSaveWriteLog(new QPushButton(tr("Save"), this))
-    , m_bSaveReadLog(new QPushButton(tr("Save"), this))
+    , m_bWriteLogClear(new QPushButton(QIcon(":/Resources/Clear.png"), tr("Clear"), this))
+    , m_bReadLogClear(new QPushButton(QIcon(":/Resources/Clear.png"), tr("Clear"), this))
+    , m_bSaveWriteLog(new QPushButton(QIcon(":/Resources/Save.png"), tr("Save"), this))
+    , m_bSaveReadLog(new QPushButton(QIcon(":/Resources/Save.png"), tr("Save"), this))
     , m_bHiddenGroup(new QPushButton(">", this))
     , m_bDeleteAllMacroses(new QPushButton(this))
     , m_bNewMacros(new QPushButton(this))
     , m_bLoadMacroses(new QPushButton(this))
-    , m_bRecordWriteLog(new QPushButton(this))
-    , m_bRecordReadLog(new QPushButton(this))
-    , m_bSendPackage(new QPushButton(this))
+    , m_bRecordWriteLog(new QPushButton(QIcon(":/Resources/Rec.png"), tr("Rec"), this))
+    , m_bRecordReadLog(new QPushButton(QIcon(":/Resources/Rec.png"), tr("Rec"), this))
+    , m_bSendPackage(new QPushButton(QIcon(":/Resources/Send.png"), tr("Send packet"), this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
     , m_eLogRead(new LimitedTextEdit(this))
@@ -122,10 +122,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_bLoadMacroses->setIcon(QIcon(":/Resources/Open.png"));
     m_bNewMacros->setFixedSize(20, 20);
     m_bLoadMacroses->setFixedSize(20, 20);
-    m_bRecordReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
-    m_bRecordWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
-    m_bSendPackage->setIcon(QIcon(":/Resources/Send.png"));
-    m_bSendPackage->setToolTip(tr("Send packet"));
     m_bRecordWriteLog->setCheckable(true);
     m_bRecordReadLog->setCheckable(true);
     m_bSendPackage->setCheckable(true);
@@ -196,6 +192,7 @@ void MainWindow::view()
     sendPackageLayout->addWidget(m_chbLF);
     sendPackageLayout->addWidget(m_sbRepeatSendInterval);
     sendPackageLayout->addWidget(m_bSendPackage);
+    sendPackageLayout->setSpacing(5);
 
     QGridLayout *writeLayout = new QGridLayout;
     writeLayout->addWidget(m_cbWriteMode, 0, 0);
@@ -364,19 +361,8 @@ void MainWindow::deleteAllMacroses()
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
         QListIterator<MacrosWidget*> it(macrosWidgets);
-        MacrosWidget *m = 0;
         while(it.hasNext()) {
-            m = it.next();
-            m->setCheckedInterval(false);
-            m->setCheckedPeriod(false);
-            hiddenLayout->removeWidget(m);
-            disconnect(m, &MacrosWidget::deleted, this, &MainWindow::deleteMacros);
-            disconnect(m, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
-            disconnect(m, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
-            disconnect(m, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
-            disconnect(m, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
-            delete m;
-            m = 0;
+            deleteMacros(it.next());
         }
         macrosWidgets.clear();
     }
@@ -425,7 +411,7 @@ void MainWindow::addMacros()
     macrosWidgets.append(macrosWidget);
     hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosWidget);
 
-    connect(macrosWidget, &MacrosWidget::deleted, this, &MainWindow::deleteMacros);
+    connect(macrosWidget, &MacrosWidget::deleted, this, static_cast<void (MainWindow::*)()>(&MainWindow::deleteMacros));
     connect(macrosWidget, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
     connect(macrosWidget, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
     connect(macrosWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
@@ -474,20 +460,25 @@ void MainWindow::moveMacrosDown()
 
 void MainWindow::deleteMacros()
 {
-    MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
-    if(m == 0) {
+    deleteMacros(qobject_cast<MacrosWidget*>(sender()));
+}
+
+void MainWindow::deleteMacros(MacrosWidget *macros)
+{
+    if(macros == 0) {
         return;
     }
-    m->setCheckedInterval(false);
-    m->setCheckedPeriod(false);
-    macrosWidgets.removeOne(m);
-    hiddenLayout->removeWidget(m);
-    disconnect(m, &MacrosWidget::deleted, this, &MainWindow::deleteMacros);
-    disconnect(m, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
-    disconnect(m, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
-    disconnect(m, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
-    disconnect(m, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
-    delete m;
+    macros->setCheckedInterval(false);
+    macros->setCheckedPeriod(false);
+    macrosWidgets.removeOne(macros);
+    hiddenLayout->removeWidget(macros);
+    disconnect(macros, &MacrosWidget::deleted, this, static_cast<void (MainWindow::*)()>(&MainWindow::deleteMacros));
+    disconnect(macros, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
+    disconnect(macros, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
+    disconnect(macros, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
+    disconnect(macros, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
+    delete macros;
+    macros = 0;
 }
 
 void MainWindow::sendPackage(const QByteArray &data)
@@ -523,13 +514,13 @@ void MainWindow::startWriteLog(bool check)
         m_tWriteLog->stop();
         writeLogFile.close();
         logWrite = false;
-        m_bRecordWriteLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
+        m_bRecordWriteLog->setIcon(QIcon(":/Resources/Rec.png"));
 
         return;
     }
     QString path = fileDialog->getSaveFileName(this,
                                                tr("Save File"),
-                                               QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss") + ".txt",
+                                               QDir::currentPath() + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt",
                                                tr("Log Files (*.txt)"));
     if(path.isEmpty()) {
         m_bRecordWriteLog->setChecked(false);
@@ -540,7 +531,7 @@ void MainWindow::startWriteLog(bool check)
     writeLogFile.open(QIODevice::WriteOnly);
     m_tWriteLog->start();
     logWrite = true;
-    m_bRecordWriteLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
+    m_bRecordWriteLog->setIcon(QIcon(":/Resources/RecBlink.png"));
 }
 
 void MainWindow::startReadLog(bool check)
@@ -549,7 +540,7 @@ void MainWindow::startReadLog(bool check)
         m_tReadLog->stop();
         readLogFile.close();
         logRead = false;
-        m_bRecordReadLog->setIcon(QIcon(":/Resources/startRecToFile.png"));
+        m_bRecordReadLog->setIcon(QIcon(":/Resources/Rec.png"));
 
         return;
     }
@@ -567,7 +558,7 @@ void MainWindow::startReadLog(bool check)
     readLogFile.open(QIODevice::WriteOnly);
     m_tReadLog->start();
     logRead = true;
-    m_bRecordReadLog->setIcon(QIcon(":/Resources/startRecToFileBlink.png"));
+    m_bRecordReadLog->setIcon(QIcon(":/Resources/RecBlink.png"));
 }
 
 void MainWindow::textChanged(const QString &text)
@@ -820,7 +811,7 @@ DataEncoder *MainWindow::getEncoder(int mode)
     case ASCII:
         dataEncoder = asciiEncoder;
         break;
-    case DEC:
+    default:
         dataEncoder = decEncoder;
     }
 
@@ -992,6 +983,7 @@ void MainWindow::txHold()
 
 void MainWindow::saveSession()
 {
+    settings->remove("config");
     settings->setValue("config/size", size());
     settings->setValue("config/position", pos());
     settings->setValue("config/isMaximized", isMaximized());

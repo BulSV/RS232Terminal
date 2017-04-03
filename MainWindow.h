@@ -69,6 +69,7 @@ private slots:
     void addMacros();
     void openDialog();
     void deleteMacros();
+    void deleteMacros(MacrosWidget *macros);
     void sendPackage(const QByteArray &data);
     void sendPackage(const QByteArray &data, bool macros);
     void deleteAllMacroses();
