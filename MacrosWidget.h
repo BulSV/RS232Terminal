@@ -12,6 +12,7 @@
 
 #include "RightClickedButton.h"
 #include "MacrosEditWidget.h"
+#include "ClickableLabel.h"
 
 class MacrosWidget : public QWidget
 {
@@ -46,13 +47,13 @@ signals:
     void movedUp();
     void movedDown();
 private:
-    QPushButton *buttonDelete;
+    ClickableLabel *buttonDelete;
     QCheckBox *checkBoxInterval;
     QCheckBox *checkBoxPeriod;
     QSpinBox *spinBoxTime;
     RightClickedButton *buttonSend;
-    QPushButton *buttonUp;
-    QPushButton *buttonDown;
+    ClickableLabel *buttonUp;
+    ClickableLabel *buttonDown;
     MacrosEditWidget *macrosEditWidget;
     QTimer *timerPeriod;
 

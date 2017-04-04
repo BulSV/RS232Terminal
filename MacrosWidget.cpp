@@ -6,13 +6,13 @@ const int MAX_SYMBOLS_COUNT = 20;
 
 MacrosWidget::MacrosWidget(QWidget *parent)
 : QWidget(parent)
-, buttonDelete(new QPushButton(this))
+, buttonDelete(new ClickableLabel(this))
 , checkBoxInterval(new QCheckBox(this))
 , checkBoxPeriod(new QCheckBox(this))
 , spinBoxTime(new QSpinBox(this))
 , buttonSend(new RightClickedButton(tr("Empty"), this))
-, buttonUp(new QPushButton(this))
-, buttonDown(new QPushButton(this))
+, buttonUp(new ClickableLabel(this))
+, buttonDown(new ClickableLabel(this))
 , macrosEditWidget(new MacrosEditWidget(this))
 , timerPeriod(new QTimer(this))
 {
@@ -131,14 +131,20 @@ void MacrosWidget::titleChanged()
 void MacrosWidget::view()
 {
     buttonUp->setFixedSize(16, 13);
+    buttonUp->setText("<img src=':/Resources/arrow-up.png' width='14' height='11'/>");
+    buttonUp->setAlignment(Qt::AlignHCenter);
+    buttonUp->setToolTip(tr("Move up"));
+
     buttonDown->setFixedSize(16, 13);
-    buttonUp->setIcon(QIcon(":/Resources/arrow-up.png"));
-    buttonDown->setIcon(QIcon(":/Resources/arrow-down.png"));
+    buttonDown->setText("<img src=':/Resources/arrow-down.png' width='14' height='11'/>");
+    buttonDown->setAlignment(Qt::AlignHCenter);
+    buttonDown->setToolTip(tr("Move down"));
 
     QVBoxLayout *upDownButtonsLayout = new QVBoxLayout;
-    upDownButtonsLayout->setSpacing(1);
-    upDownButtonsLayout->addWidget(buttonUp);
-    upDownButtonsLayout->addWidget(buttonDown);
+    upDownButtonsLayout->setSpacing(0);
+    upDownButtonsLayout->setContentsMargins(0, 0, 0, 0);
+    upDownButtonsLayout->addWidget(buttonUp, 0, Qt::AlignVCenter);
+    upDownButtonsLayout->addWidget(buttonDown, 0, Qt::AlignVCenter);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addWidget(buttonDelete);
@@ -153,7 +159,9 @@ void MacrosWidget::view()
     layout()->setSpacing(0);
     layout()->setContentsMargins(0, 0, 0, 0);
 
-    buttonDelete->setIcon(QIcon(":/Resources/Delete.png"));
+    buttonDelete->setText("<img src=':/Resources/Delete.png' width='20' height='20'/>");
+    buttonDelete->setAlignment(Qt::AlignCenter);
+    buttonDelete->setToolTip(tr("Delete macros"));
     buttonSend->setStyleSheet("font-weight: bold");
 
     buttonDelete->setFixedWidth(25);
@@ -170,10 +178,10 @@ void MacrosWidget::connections()
     connect(buttonSend, &RightClickedButton::rightClicked, macrosEditWidget, &MacrosEditWidget::show);
     connect(buttonSend, &RightClickedButton::clicked, this, &MacrosWidget::sendPackage);
     connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MacrosWidget::sendTimeChanged);
-    connect(buttonDelete, &QPushButton::pressed, this, &MacrosWidget::deleteMacros);
+    connect(buttonDelete, &ClickableLabel::clicked, this, &MacrosWidget::deleteMacros);
     connect(timerPeriod, &QTimer::timeout, this, &MacrosWidget::sendPackage);
-    connect(buttonUp, &QPushButton::clicked, this, &MacrosWidget::movedUp);
-    connect(buttonDown, &QPushButton::clicked, this, &MacrosWidget::movedDown);
+    connect(buttonUp, &ClickableLabel::clicked, this, &MacrosWidget::movedUp);
+    connect(buttonDown, &ClickableLabel::clicked, this, &MacrosWidget::movedDown);
     connect(macrosEditWidget, &MacrosEditWidget::titleChanged, buttonSend, &RightClickedButton::setText);
     connect(macrosEditWidget, &MacrosEditWidget::titleChanged, this, &MacrosWidget::titleChanged);
 }

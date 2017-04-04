@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     DataTable.cpp \
     LimitedTextEdit.cpp \
     ComPortConfigure.cpp \
-    Macroses.cpp
+    Macroses.cpp \
+    ClickableLabel.cpp
 
 HEADERS  += \
     MainWindow.h \
@@ -37,7 +38,8 @@ HEADERS  += \
     DataTable.h \
     LimitedTextEdit.h \
     ComPortConfigure.h \
-    Macroses.h
+    Macroses.h \
+    ClickableLabel.h
 
 RESOURCES += \
     Terminal.qrc
