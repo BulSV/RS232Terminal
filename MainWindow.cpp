@@ -54,7 +54,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tTx(new QTimer(this))
     , m_tRx(new QTimer(this))
     , macroses(new Macroses)
-    , macrosesDockWidget(new QDockWidget(tr("Macroses"), this, Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint))
+    , macrosesDockWidget(new QDockWidget(tr("Macroses"), this))
     , m_bPause(new QPushButton(this))
     , m_bWriteLogClear(new QPushButton(QIcon(":/Resources/Clear.png"), tr("Clear"), this))
     , m_bReadLogClear(new QPushButton(QIcon(":/Resources/Clear.png"), tr("Clear"), this))
@@ -100,8 +100,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     view();
     connections();
-
-    setMinimumWidth(665);
 
     m_port->setReadBufferSize(1);
 

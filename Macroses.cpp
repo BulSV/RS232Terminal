@@ -51,7 +51,7 @@ Macroses::Macroses(QWidget *parent)
     if(!dir.exists(dir.currentPath() + "/Macroses")) {
         dir.mkpath(dir.currentPath() + "/Macroses");
     }
-    fileDialog->setDirectory(dir.currentPath() + "/Macros");
+    fileDialog->setDirectory(dir.currentPath() + "/Macroses");
     fileDialog->setFileMode(QFileDialog::ExistingFiles);
     fileDialog->setNameFilter(tr("Terminal Macros File (*.tmf)"));
 
