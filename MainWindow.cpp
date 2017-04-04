@@ -112,9 +112,9 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     sendCount = 0;
     currentIntervalIndex = -1;
 
-    m_eLogRead->displayTime("mm:ss.zzz");
+    m_eLogRead->displayTime("hh:mm:ss.zzz");
     m_eLogRead->setReadOnly(true);
-    m_eLogWrite->displayTime("mm:ss.zzz");
+    m_eLogWrite->displayTime("hh:mm:ss.zzz");
     m_eLogWrite->setReadOnly(true);
 
     comPortConfigure->setWindowTitle(tr("Port configure"));

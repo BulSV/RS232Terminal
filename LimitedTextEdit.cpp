@@ -13,14 +13,16 @@ LimitedTextEdit::LimitedTextEdit(QWidget *parent)
 
 void LimitedTextEdit::addLine(const QString &line)
 {
+    QString promtSymbols = "->";
     if(!timeFormat.isEmpty()) {
         QString timeString;
         timeString.append("[");
         timeString .append(time.currentTime().toString(timeFormat));
         timeString.append("]:");
         QTextEdit::append(timeString);
+        promtSymbols.clear();
     }
-    QTextEdit::append("->" + line);
+    QTextEdit::append(promtSymbols + line);
     if(document()->lineCount() >= maxLinesCount) {
         QTextBlock block = document()->begin();
         for(int i = maxLinesCount; i < linesCount(); ++i) {
