@@ -4,6 +4,8 @@
 
 #include "Macroses.h"
 
+#include <QDebug>
+
 Macroses::Macroses(QWidget *parent)
     : QMainWindow(parent)
     , actionPause(new QAction(QIcon(":/Resources/Pause.png"), tr("Pause"), this))
@@ -58,6 +60,7 @@ Macroses::Macroses(QWidget *parent)
             this, static_cast<void (Macroses::*)()>(&Macroses::deleteAllMacroses));
     connect(actionLoad, &QAction::triggered, this, &Macroses::loadMacroses);
     connect(actionStartStop, &QAction::triggered, this, &Macroses::startOrStop);
+    connect(actionPause, &QAction::triggered, this, &Macroses::pause);
 }
 
 void Macroses::saveSettings(QSettings *settings)
@@ -208,5 +211,16 @@ void Macroses::startOrStop()
     } else {
         actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
         actionStartStop->setToolTip(tr("Start"));
+    }
+}
+
+void Macroses::pause(bool check)
+{
+    if(check) {
+//        m_tIntervalSending->stop();
+        qDebug() << "paused";
+    } else /*if(sendCount != 0)*/ {
+//        m_tIntervalSending->start();
+        qDebug() << "resumed";
     }
 }

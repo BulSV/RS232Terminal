@@ -19,9 +19,7 @@ MacrosWidget::MacrosWidget(QWidget *parent)
 , timerPeriod(new QTimer(this))
 {
     spinBoxTime->setRange(0, 999999);
-    spinBoxTime->setValue(0);
-    checkBoxInterval->setEnabled(false);
-    checkBoxPeriod->setEnabled(false);
+    spinBoxTime->setValue(50);
 
     view();
     connections();

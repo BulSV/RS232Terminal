@@ -52,6 +52,7 @@ private:
     void moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction);
     void loadMacroses();
     void startOrStop();
+    void pause(bool check);
 };
 
 #endif // MACROSES_H
