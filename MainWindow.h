@@ -68,18 +68,8 @@ private slots:
     void received();
     void singleSend();
     void startSending(bool checked = true);
-    void addMacros();
-    void openDialog();
-    void deleteMacros();
-    void deleteMacros(MacrosWidget *macros);
     void sendPackage(const QByteArray &data);
     void sendPackage(const QByteArray &data, bool macros);
-    void deleteAllMacroses();
-    void checkAllMacroses();
-    void changeAllDelays(int time);
-    void moveMacrosUp();
-    void moveMacrosDown();
-    void moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction);
 private:
     QWidget *widget;
     QToolBar *toolBar;

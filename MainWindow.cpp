@@ -160,12 +160,11 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_cbWriteMode->addItems(buffer);
 
     QDir dir;
-    if(!dir.exists(dir.currentPath() + "/Macros")) {
-        dir.mkpath(dir.currentPath() + "/Macros");
+    if(!dir.exists(dir.currentPath() + "/Macroses")) {
+        dir.mkpath(dir.currentPath() + "/Macroses");
     }
     fileDialog->setDirectory(dir.currentPath() + "/Macros");
     fileDialog->setFileMode(QFileDialog::ExistingFiles);
-    fileDialog->setNameFilter(tr("Terminal Macros File (*.tmf)"));
 
     loadSession();
 }
@@ -305,71 +304,15 @@ void MainWindow::connections()
     connect(m_bHiddenGroup, SIGNAL(clicked()), this, SLOT(hiddenClicked()));
     connect(m_bRecordWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
     connect(m_bRecordReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
-    connect(m_bDeleteAllMacroses, SIGNAL(clicked()), this, SLOT(deleteAllMacroses()));
     connect(m_bSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
     connect(m_leSendPackage, &QLineEdit::returnPressed, [this](){startSending();});
-    connect(m_bNewMacros, SIGNAL(clicked()), this, SLOT(addMacros()));
-    connect(m_bLoadMacroses, SIGNAL(clicked()), this, SLOT(openDialog()));
-    connect(m_cbAllIntervals, SIGNAL(toggled(bool)), this, SLOT(checkAllMacroses()));
-    connect(m_cbAllPeriods, SIGNAL(toggled(bool)), this, SLOT(checkAllMacroses()));
-    connect(m_sbAllDelays, SIGNAL(valueChanged(int)), this, SLOT(changeAllDelays(int)));
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(singleSend()));
     connect(m_timerDelayBetweenPackets, &QTimer::timeout, this, &MainWindow::delayBetweenPacketsEnded);
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
     connect(m_port, SIGNAL(readyRead()), this, SLOT(received()));
-}
-
-void MainWindow::changeAllDelays(int time)
-{
-    QListIterator<MacrosWidget*> it(macrosWidgets);
-    while(it.hasNext()) {
-        it.next()->setTime(time);
-    }
-}
-
-void MainWindow::checkAllMacroses()
-{
-    if(m_cbAllIntervals->isChecked() && m_cbAllPeriods->isChecked()) {
-        QCheckBox *tempCheckBox = dynamic_cast<QCheckBox*>(sender());
-        if(tempCheckBox) {
-            tempCheckBox->setChecked(false);
-        }
-
-        return;
-    }
-    QListIterator<MacrosWidget*> it(macrosWidgets);
-    MacrosWidget *m = 0;
-    while(it.hasNext()) {
-        m = it.next();
-        if(m_cbAllIntervals->isChecked()) {
-            m->setCheckedInterval(true);
-
-            continue;
-        }
-        if(m_cbAllPeriods->isChecked()) {
-            m->setCheckedPeriod(true);
-
-            continue;
-        }
-        m->setCheckedInterval(false);
-        m->setCheckedPeriod(false);
-    }
-}
-
-void MainWindow::deleteAllMacroses()
-{
-    int button = QMessageBox::question(this, tr("Warning"),
-                                       tr("Delete ALL macroses?"),
-                                       QMessageBox::Yes | QMessageBox::No);
-    if(button == QMessageBox::Yes) {
-        QListIterator<MacrosWidget*> it(macrosWidgets);
-        while(it.hasNext()) {
-            deleteMacros(it.next());
-        }
-        macrosWidgets.clear();
-    }
+    connect(macroses, &Macroses::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
 }
 
 void MainWindow::hiddenClicked()
@@ -408,99 +351,9 @@ void MainWindow::startStop()
     }
 }
 
-void MainWindow::openDialog()
-{
-    QStringList fileNames;
-    if(fileDialog->exec()) {
-        fileNames = fileDialog->selectedFiles();
-    }
-
-    QListIterator<QString> it(fileNames);
-    while(it.hasNext()) {
-        addMacros();
-        macrosWidgets.last()->openMacrosFile(it.next());
-    }
-}
-
-void MainWindow::addMacros()
-{
-    MacrosWidget *macrosWidget = new MacrosWidget(this);
-    macrosWidgets.append(macrosWidget);
-    hiddenLayout->insertWidget(hiddenLayout->count() - 1, macrosWidget);
-
-    connect(macrosWidget, &MacrosWidget::deleted, this, static_cast<void (MainWindow::*)()>(&MainWindow::deleteMacros));
-    connect(macrosWidget, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
-    connect(macrosWidget, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
-    connect(macrosWidget, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
-    connect(macrosWidget, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
-}
-
-void MainWindow::moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction)
-{
-    if(!macrosWidget) {
-        return;
-    }
-
-    int macrosIndex = macrosWidgets.indexOf(macrosWidget);
-
-    QVBoxLayout* tempLayout = qobject_cast<QVBoxLayout*>(macrosWidget->parentWidget()->layout());
-    int index = tempLayout->indexOf(macrosWidget);
-
-    if(direction == MoveUp) {
-        if(macrosIndex == 0) {
-            return;
-        }
-
-        macrosWidgets.swap(macrosIndex, macrosIndex - 1);
-        --index;
-    } else {
-        if(macrosIndex == macrosWidgets.size() - 1) {
-            return;
-        }
-
-        macrosWidgets.swap(macrosIndex, macrosIndex + 1);
-        ++index;
-    }
-    tempLayout->removeWidget(macrosWidget);
-    tempLayout->insertWidget(index, macrosWidget);
-}
-
-void MainWindow::moveMacrosUp()
-{
-    moveMacros(qobject_cast<MacrosWidget*>(sender()), MoveUp);
-}
-
-void MainWindow::moveMacrosDown()
-{
-    moveMacros(qobject_cast<MacrosWidget*>(sender()), MoveDown);
-}
-
-void MainWindow::deleteMacros()
-{
-    deleteMacros(qobject_cast<MacrosWidget*>(sender()));
-}
-
-void MainWindow::deleteMacros(MacrosWidget *macros)
-{
-    if(macros == 0) {
-        return;
-    }
-    macros->setCheckedInterval(false);
-    macros->setCheckedPeriod(false);
-    macrosWidgets.removeOne(macros);
-    hiddenLayout->removeWidget(macros);
-    disconnect(macros, &MacrosWidget::deleted, this, static_cast<void (MainWindow::*)()>(&MainWindow::deleteMacros));
-    disconnect(macros, &MacrosWidget::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
-    disconnect(macros, &MacrosWidget::intervalChecked, this, &MainWindow::updateIntervalsList);
-    disconnect(macros, &MacrosWidget::movedUp, this, &MainWindow::moveMacrosUp);
-    disconnect(macros, &MacrosWidget::movedDown, this, &MainWindow::moveMacrosDown);
-    delete macros;
-    macros = 0;
-}
-
 void MainWindow::sendPackage(const QByteArray &data)
 {
-    MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
+    Macroses *m = qobject_cast<Macroses*>(sender());
     QPushButton *b = qobject_cast<QPushButton*>(sender());
     if(m == 0 && b == 0) {
         return;

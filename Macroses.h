@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QSettings>
+#include <QFileDialog>
 
 #include "MacrosWidget.h"
 
@@ -25,6 +26,8 @@ public:
     explicit Macroses(QWidget *parent = 0);
     void saveSettings(QSettings *settings);
     void loadSettings(QSettings *settings);
+signals:
+    void packageSended(const QByteArray &package);
 private:
     QAction *actionPause;
     QAction *actionStartStop;
@@ -38,6 +41,7 @@ private:
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;
     QScrollArea *scrollArea;
+    QFileDialog *fileDialog;
 
     void addMacros();
     void deleteMacros();
@@ -46,6 +50,8 @@ private:
     void moveMacrosUp();
     void moveMacrosDown();
     void moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction);
+    void loadMacroses();
+    void startOrStop();
 };
 
 #endif // MACROSES_H

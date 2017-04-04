@@ -17,9 +17,9 @@ Macroses::Macroses(QWidget *parent)
     , mainWidget(new QWidget(this))
     , scrollAreaLayout(new QVBoxLayout)
     , scrollArea(new QScrollArea(this))
+    , fileDialog(new QFileDialog(this))
 {
     actionPause->setCheckable(true);
-    actionStartStop->setCheckable(true);
     time->setRange(1, 60000);
     QWidgetAction *actionTime = new QWidgetAction(toolBar);
     actionTime->setDefaultWidget(time);
@@ -45,9 +45,19 @@ Macroses::Macroses(QWidget *parent)
 
     mainWidget->setLayout(scrollAreaLayout);
 
+    QDir dir;
+    if(!dir.exists(dir.currentPath() + "/Macroses")) {
+        dir.mkpath(dir.currentPath() + "/Macroses");
+    }
+    fileDialog->setDirectory(dir.currentPath() + "/Macros");
+    fileDialog->setFileMode(QFileDialog::ExistingFiles);
+    fileDialog->setNameFilter(tr("Terminal Macros File (*.tmf)"));
+
     connect(actionNew, &QAction::triggered, this, &Macroses::addMacros);
     connect(actionDelete, &QAction::triggered,
             this, static_cast<void (Macroses::*)()>(&Macroses::deleteAllMacroses));
+    connect(actionLoad, &QAction::triggered, this, &Macroses::loadMacroses);
+    connect(actionStartStop, &QAction::triggered, this, &Macroses::startOrStop);
 }
 
 void Macroses::saveSettings(QSettings *settings)
@@ -89,7 +99,7 @@ void Macroses::addMacros()
     scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macros);
 
     connect(macros, &MacrosWidget::deleted, this, static_cast<void (Macroses::*)()>(&Macroses::deleteMacros));
-//    connect(macros, &MacrosWidget::packageSended, this, static_cast<void (Macroses::*)(const QByteArray &)>(&Macroses::sendPackage));
+    connect(macros, &MacrosWidget::packageSended, this, &Macroses::packageSended);
 //    connect(macros, &MacrosWidget::intervalChecked, this, &Macroses::updateIntervalsList);
     connect(macros, &MacrosWidget::movedUp, this, &Macroses::moveMacrosUp);
     connect(macros, &MacrosWidget::movedDown, this, &Macroses::moveMacrosDown);
@@ -112,7 +122,7 @@ void Macroses::deleteMacros(MacrosWidget *macros)
     macrosWidgets.removeOne(macros);
     scrollAreaLayout->removeWidget(macros);
     disconnect(macros, &MacrosWidget::deleted, this, static_cast<void (Macroses::*)()>(&Macroses::deleteMacros));
-//    disconnect(macros, &MacrosWidget::packageSended, this, static_cast<void (Macroses::*)(const QByteArray &)>(&Macroses::sendPackage));
+    disconnect(macros, &MacrosWidget::packageSended, this, &Macroses::packageSended);
 //    disconnect(macros, &MacrosWidget::intervalChecked, this, &Macroses::updateIntervalsList);
     disconnect(macros, &MacrosWidget::movedUp, this, &Macroses::moveMacrosUp);
     disconnect(macros, &MacrosWidget::movedDown, this, &Macroses::moveMacrosDown);
@@ -176,3 +186,27 @@ void Macroses::moveMacros(MacrosWidget *macrosWidget, Macroses::MacrosMoveDirect
     tempLayout->insertWidget(index, macrosWidget);
 }
 
+void Macroses::loadMacroses()
+{
+    QStringList fileNames;
+    if(fileDialog->exec()) {
+        fileNames = fileDialog->selectedFiles();
+    }
+
+    QListIterator<QString> it(fileNames);
+    while(it.hasNext()) {
+        addMacros();
+        macrosWidgets.last()->openMacrosFile(it.next());
+    }
+}
+
+void Macroses::startOrStop()
+{
+    if(actionStartStop->toolTip() == tr("Start")) {
+        actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
+        actionStartStop->setToolTip(tr("Stop"));
+    } else {
+        actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
+        actionStartStop->setToolTip(tr("Start"));
+    }
+}

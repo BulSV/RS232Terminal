@@ -2,6 +2,8 @@
 
 #include "MacrosWidget.h"
 
+#include <QDebug>
+
 const int MAX_SYMBOLS_COUNT = 20;
 
 MacrosWidget::MacrosWidget(QWidget *parent)
