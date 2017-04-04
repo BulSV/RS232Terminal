@@ -156,7 +156,7 @@ void MacrosWidget::view()
     mainLayout->setSpacing(5);
 
     setLayout(mainLayout);
-    layout()->setSpacing(0);
+    layout()->setSpacing(2);
     layout()->setContentsMargins(0, 0, 0, 0);
 
     buttonDelete->setText("<img src=':/Resources/Delete.png' width='20' height='20'/>");

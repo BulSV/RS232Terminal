@@ -24,8 +24,9 @@ void ClickableLabel::mousePressEvent(QMouseEvent *e)
 {
     setFrameShape(QFrame::Panel);
     setFrameShadow(QFrame::Sunken);
-
-    emit clicked(checkable ? true : false);
+    if(checkable) {
+        emit clicked(true);
+    }
 
     QLabel::mousePressEvent(e);
 }
@@ -35,9 +36,7 @@ void ClickableLabel::mouseReleaseEvent(QMouseEvent *e)
     setFrameShape(QFrame::NoFrame);
     setFrameShadow(QFrame::Plain);
 
-    if(checkable) {
-        emit clicked();
-    }
+    emit clicked();
 
     QLabel::mouseReleaseEvent(e);
 }
