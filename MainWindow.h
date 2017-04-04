@@ -54,6 +54,7 @@ private slots:
     void txHold();
     void delayBetweenPacketsEnded();
     void hiddenClicked();
+    void startStop();
     void start();
     void stop();
     void pause(bool check);
@@ -64,7 +65,6 @@ private slots:
     void readLogTimeout();
     void startWriteLog(bool check);
     void startReadLog(bool check);
-    void textChanged(const QString &text);
     void received();
     void singleSend();
     void startSending(bool checked = true);
@@ -84,8 +84,7 @@ private:
     QWidget *widget;
     QToolBar *toolBar;
     QAction *actionPortConfigure;
-    QAction *actionStart;
-    QAction *actionStop;
+    QAction *actionStartStop;
     QAction *actionMacroses;
     QStatusBar *statusBar;
     QLabel *portName;

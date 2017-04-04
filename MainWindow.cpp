@@ -35,8 +35,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
     , toolBar(new QToolBar(this))
     , actionPortConfigure(new QAction(QIcon(":/Resources/ComPort.png"), tr("Port configure"), this))
-    , actionStart(new QAction(QIcon(":/Resources/Play.png"), tr("Start"), this))
-    , actionStop(new QAction(QIcon(":/Resources/Stop.png"), tr("Stop"), this))
+    , actionStartStop(new QAction(QIcon(":/Resources/Play.png"), tr("Start"), this))
     , actionMacroses(new QAction(QIcon(":/Resources/Macros.png"), tr("Macroses"), this))
     , statusBar(new QStatusBar(this))
     , portName(new QLabel(PORT + tr("None"), this))
@@ -133,7 +132,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_bRecordReadLog->setCheckable(true);
     m_bSendPackage->setCheckable(true);
     m_bPause->setCheckable(true);
-    actionStop->setEnabled(false);
     m_bPause->setEnabled(false);
     m_sbRepeatSendInterval->setRange(0, 100000);
     m_sbDelayBetweenPackets->setRange(0, 10);
@@ -175,7 +173,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 void MainWindow::view()
 {
     QList<QAction*> actions;
-    actions << actionPortConfigure << actionStart << actionStop << actionMacroses;
+    actions << actionPortConfigure << actionStartStop << actionMacroses;
     addToolBar(Qt::TopToolBarArea, toolBar);
     toolBar->setMovable(false);
     toolBar->addActions(actions);
@@ -299,8 +297,7 @@ void MainWindow::connections()
     connect(actionPortConfigure, &QAction::triggered, comPortConfigure, &ComPortConfigure::show);
     connect(m_bReadLogClear, SIGNAL(clicked()), m_eLogRead, SLOT(clear()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
-    connect(actionStart, &QAction::triggered, this, &MainWindow::start);
-    connect(actionStop, &QAction::triggered, this, &MainWindow::stop);
+    connect(actionStartStop, &QAction::triggered, this, &MainWindow::startStop);
     connect(actionMacroses, &QAction::triggered, macrosesDockWidget, &QDockWidget::show);
     connect(m_bPause, SIGNAL(toggled(bool)), this, SLOT(pause(bool)));
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
@@ -310,7 +307,6 @@ void MainWindow::connections()
     connect(m_bRecordReadLog, SIGNAL(toggled(bool)), this, SLOT(startReadLog(bool)));
     connect(m_bDeleteAllMacroses, SIGNAL(clicked()), this, SLOT(deleteAllMacroses()));
     connect(m_bSendPackage, SIGNAL(toggled(bool)), this, SLOT(startSending(bool)));
-    connect(m_leSendPackage, SIGNAL(textChanged(QString)), this, SLOT(textChanged(QString)));
     connect(m_leSendPackage, &QLineEdit::returnPressed, [this](){startSending();});
     connect(m_bNewMacros, SIGNAL(clicked()), this, SLOT(addMacros()));
     connect(m_bLoadMacroses, SIGNAL(clicked()), this, SLOT(openDialog()));
@@ -396,6 +392,19 @@ void MainWindow::hiddenClicked()
 
     if(!isMaximized()) {
         resize(width() - m_gbHiddenGroup->width() - 5, height());
+    }
+}
+
+void MainWindow::startStop()
+{
+    if(actionStartStop->text() == tr("Start")) {
+        actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
+        actionStartStop->setText(tr("Stop"));
+        start();
+    } else {
+        actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
+        actionStartStop->setText(tr("Start"));
+        stop();
     }
 }
 
@@ -569,18 +578,6 @@ void MainWindow::startReadLog(bool check)
     m_bRecordReadLog->setIcon(QIcon(":/Resources/RecBlink.png"));
 }
 
-void MainWindow::textChanged(const QString &text)
-{
-    if(!text.isEmpty() && actionStop->isEnabled()) {
-        m_bSendPackage->setEnabled(true);
-        m_bSendPackage->setCheckable(true);
-
-        return;
-    }
-    m_bSendPackage->setEnabled(false);
-    m_bSendPackage->setCheckable(false);
-}
-
 void MainWindow::updateIntervalsList(bool add)
 {
     MacrosWidget *m = qobject_cast<MacrosWidget*>(sender());
@@ -623,8 +620,6 @@ void MainWindow::start()
 
     m_port->setFlowControl(QSerialPort::NoFlowControl);
 
-    actionStart->setEnabled(false);
-    actionStop->setEnabled(true);
     actionPortConfigure->setEnabled(false);
     m_bPause->setEnabled(true);
 
@@ -650,8 +645,6 @@ void MainWindow::stop()
     m_lTxCount->setStyleSheet("background: none");
     m_lRxCount->setStyleSheet("background: none");
 
-    actionStart->setEnabled(true);
-    actionStop->setEnabled(false);
     actionPortConfigure->setEnabled(true);
     m_bPause->setEnabled(false);
     m_bSendPackage->setChecked(false);
