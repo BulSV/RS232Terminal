@@ -1001,6 +1001,7 @@ void MainWindow::saveSession()
     settings->setValue("config/read_log_timeout", m_tReadLog->interval());
 
     comPortConfigure->saveSettings(settings);
+    macroses->saveSettings(settings);
 
     settings->setValue("config/hidden_group_isHidden", m_gbHiddenGroup->isHidden());
     settings->setValue("config/all_delays", m_sbAllDelays->value());
@@ -1009,17 +1010,6 @@ void MainWindow::saveSession()
     settings->setValue("config/mode", m_cbSendMode->currentIndex());
     settings->setValue("config/CR", m_chbCR->isChecked());
     settings->setValue("config/LF", m_chbLF->isChecked());
-
-    settings->remove("macroses");
-    int macrosIndex = 1;
-    QListIterator<MacrosWidget*> it(macrosWidgets);
-    MacrosWidget *m = 0;
-    while(it.hasNext()) {
-        m = it.next();
-        m->saveSettings(settings, macrosIndex);
-        macrosIndex++;
-    }
-    settings->setValue("macroses/count", macrosIndex - 1);
 }
 
 void MainWindow::loadSession()
@@ -1040,6 +1030,7 @@ void MainWindow::loadSession()
     m_eLogWrite->setLinesLimit(settings->value("config/max_read_log_rows", 1000).toInt());
 
     comPortConfigure->loadSettings(settings);
+    macroses->loadSettings(settings);
 
     m_cbWriteMode->setCurrentIndex(settings->value("config/write_mode", 0).toInt());
     m_cbReadMode->setCurrentIndex(settings->value("config/read_mode", 0).toInt());
@@ -1061,12 +1052,6 @@ void MainWindow::loadSession()
     m_cbSendMode->setCurrentIndex(settings->value("config/mode", 0).toInt());
     m_cbDisplayWrite->setChecked(settings->value("config/write_display", true).toBool());
     m_cbDisplayRead->setChecked(settings->value("config/read_display", true).toBool());
-
-    int MacrosesCount = settings->value("macroses/count", 0).toInt();
-    for(int macrosIndex = 1; macrosIndex <= MacrosesCount; ++macrosIndex) {
-        addMacros();
-        macrosWidgets.last()->loadSettings(settings, macrosIndex);
-    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)

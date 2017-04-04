@@ -23,6 +23,8 @@ class Macroses : public QMainWindow
     };
 public:
     explicit Macroses(QWidget *parent = 0);
+    void saveSettings(QSettings *settings);
+    void loadSettings(QSettings *settings);
 private:
     QAction *actionPause;
     QAction *actionStartStop;

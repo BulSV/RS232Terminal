@@ -50,17 +50,51 @@ Macroses::Macroses(QWidget *parent)
             this, static_cast<void (Macroses::*)()>(&Macroses::deleteAllMacroses));
 }
 
+void Macroses::saveSettings(QSettings *settings)
+{
+    settings->remove("macroses");
+    settings->setValue("macroses/time", time->value());
+    settings->setValue("macroses/setTime", actionSetTime->isChecked());
+
+    int macrosIndex = 1;
+    QListIterator<MacrosWidget*> it(macrosWidgets);
+    MacrosWidget *m = 0;
+    while(it.hasNext()) {
+        m = it.next();
+        m->saveSettings(settings, macrosIndex);
+        macrosIndex++;
+    }
+    settings->setValue("macroses/count", macrosIndex - 1);
+}
+
+void Macroses::loadSettings(QSettings *settings)
+{
+    time->setValue(settings->value("macroses/time", 50).toInt());
+    actionSetTime->setChecked(settings->value("macroses/setTime", false).toBool());
+
+    int macrosesCount = settings->value("macroses/count", 0).toInt();
+    for(int macrosIndex = 1; macrosIndex <= macrosesCount; ++macrosIndex) {
+        addMacros();
+        macrosWidgets.last()->loadSettings(settings, macrosIndex);
+        if(actionSetTime->isChecked()) {
+            macrosWidgets.last()->setCheckedInterval(true);
+        }
+    }
+}
+
 void Macroses::addMacros()
 {
-    MacrosWidget *macrosWidget = new MacrosWidget(this);
-    macrosWidgets.append(macrosWidget);
-    scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macrosWidget);
+    MacrosWidget *macros = new MacrosWidget(this);
+    macrosWidgets.append(macros);
+    scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macros);
 
-    connect(macrosWidget, &MacrosWidget::deleted, this, static_cast<void (Macroses::*)()>(&Macroses::deleteMacros));
-//    connect(macrosWidget, &MacrosWidget::packageSended, this, static_cast<void (Macroses::*)(const QByteArray &)>(&Macroses::sendPackage));
-//    connect(macrosWidget, &MacrosWidget::intervalChecked, this, &Macroses::updateIntervalsList);
-    connect(macrosWidget, &MacrosWidget::movedUp, this, &Macroses::moveMacrosUp);
-    connect(macrosWidget, &MacrosWidget::movedDown, this, &Macroses::moveMacrosDown);
+    connect(macros, &MacrosWidget::deleted, this, static_cast<void (Macroses::*)()>(&Macroses::deleteMacros));
+//    connect(macros, &MacrosWidget::packageSended, this, static_cast<void (Macroses::*)(const QByteArray &)>(&Macroses::sendPackage));
+//    connect(macros, &MacrosWidget::intervalChecked, this, &Macroses::updateIntervalsList);
+    connect(macros, &MacrosWidget::movedUp, this, &Macroses::moveMacrosUp);
+    connect(macros, &MacrosWidget::movedDown, this, &Macroses::moveMacrosDown);
+    connect(actionSetTime, &QAction::triggered, macros, &MacrosWidget::setCheckedInterval);
+    connect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macros, &MacrosWidget::setTime);
 }
 
 void Macroses::deleteMacros()
@@ -82,6 +116,8 @@ void Macroses::deleteMacros(MacrosWidget *macros)
 //    disconnect(macros, &MacrosWidget::intervalChecked, this, &Macroses::updateIntervalsList);
     disconnect(macros, &MacrosWidget::movedUp, this, &Macroses::moveMacrosUp);
     disconnect(macros, &MacrosWidget::movedDown, this, &Macroses::moveMacrosDown);
+    disconnect(actionSetTime, &QAction::triggered, macros, &MacrosWidget::setCheckedInterval);
+    disconnect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macros, &MacrosWidget::setTime);
     delete macros;
     macros = 0;
 }
