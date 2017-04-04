@@ -579,6 +579,8 @@ void MacrosEditWidget::setRawData(const QByteArray &rawData)
         it.next()->setData(dataList.mid(i, GROUP_BYTES_COUNT));
         i += 8;
     }
+    currentEditGroup = macrosGroups.first();
+    fillEditGroup();
 }
 
 void MacrosEditWidget::onEditRawData()
