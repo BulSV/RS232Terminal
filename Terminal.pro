@@ -12,16 +12,16 @@ SOURCES += main.cpp\
     AsciiEncoder.cpp \
     DecEncoder.cpp \
     RightClickedButton.cpp \
-    MacrosEditWidget.cpp \
-    MacrosWidget.cpp \
-    MacrosRawEditWidget.cpp \
-    OpenMacros.cpp \
-    SaveMacros.cpp \
     DataTable.cpp \
     LimitedTextEdit.cpp \
     ComPortConfigure.cpp \
-    Macroses.cpp \
-    ClickableLabel.cpp
+    ClickableLabel.cpp \
+    Macros.cpp \
+    MacroEditWidget.cpp \
+    MacroRawEditWidget.cpp \
+    MacroWidget.cpp \
+    SaveMacro.cpp \
+    OpenMacro.cpp
 
 HEADERS  += \
     MainWindow.h \
@@ -30,16 +30,16 @@ HEADERS  += \
     AsciiEncoder.h \
     DecEncoder.h \
     RightClickedButton.h \
-    MacrosEditWidget.h \
-    MacrosWidget.h \
-    MacrosRawEditWidget.h \
-    OpenMacros.h \
-    SaveMacros.h \
     DataTable.h \
     LimitedTextEdit.h \
     ComPortConfigure.h \
-    Macroses.h \
-    ClickableLabel.h
+    ClickableLabel.h \
+    Macros.h \
+    MacroEditWidget.h \
+    MacroRawEditWidget.h \
+    MacroWidget.h \
+    SaveMacro.h \
+    OpenMacro.h
 
 RESOURCES += \
     Terminal.qrc

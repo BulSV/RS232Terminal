@@ -1,10 +1,10 @@
-#ifndef OPEN_MACROS_H
-#define OPEN_MACROS_H
+#ifndef OPEN_MACRO_H
+#define OPEN_MACRO_H
 
 #include <QString>
 #include <QByteArray>
 
-class OpenMacros
+class OpenMacro
 {
 public:
     bool open(const QString &fileName);
@@ -13,4 +13,4 @@ private:
     QByteArray data;
 };
 
-#endif // OPEN_MACROS_H
+#endif // OPEN_MACRO_H

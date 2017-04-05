@@ -1,9 +1,9 @@
 #include <QTextStream>
 #include <QFile>
 
-#include "SaveMacros.h"
+#include "SaveMacro.h"
 
-void SaveMacros::setData(const QByteArray &data)
+void SaveMacro::setData(const QByteArray &data)
 {
     if(data.isEmpty()) {
         return;
@@ -22,7 +22,7 @@ void SaveMacros::setData(const QByteArray &data)
     this->data.chop(1);
 }
 
-bool SaveMacros::save(const QString &fileName)
+bool SaveMacro::save(const QString &fileName)
 {
     QFile file(fileName);
     if(!file.open(QFile::WriteOnly | QFile::Truncate)) {

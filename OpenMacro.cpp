@@ -2,9 +2,9 @@
 #include <QFile>
 #include <QList>
 
-#include "OpenMacros.h"
+#include "OpenMacro.h"
 
-bool OpenMacros::open(const QString &fileName)
+bool OpenMacro::open(const QString &fileName)
 {
     QFile file(fileName);
     if(!file.open(QFile::ReadOnly)) {
@@ -23,7 +23,7 @@ bool OpenMacros::open(const QString &fileName)
     return true;
 }
 
-const QByteArray &OpenMacros::getData() const
+const QByteArray &OpenMacro::getData() const
 {
     return data;
 }

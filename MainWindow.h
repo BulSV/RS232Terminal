@@ -21,13 +21,13 @@
 
 #include "RightClickedButton.h"
 #include "LimitedTextEdit.h"
-#include "MacrosWidget.h"
+#include "MacroWidget.h"
 #include "DataEncoder.h"
 #include "HexEncoder.h"
 #include "DecEncoder.h"
 #include "AsciiEncoder.h"
 #include "ComPortConfigure.h"
-#include "Macroses.h"
+#include "Macros.h"
 
 class MainWindow : public QMainWindow
 {
@@ -37,11 +37,6 @@ class MainWindow : public QMainWindow
         HEX = 0,
         ASCII = 1,
         DEC = 2
-    };
-    enum MacrosMoveDirection
-    {
-        MoveUp = 0,
-        MoveDown = 1
     };
 public:
     explicit MainWindow(QString title, QWidget *parent = 0);
@@ -53,11 +48,9 @@ private slots:
     void rxHold();
     void txHold();
     void delayBetweenPacketsEnded();
-    void hiddenClicked();
     void startStop();
     void start();
     void stop();
-    void pause(bool check);
     void saveReadWriteLog(bool writeLog);
     void saveWrite();
     void saveRead();
@@ -69,13 +62,13 @@ private slots:
     void singleSend();
     void startSending(bool checked = true);
     void sendPackage(const QByteArray &data);
-    void sendPackage(const QByteArray &data, bool macros);
+    void sendPackage(const QByteArray &data, bool macro);
 private:
     QWidget *widget;
     QToolBar *toolBar;
     QAction *actionPortConfigure;
     QAction *actionStartStop;
-    QAction *actionMacroses;
+    QAction *actionMacros;
     QStatusBar *statusBar;
     QLabel *portName;
     QLabel *baud;
@@ -92,17 +85,12 @@ private:
     QTimer *m_timerDelayBetweenPackets;
     QTimer *m_tTx;
     QTimer *m_tRx;
-    Macroses *macroses;
-    QDockWidget *macrosesDockWidget;
-    QPushButton *m_bPause;
+    Macros *macros;
+    QDockWidget *macrosDockWidget;
     QPushButton *m_bWriteLogClear;
     QPushButton *m_bReadLogClear;
     QPushButton *m_bSaveWriteLog;
     QPushButton *m_bSaveReadLog;
-    QPushButton *m_bHiddenGroup;
-    QPushButton *m_bDeleteAllMacroses;
-    QPushButton *m_bNewMacros;
-    QPushButton *m_bLoadMacroses;
     QPushButton *m_bRecordWriteLog;
     QPushButton *m_bRecordReadLog;
     QPushButton *m_bSendPackage;
@@ -111,13 +99,10 @@ private:
     LimitedTextEdit *m_eLogRead;
     LimitedTextEdit *m_eLogWrite;
     QSpinBox *m_sbRepeatSendInterval;
-    QSpinBox *m_sbDelayBetweenPackets;
-    QSpinBox *m_sbAllDelays;
+    QSpinBox *m_sbReadDelayBetweenPackets;
     QLineEdit *m_leSendPackage;
     QCheckBox *m_cbReadScroll;
     QCheckBox *m_cbWriteScroll;
-    QCheckBox *m_cbAllIntervals;
-    QCheckBox *m_cbAllPeriods;
     QCheckBox *m_cbDisplayWrite;
     QCheckBox *m_cbDisplayRead;
     QCheckBox *m_chbCR;
@@ -127,11 +112,6 @@ private:
     ComPortConfigure *comPortConfigure;
     QSettings *settings;
     QFileDialog *fileDialog;
-    QGroupBox *m_gbHiddenGroup;
-    QVBoxLayout *scrollAreaLayout;
-    QScrollArea *scrollArea;
-    QWidget *scrollWidget;
-    QVBoxLayout *hiddenLayout;
 
     QFile writeLogFile;
     QFile readLogFile;
@@ -141,7 +121,6 @@ private:
     bool logRead;
 
     QByteArray readBuffer;
-    QList<MacrosWidget*> macrosWidgets;
     QList<int> indexesOfIntervals;
     int sendCount;
     int currentIntervalIndex;
@@ -156,14 +135,14 @@ private:
     void connections();
 
     void updateIntervalsList(bool add);
-    void sendNextMacros();
+    void sendNextMacro();
     void displayWrittenData(const QByteArray &writeData);
     DataEncoder *getEncoder(int mode);
     QString baudToString(int baud);
     QString bitsToString(int bits);
     QString parityToString(int parity);
     QString stopBitsToString(int stopBits);
-    void setMacrosesMinimizeFeature(bool floating);
+    void setMacrosMinimizeFeature(bool floating);
 };
 
 #endif // MAIN_WINDOW_H

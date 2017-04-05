@@ -1,5 +1,5 @@
-#ifndef MACROS_EDIT_WIDGET_H
-#define MACROS_EDIT_WIDGET_H
+#ifndef MACRO_EDIT_WIDGET_H
+#define MACRO_EDIT_WIDGET_H
 
 #include <QMainWindow>
 #include <QPushButton>
@@ -14,20 +14,20 @@
 #include "AsciiEncoder.h"
 #include "HexEncoder.h"
 #include "DecEncoder.h"
-#include "MacrosRawEditWidget.h"
-#include "OpenMacros.h"
-#include "SaveMacros.h"
+#include "MacroRawEditWidget.h"
+#include "OpenMacro.h"
+#include "SaveMacro.h"
 
-class MacrosEditWidget : public QMainWindow
+class MacroEditWidget : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MacrosEditWidget(QWidget *parent = 0);
-    virtual ~MacrosEditWidget();
+    explicit MacroEditWidget(QWidget *parent = 0);
+    virtual ~MacroEditWidget();
     const QByteArray &getPackage();
-    void saveSettings(QSettings *settings, int macrosIndex);
-    void loadSettings(QSettings *settings, int macrosIndex);
-    void openMacrosFile(const QString &fileName);
+    void saveSettings(QSettings *settings, int macroIndex);
+    void loadSettings(QSettings *settings, int macroIndex);
+    void openMacroFile(const QString &fileName);
 signals:
     void titleChanged(const QString &title);
 private:
@@ -45,22 +45,22 @@ private:
     DataTable *tableAscii;
     DataTable *tableHex;
     DataTable *tableDec;
-    QList<DataTable*> macrosGroups;
-    QVBoxLayout *macrosLayout;
+    QList<DataTable*> macroGroups;
+    QVBoxLayout *macroGroupsLayout;
     DataTable *currentEditGroup;
     AsciiEncoder *asciiEncoder;
     HexEncoder *hexEncoder;
     DecEncoder *decEncoder;
     QByteArray package;
     QByteArray package_CR_LF;
-    MacrosRawEditWidget *macrosRawEditWidget;
-    OpenMacros openMacros;
-    SaveMacros saveMacros;
-    QString macrosesOpenDir;
-    QString macrosesSaveDir;
+    MacroRawEditWidget *macroRawEditWidget;
+    OpenMacro openMacro;
+    SaveMacro saveMacro;
+    QString macroOpenDir;
+    QString macroSaveDir;
     QFileDialog *fileOpenDialog;
     QFileDialog *fileSaveAsDialog;
-    QString macrosFileName;
+    QString macroFileName;
 
     void connections();
     void view();
@@ -83,10 +83,10 @@ private:
     void onEditRawData();
     void formPackage();
     void addCR_LF();
-    void newMacrosFile();
-    void openMacrosFile();
-    void saveMacrosFile();
-    void saveAsMacrosFile();
+    void newMacroFile();
+    void openMacroFile();
+    void saveMacroFile();
+    void saveAsMacroFile();
 };
 
-#endif // MACROS_EDIT_WIDGET_H
+#endif // MACRO_EDIT_WIDGET_H

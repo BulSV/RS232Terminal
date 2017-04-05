@@ -1,10 +1,10 @@
-#ifndef SAVE_MACROS_H
-#define SAVE_MACROS_H
+#ifndef SAVE_MACRO_H
+#define SAVE_MACRO_H
 
 #include <QString>
 #include <QByteArray>
 
-class SaveMacros
+class SaveMacro
 {
 public:
     void setData(const QByteArray &data);
@@ -13,4 +13,4 @@ private:
     QString data;
 };
 
-#endif // SAVE_MACROS_H
+#endif // SAVE_MACRO_H

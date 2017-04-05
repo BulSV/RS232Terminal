@@ -8,7 +8,7 @@
 #include <QtMath>
 #include <QFileInfo>
 
-#include "MacrosEditWidget.h"
+#include "MacroEditWidget.h"
 
 const int TABLE_WIDTH = 250;
 const int GROUP_BYTES_COUNT = 8;
@@ -17,7 +17,7 @@ const char LF = 0x0D;
 
 #include <QDebug>
 
-MacrosEditWidget::MacrosEditWidget(QWidget *parent)
+MacroEditWidget::MacroEditWidget(QWidget *parent)
     : QMainWindow(parent, Qt::WindowCloseButtonHint)
     , toolBar(new QToolBar(this))
     , actionNew(new QAction(QIcon(":/Resources/New.png"), tr("New"), this))
@@ -33,17 +33,17 @@ MacrosEditWidget::MacrosEditWidget(QWidget *parent)
     , tableAscii(new DataTable(1, this))
     , tableHex(new DataTable(GROUP_BYTES_COUNT, this))
     , tableDec(new DataTable(GROUP_BYTES_COUNT, this))
-    , macrosLayout(new QVBoxLayout)
+    , macroGroupsLayout(new QVBoxLayout)
     , asciiEncoder(new AsciiEncoder)
     , hexEncoder(new HexEncoder)
     , decEncoder(new DecEncoder)
-    , macrosRawEditWidget(new MacrosRawEditWidget(0))
-    , macrosesOpenDir(".")
-    , macrosesSaveDir(".")
-    , fileOpenDialog(new QFileDialog(this, tr("Open Macros File"), macrosesOpenDir, "Terminal Macros File (*.tmf)"))
-    , fileSaveAsDialog(new QFileDialog(this, tr("Save Macros File"), macrosesOpenDir, "Terminal Macros File (*.tmf)"))
+    , macroRawEditWidget(new MacroRawEditWidget(0))
+    , macroOpenDir(".")
+    , macroSaveDir(".")
+    , fileOpenDialog(new QFileDialog(this, tr("Open Macro File"), macroOpenDir, "Terminal Macro File (*.tmf)"))
+    , fileSaveAsDialog(new QFileDialog(this, tr("Save Macro File"), macroSaveDir, "Terminal Macro File (*.tmf)"))
 {
-    setWindowTitle(tr("Macros Edit - No Name"));
+    setWindowTitle(tr("Macro Edit - No Name"));
 
     emit titleChanged(QString(tr("No Name")));
 
@@ -72,24 +72,24 @@ MacrosEditWidget::MacrosEditWidget(QWidget *parent)
 
     addGroup();
 
-    macrosGroups.last()->setSelected(true);
+    macroGroups.last()->setSelected(true);
 
-    currentEditGroup = macrosGroups.last();
+    currentEditGroup = macroGroups.last();
 
-    macrosLayout->setSpacing(0);
-    macrosLayout->setContentsMargins(0, 0, 0, 0);
+    macroGroupsLayout->setSpacing(0);
+    macroGroupsLayout->setContentsMargins(0, 0, 0, 0);
 
     view();
     connections();
 }
 
-MacrosEditWidget::~MacrosEditWidget()
+MacroEditWidget::~MacroEditWidget()
 {
-    delete macrosRawEditWidget;
-    macrosRawEditWidget = 0;
+    delete macroRawEditWidget;
+    macroRawEditWidget = 0;
 }
 
-void MacrosEditWidget::addCR_LF()
+void MacroEditWidget::addCR_LF()
 {
     package_CR_LF = package;
     if(actionCR->isChecked()) {
@@ -100,63 +100,63 @@ void MacrosEditWidget::addCR_LF()
     }
 }
 
-void MacrosEditWidget::newMacrosFile()
+void MacroEditWidget::newMacroFile()
 {
-    int groupsCount = macrosGroups.size();
+    int groupsCount = macroGroups.size();
     for(int i = 0; i < groupsCount - 1; ++i) {
         deleteGroup();
     }
     clearSelectedGroup();
-    macrosFileName.clear();
+    macroFileName.clear();
     package.clear();
-    setWindowTitle(tr("Macros Edit - No Name"));
+    setWindowTitle(tr("Macro Edit - No Name"));
 
     emit titleChanged(QString(tr("No Name")));
 }
 
-void MacrosEditWidget::openMacrosFile()
+void MacroEditWidget::openMacroFile()
 {
-    openMacrosFile(fileOpenDialog->selectedFiles().first());
+    openMacroFile(fileOpenDialog->selectedFiles().first());
 }
 
-void MacrosEditWidget::saveMacrosFile()
+void MacroEditWidget::saveMacroFile()
 {
-    if(macrosFileName.isEmpty()) {
+    if(macroFileName.isEmpty()) {
         fileSaveAsDialog->show();
 
         return;
     }
     formPackage();
-    saveMacros.setData(package);
-    saveMacros.save(macrosFileName);
+    saveMacro.setData(package);
+    saveMacro.save(macroFileName);
 }
 
-void MacrosEditWidget::saveAsMacrosFile()
+void MacroEditWidget::saveAsMacroFile()
 {
     QString fileName = fileSaveAsDialog->selectedFiles().first();
     if(fileName.isEmpty()) {
         return;
     }
     formPackage();
-    saveMacros.setData(package);
-    if(!saveMacros.save(fileName)) {
+    saveMacro.setData(package);
+    if(!saveMacro.save(fileName)) {
         return;
     }
-    macrosFileName = fileName;
+    macroFileName = fileName;
     QFileInfo fileInfo(fileName);
     fileName = fileInfo.fileName();
     fileName.chop(4);
-    setWindowTitle(tr("Macros Edit - ") + fileName);
+    setWindowTitle(tr("Macro Edit - ") + fileName);
 
     emit titleChanged(fileName);
 }
 
-void MacrosEditWidget::formPackage()
+void MacroEditWidget::formPackage()
 {
-    QListIterator<DataTable*> itDataTable(macrosGroups);
+    QListIterator<DataTable*> itMacroGroups(macroGroups);
     QString hexData;
-    while(itDataTable.hasNext()) {
-        QListIterator<QString> itHexData(itDataTable.next()->getData());
+    while(itMacroGroups.hasNext()) {
+        QListIterator<QString> itHexData(itMacroGroups.next()->getData());
         while(itHexData.hasNext()) {
             QString tempString = itHexData.next();
             if(tempString.isEmpty()) {
@@ -171,17 +171,17 @@ void MacrosEditWidget::formPackage()
     package = hexEncoder->encodedByteArray();
 }
 
-const QByteArray &MacrosEditWidget::getPackage()
+const QByteArray &MacroEditWidget::getPackage()
 {
     addCR_LF();
 
     return package_CR_LF;
 }
 
-void MacrosEditWidget::saveSettings(QSettings *settings, int macrosIndex)
+void MacroEditWidget::saveSettings(QSettings *settings, int macroIndex)
 {
-    QString macrosIndexString = QString::number(macrosIndex);
-    if(macrosFileName.isEmpty()) {
+    QString macroIndexString = QString::number(macroIndex);
+    if(macroFileName.isEmpty()) {
         formPackage();
         QString packageString;
         int packageSize = package.size();
@@ -190,36 +190,36 @@ void MacrosEditWidget::saveSettings(QSettings *settings, int macrosIndex)
             packageString.append(" ");
         }
         packageString.chop(1);
-        settings->setValue("macroses/" + macrosIndexString + "/package", packageString);
+        settings->setValue("macros/" + macroIndexString + "/package", packageString);
     } else {
-        settings->setValue("macroses/" + macrosIndexString + "/path", macrosFileName);
+        settings->setValue("macros/" + macroIndexString + "/path", macroFileName);
     }
-    settings->setValue("macroses/" + macrosIndexString + "/CR", actionCR->isChecked());
-    settings->setValue("macroses/" + macrosIndexString + "/LF", actionLF->isChecked());
-    settings->setValue("macroses/" + macrosIndexString + "/position", pos());
-    settings->setValue("macroses/" + macrosIndexString + "/size", size());
+    settings->setValue("macros/" + macroIndexString + "/CR", actionCR->isChecked());
+    settings->setValue("macros/" + macroIndexString + "/LF", actionLF->isChecked());
+    settings->setValue("macros/" + macroIndexString + "/position", pos());
+    settings->setValue("macros/" + macroIndexString + "/size", size());
 
-    macrosRawEditWidget->saveSettings(settings, macrosIndex);
+    macroRawEditWidget->saveSettings(settings, macroIndex);
 }
 
-void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
+void MacroEditWidget::loadSettings(QSettings *settings, int macroIndex)
 {
-    QString macrosIndexString = QString::number(macrosIndex);
-    QString fileName = settings->value("macroses/" + macrosIndexString + "/path").toString();
+    QString macroIndexString = QString::number(macroIndex);
+    QString fileName = settings->value("macros/" + macroIndexString + "/path").toString();
     if(!fileName.isEmpty()) {
-        if(!openMacros.open(fileName)) {
+        if(!openMacro.open(fileName)) {
             return;
         }
-        macrosFileName = fileName;
-        setRawData(openMacros.getData());
+        macroFileName = fileName;
+        setRawData(openMacro.getData());
         QFileInfo fileInfo(fileName);
         fileName = fileInfo.fileName();
         fileName.chop(4);
-        setWindowTitle(tr("Macros Edit - ") + fileName);
+        setWindowTitle(tr("Macro Edit - ") + fileName);
 
         emit titleChanged(fileName);
     } else {
-        QList<QString> packageList = settings->value("macroses/" + macrosIndexString + "/package").toString().split(" ");
+        QList<QString> packageList = settings->value("macros/" + macroIndexString + "/package").toString().split(" ");
         int dataSize = packageList.size();
         bool ok;
         for(int i = 0; i < dataSize; ++i) {
@@ -227,63 +227,63 @@ void MacrosEditWidget::loadSettings(QSettings *settings, int macrosIndex)
         }
         setRawData(package);
     }
-    actionCR->setChecked(settings->value("macroses/" + macrosIndexString + "/CR").toBool());
-    actionLF->setChecked(settings->value("macroses/" + macrosIndexString + "/LF").toBool());
-    QPoint pos = settings->value("macroses/" + macrosIndexString + "/position").toPoint();
+    actionCR->setChecked(settings->value("macros/" + macroIndexString + "/CR").toBool());
+    actionLF->setChecked(settings->value("macros/" + macroIndexString + "/LF").toBool());
+    QPoint pos = settings->value("macros/" + macroIndexString + "/position").toPoint();
     if(!pos.isNull()) {
         move(pos);
     }
-    QSize size = settings->value("macroses/" + macrosIndexString + "/size").toSize();
+    QSize size = settings->value("macros/" + macroIndexString + "/size").toSize();
     if(size.isValid()) {
         resize(size);
     }
 
-    macrosRawEditWidget->loadSettings(settings, macrosIndex);
+    macroRawEditWidget->loadSettings(settings, macroIndex);
 }
 
-void MacrosEditWidget::openMacrosFile(const QString &fileName)
+void MacroEditWidget::openMacroFile(const QString &fileName)
 {
     if(fileName.isEmpty()) {
         return;
     }
-    if(!openMacros.open(fileName)) {
+    if(!openMacro.open(fileName)) {
         return;
     }
-    macrosFileName = fileName;
-    setRawData(openMacros.getData());
+    macroFileName = fileName;
+    setRawData(openMacro.getData());
     QFileInfo fileInfo(fileName);
     QString title = fileInfo.fileName();
     title.chop(4);
-    setWindowTitle(tr("Macros Edit - ") + title);
+    setWindowTitle(tr("Macro Edit - ") + title);
 
     emit titleChanged(title);
 }
 
-void MacrosEditWidget::connections()
+void MacroEditWidget::connections()
 {
-    connect(actionNew, &QAction::triggered, this, &MacrosEditWidget::newMacrosFile);
+    connect(actionNew, &QAction::triggered, this, &MacroEditWidget::newMacroFile);
 
     connect(actionLoad, &QAction::triggered, fileOpenDialog, &QFileDialog::show);
-    connect(fileOpenDialog, &QFileDialog::accepted, [this](){openMacrosFile();});
+    connect(fileOpenDialog, &QFileDialog::accepted, [this](){openMacroFile();});
 
-    connect(actionSave, &QAction::triggered, this, &MacrosEditWidget::saveMacrosFile);
+    connect(actionSave, &QAction::triggered, this, &MacroEditWidget::saveMacroFile);
 
-    connect(actionSaveAs, &QAction::triggered, fileSaveAsDialog, &MacrosEditWidget::show);
-    connect(fileSaveAsDialog, &QFileDialog::accepted, this, &MacrosEditWidget::saveAsMacrosFile);
+    connect(actionSaveAs, &QAction::triggered, fileSaveAsDialog, &MacroEditWidget::show);
+    connect(fileSaveAsDialog, &QFileDialog::accepted, this, &MacroEditWidget::saveAsMacroFile);
 
-    connect(actionRawEdit, &QAction::triggered, this, &MacrosEditWidget::onEditRawData);
-    connect(actionClearSelectedGroup, &QAction::triggered, this, &MacrosEditWidget::clearSelectedGroup);
-    connect(actionAddGroup, &QAction::triggered, this, &MacrosEditWidget::addGroup);
-    connect(actionDeleteGroup, &QAction::triggered, this, &MacrosEditWidget::deleteGroup);
+    connect(actionRawEdit, &QAction::triggered, this, &MacroEditWidget::onEditRawData);
+    connect(actionClearSelectedGroup, &QAction::triggered, this, &MacroEditWidget::clearSelectedGroup);
+    connect(actionAddGroup, &QAction::triggered, this, &MacroEditWidget::addGroup);
+    connect(actionDeleteGroup, &QAction::triggered, this, &MacroEditWidget::deleteGroup);
 
-    connect(tableAscii, &DataTable::editingFinished, this, &MacrosEditWidget::fromAsciiInput);
-    connect(tableHex, &DataTable::editingFinished, this, &MacrosEditWidget::fromHexInput);
-    connect(tableDec, &DataTable::editingFinished, this, &MacrosEditWidget::fromDecInput);
+    connect(tableAscii, &DataTable::editingFinished, this, &MacroEditWidget::fromAsciiInput);
+    connect(tableHex, &DataTable::editingFinished, this, &MacroEditWidget::fromHexInput);
+    connect(tableDec, &DataTable::editingFinished, this, &MacroEditWidget::fromDecInput);
 
-    connect(macrosRawEditWidget, &MacrosRawEditWidget::dataInputted, this, &MacrosEditWidget::setRawData);
+    connect(macroRawEditWidget, &MacroRawEditWidget::dataInputted, this, &MacroEditWidget::setRawData);
 }
 
-void MacrosEditWidget::view()
+void MacroEditWidget::view()
 {
     QList<QAction*> actions;
     actions << actionNew
@@ -312,10 +312,10 @@ void MacrosEditWidget::view()
     QGroupBox *editGroup = new QGroupBox(tr("Edit selected group"), this);
     editGroup->setLayout(editGroupLayout);
 
-    macrosLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    macroGroupsLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     QWidget *scrollWidget = new QWidget(this);
-    scrollWidget->setLayout(macrosLayout);
+    scrollWidget->setLayout(macroGroupsLayout);
 
     QScrollArea *scrollArea = new QScrollArea(this);
     scrollArea->setWidget(scrollWidget);
@@ -349,7 +349,7 @@ void MacrosEditWidget::view()
     setMaximumWidth(minimumWidth());
 }
 
-void MacrosEditWidget::selectGroup()
+void MacroEditWidget::selectGroup()
 {
     DataTable *group = qobject_cast<DataTable*>(sender());
     if(group == 0) {
@@ -359,7 +359,7 @@ void MacrosEditWidget::selectGroup()
     fillEditGroup();
 }
 
-void MacrosEditWidget::clearSelectedGroup()
+void MacroEditWidget::clearSelectedGroup()
 {
     tableAscii->clearData();
     tableHex->clearData();
@@ -367,7 +367,7 @@ void MacrosEditWidget::clearSelectedGroup()
     currentEditGroup->clearData();
 }
 
-void MacrosEditWidget::addGroup()
+void MacroEditWidget::addGroup()
 {
     DataTable *group = new DataTable(GROUP_BYTES_COUNT, this);
     group->setFixedWidth(TABLE_WIDTH);
@@ -378,31 +378,31 @@ void MacrosEditWidget::addGroup()
     font.setFamily("Lucida Console");
     font.setPixelSize(12);
     group->setFont(font);
-    connect(group, &DataTable::tableSelected, this, &MacrosEditWidget::selectGroup);
+    connect(group, &DataTable::tableSelected, this, &MacroEditWidget::selectGroup);
 
-    macrosGroups.append(group);
-    macrosLayout->insertWidget(macrosLayout->count() - 1, group, 0, Qt::AlignCenter);
+    macroGroups.append(group);
+    macroGroupsLayout->insertWidget(macroGroupsLayout->count() - 1, group, 0, Qt::AlignCenter);
 }
 
-void MacrosEditWidget::deleteGroup()
+void MacroEditWidget::deleteGroup()
 {
-    if(macrosGroups.size() < 2) {
+    if(macroGroups.size() < 2) {
         return;
     }
-    if(currentEditGroup == macrosGroups.last()) {
-        currentEditGroup = macrosGroups[macrosGroups.size() - 2];
+    if(currentEditGroup == macroGroups.last()) {
+        currentEditGroup = macroGroups[macroGroups.size() - 2];
         fillEditGroup();
 
     }
-    disconnect(macrosGroups.last(), &DataTable::tableSelected, this, &MacrosEditWidget::selectGroup);
-    macrosLayout->removeWidget(macrosGroups.last());
-    delete macrosGroups.takeLast();
+    disconnect(macroGroups.last(), &DataTable::tableSelected, this, &MacroEditWidget::selectGroup);
+    macroGroupsLayout->removeWidget(macroGroups.last());
+    delete macroGroups.takeLast();
 }
 
-QList<QString> MacrosEditWidget::getLabels() const
+QList<QString> MacroEditWidget::getLabels() const
 {
     QList<QString> labels;
-    int index = macrosGroups.size() * GROUP_BYTES_COUNT + 1;
+    int index = macroGroups.size() * GROUP_BYTES_COUNT + 1;
     for(int i = index; i < index + GROUP_BYTES_COUNT; ++i) {
         labels.append(QString::number(i));
     }
@@ -410,7 +410,7 @@ QList<QString> MacrosEditWidget::getLabels() const
     return labels;
 }
 
-QList<QString> MacrosEditWidget::toUpper(const QList<QString> &source) const
+QList<QString> MacroEditWidget::toUpper(const QList<QString> &source) const
 {
     QList<QString> result;
     QListIterator<QString> it(source);
@@ -428,7 +428,7 @@ QList<QString> MacrosEditWidget::toUpper(const QList<QString> &source) const
     return result;
 }
 
-void MacrosEditWidget::fromAsciiInput()
+void MacroEditWidget::fromAsciiInput()
 {
     QListIterator<QString> it(tableAscii->getData());
     QString asciiData;
@@ -446,7 +446,7 @@ void MacrosEditWidget::fromAsciiInput()
     formPackage();
 }
 
-void MacrosEditWidget::fromHexInput()
+void MacroEditWidget::fromHexInput()
 {
     fillEmptyBytes(tableHex);
     hexEncoder->setData(fromStringListToString(tableHex), " ");
@@ -461,7 +461,7 @@ void MacrosEditWidget::fromHexInput()
     formPackage();
 }
 
-void MacrosEditWidget::fromDecInput()
+void MacroEditWidget::fromDecInput()
 {
     fillEmptyBytes(tableDec);
     decEncoder->setData(fromStringListToString(tableDec), " ");
@@ -476,10 +476,10 @@ void MacrosEditWidget::fromDecInput()
     formPackage();
 }
 
-void MacrosEditWidget::nonPrintableCharacters()
+void MacroEditWidget::nonPrintableCharacters()
 {
     bool wasNonPrintingChar = false;
-    connect(tableAscii, &DataTable::editingFinished, this, &MacrosEditWidget::fromAsciiInput);
+    connect(tableAscii, &DataTable::editingFinished, this, &MacroEditWidget::fromAsciiInput);
     QString asciiString = tableAscii->getData().first();
     for(int i = 0; i < asciiString.size(); ++i) {
         if(!asciiString.at(i).isPrint()) {
@@ -488,11 +488,11 @@ void MacrosEditWidget::nonPrintableCharacters()
     }
     tableAscii->setReadOnly(wasNonPrintingChar);
     if(wasNonPrintingChar) {
-        disconnect(tableAscii, &DataTable::editingFinished, this, &MacrosEditWidget::fromAsciiInput);
+        disconnect(tableAscii, &DataTable::editingFinished, this, &MacroEditWidget::fromAsciiInput);
     }
 }
 
-QList<QString> MacrosEditWidget::getAsciiString()
+QList<QString> MacroEditWidget::getAsciiString()
 {
     QString asciiString;
     QListIterator<QString> itAscii(asciiEncoder->encodedStringList());
@@ -505,7 +505,7 @@ QList<QString> MacrosEditWidget::getAsciiString()
     return asciiList;
 }
 
-void MacrosEditWidget::fillEmptyBytes(DataTable *dataTable)
+void MacroEditWidget::fillEmptyBytes(DataTable *dataTable)
 {
     QListIterator<QString> it(dataTable->getData());
     QString dataString;
@@ -528,7 +528,7 @@ void MacrosEditWidget::fillEmptyBytes(DataTable *dataTable)
     dataTable->setData(result);
 }
 
-QString MacrosEditWidget::fromStringListToString(DataTable *dataTable)
+QString MacroEditWidget::fromStringListToString(DataTable *dataTable)
 {
     QListIterator<QString> it(dataTable->getData());
     QString data;
@@ -541,7 +541,7 @@ QString MacrosEditWidget::fromStringListToString(DataTable *dataTable)
     return data;
 }
 
-void MacrosEditWidget::fillEditGroup()
+void MacroEditWidget::fillEditGroup()
 {
     QList<QString> labels;
     labels.append(currentEditGroup->getLabels().first() + "-" + currentEditGroup->getLabels().last());
@@ -555,12 +555,12 @@ void MacrosEditWidget::fillEditGroup()
     fromHexInput();
 }
 
-void MacrosEditWidget::setRawData(const QByteArray &rawData)
+void MacroEditWidget::setRawData(const QByteArray &rawData)
 {
     currentEditGroup->setFocus();
 
     int rawDataGroupsCount = qCeil(static_cast<qreal>(rawData.size()) / GROUP_BYTES_COUNT);
-    int dataGroupsCount = macrosGroups.size();
+    int dataGroupsCount = macroGroups.size();
     if(dataGroupsCount < rawDataGroupsCount) {
         for(int i = dataGroupsCount; i < rawDataGroupsCount; ++i) {
             addGroup();
@@ -571,7 +571,7 @@ void MacrosEditWidget::setRawData(const QByteArray &rawData)
             deleteGroup();
         }
     }
-    QListIterator<DataTable*> it(macrosGroups);
+    QListIterator<DataTable*> it(macroGroups);
     hexEncoder->setData(rawData);
     QList<QString> dataList = hexEncoder->encodedStringList();
     int i = 0;
@@ -579,14 +579,14 @@ void MacrosEditWidget::setRawData(const QByteArray &rawData)
         it.next()->setData(dataList.mid(i, GROUP_BYTES_COUNT));
         i += 8;
     }
-    currentEditGroup = macrosGroups.first();
+    currentEditGroup = macroGroups.first();
     fillEditGroup();
 }
 
-void MacrosEditWidget::onEditRawData()
+void MacroEditWidget::onEditRawData()
 {
     formPackage();
-    macrosRawEditWidget->setData(package);
-    macrosRawEditWidget->setWindowTitle(windowTitle());
-    macrosRawEditWidget->show();
+    macroRawEditWidget->setData(package);
+    macroRawEditWidget->setWindowTitle(windowTitle());
+    macroRawEditWidget->show();
 }

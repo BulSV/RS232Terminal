@@ -1,5 +1,5 @@
-#ifndef MACROS_RAW_EDIT_WIDGET_H
-#define MACROS_RAW_EDIT_WIDGET_H
+#ifndef MACRO_RAW_EDIT_WIDGET_H
+#define MACRO_RAW_EDIT_WIDGET_H
 
 #include <QWidget>
 #include <QComboBox>
@@ -13,7 +13,7 @@
 #include "HexEncoder.h"
 #include "DecEncoder.h"
 
-class MacrosRawEditWidget : public QWidget
+class MacroRawEditWidget : public QWidget
 {
     Q_OBJECT
     enum Modes
@@ -24,11 +24,11 @@ class MacrosRawEditWidget : public QWidget
     };
 
 public:
-    explicit MacrosRawEditWidget(QWidget *parent = 0);
+    explicit MacroRawEditWidget(QWidget *parent = 0);
     const QByteArray &getData() const;
     void setData(const QByteArray &data);
-    void saveSettings(QSettings *settings, int macrosIndex);
-    void loadSettings(QSettings *settings, int macrosIndex);
+    void saveSettings(QSettings *settings, int macroIndex);
+    void loadSettings(QSettings *settings, int macroIndex);
     void show();
 signals:
     void dataInputted(const QByteArray &data);
@@ -57,4 +57,4 @@ protected:
     virtual void closeEvent(QCloseEvent *e);
 };
 
-#endif // MACROS_RAW_EDIT_WIDGET_H
+#endif // MACRO_RAW_EDIT_WIDGET_H

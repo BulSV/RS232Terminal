@@ -1,5 +1,5 @@
-#ifndef MACROS_WIDGET_H
-#define MACROS_WIDGET_H
+#ifndef MACRO_WIDGET_H
+#define MACRO_WIDGET_H
 
 #include <QWidget>
 #include <QHBoxLayout>
@@ -11,17 +11,17 @@
 #include <QByteArray>
 
 #include "RightClickedButton.h"
-#include "MacrosEditWidget.h"
+#include "MacroEditWidget.h"
 #include "ClickableLabel.h"
 
-class MacrosWidget : public QWidget
+class MacroWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MacrosWidget(QWidget *parent = 0);
+    explicit MacroWidget(QWidget *parent = 0);
 
-    void saveSettings(QSettings *settings, int macrosIndex);
-    void loadSettings(QSettings *settings, int macrosIndex);
+    void saveSettings(QSettings *settings, int macroIndex);
+    void loadSettings(QSettings *settings, int macroIndex);
 
     void setCheckedInterval(bool check);
     bool intervalIsChecked() const;
@@ -37,7 +37,7 @@ public:
     int getTime() const;
 
     const QByteArray &getPackage() const;
-    void openMacrosFile(const QString &fileName);
+    void openMacroFile(const QString &fileName);
 signals:
     void deleted();
     void intervalChecked(bool checked);
@@ -54,14 +54,14 @@ private:
     RightClickedButton *buttonSend;
     ClickableLabel *buttonUp;
     ClickableLabel *buttonDown;
-    MacrosEditWidget *macrosEditWidget;
+    MacroEditWidget *macroEditWidget;
     QTimer *timerPeriod;
 
     void view();
     void connections();
-    void deleteMacros();
+    void deleteMacro();
     void sendPackage();
     void titleChanged();
 };
 
-#endif // MACROS_WIDGET_H
+#endif // MACRO_WIDGET_H

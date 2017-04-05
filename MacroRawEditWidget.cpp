@@ -6,11 +6,11 @@
 #include <QKeySequence>
 #include <QShortcut>
 
-#include "MacrosRawEditWidget.h"
+#include "MacroRawEditWidget.h"
 
 #include <QDebug>
 
-MacrosRawEditWidget::MacrosRawEditWidget(QWidget *parent)
+MacroRawEditWidget::MacroRawEditWidget(QWidget *parent)
     : QWidget(parent, Qt::WindowCloseButtonHint)
     , mode(new QComboBox(this))
     , separator(new QLineEdit(this))
@@ -33,12 +33,12 @@ MacrosRawEditWidget::MacrosRawEditWidget(QWidget *parent)
     connections();
 }
 
-const QByteArray &MacrosRawEditWidget::getData() const
+const QByteArray &MacroRawEditWidget::getData() const
 {
     return data;
 }
 
-void MacrosRawEditWidget::setData(const QByteArray &data)
+void MacroRawEditWidget::setData(const QByteArray &data)
 {
     this->data = data;
     DataEncoder *dataEncoder = 0;
@@ -59,31 +59,31 @@ void MacrosRawEditWidget::setData(const QByteArray &data)
     rawData->selectAll();
 }
 
-void MacrosRawEditWidget::saveSettings(QSettings *settings, int macrosIndex)
+void MacroRawEditWidget::saveSettings(QSettings *settings, int macroIndex)
 {
-    QString macrosIndexString = QString::number(macrosIndex);
-    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/mode", mode->currentIndex());
-    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/separator", separator->text());
-    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/position", pos());
-    settings->setValue("macroses/" + macrosIndexString + "/raw_edit/size", size());
+    QString macroIndexString = QString::number(macroIndex);
+    settings->setValue("macros/" + macroIndexString + "/raw_edit/mode", mode->currentIndex());
+    settings->setValue("macros/" + macroIndexString + "/raw_edit/separator", separator->text());
+    settings->setValue("macros/" + macroIndexString + "/raw_edit/position", pos());
+    settings->setValue("macros/" + macroIndexString + "/raw_edit/size", size());
 }
 
-void MacrosRawEditWidget::loadSettings(QSettings *settings, int macrosIndex)
+void MacroRawEditWidget::loadSettings(QSettings *settings, int macroIndex)
 {
-    QString macrosIndexString = QString::number(macrosIndex);
-    mode->setCurrentIndex(settings->value("macroses/" + macrosIndexString + "/raw_edit/mode").toInt());
-    separator->setText(settings->value("macroses/" + macrosIndexString + "/raw_edit/separator").toString());
-    QPoint pos = settings->value("macroses/" + macrosIndexString + "/raw_edit/position").toPoint();
+    QString macroIndexString = QString::number(macroIndex);
+    mode->setCurrentIndex(settings->value("macros/" + macroIndexString + "/raw_edit/mode").toInt());
+    separator->setText(settings->value("macros/" + macroIndexString + "/raw_edit/separator").toString());
+    QPoint pos = settings->value("macros/" + macroIndexString + "/raw_edit/position").toPoint();
     if(!pos.isNull()) {
         move(pos);
     }
-    QSize size = settings->value("macroses/" + macrosIndexString + "/raw_edit/size").toSize();
+    QSize size = settings->value("macros/" + macroIndexString + "/raw_edit/size").toSize();
     if(size.isValid()) {
         resize(size);
     }
 }
 
-void MacrosRawEditWidget::show()
+void MacroRawEditWidget::show()
 {
     if(savedWidgetSize.isValid()) {
         resize(savedWidgetSize);
@@ -91,7 +91,7 @@ void MacrosRawEditWidget::show()
     QWidget::show();
 }
 
-void MacrosRawEditWidget::view()
+void MacroRawEditWidget::view()
 {
     separator->setFixedWidth(50);
     QGridLayout *configLayout = new QGridLayout;
@@ -110,20 +110,20 @@ void MacrosRawEditWidget::view()
     setMaximumHeight(minimumHeight());
 }
 
-void MacrosRawEditWidget::connections()
+void MacroRawEditWidget::connections()
 {
-    connect(mode, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MacrosRawEditWidget::onSelectMode);
-    connect(input, &QPushButton::clicked, this, &MacrosRawEditWidget::onRawDataInput);
-    connect(input, &QPushButton::clicked, this, &MacrosRawEditWidget::close);
+    connect(mode, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MacroRawEditWidget::onSelectMode);
+    connect(input, &QPushButton::clicked, this, &MacroRawEditWidget::onRawDataInput);
+    connect(input, &QPushButton::clicked, this, &MacroRawEditWidget::close);
     QShortcut *enterSC = new QShortcut(QKeySequence(Qt::Key_Enter), this);
     QShortcut *returnSC = new QShortcut(QKeySequence(Qt::Key_Return), this);
-    connect(enterSC, &QShortcut::activated, this, &MacrosRawEditWidget::onRawDataInput);
-    connect(returnSC, &QShortcut::activated, this, &MacrosRawEditWidget::onRawDataInput);
-    connect(enterSC, &QShortcut::activated, this, &MacrosRawEditWidget::close);
-    connect(returnSC, &QShortcut::activated, this, &MacrosRawEditWidget::close);
+    connect(enterSC, &QShortcut::activated, this, &MacroRawEditWidget::onRawDataInput);
+    connect(returnSC, &QShortcut::activated, this, &MacroRawEditWidget::onRawDataInput);
+    connect(enterSC, &QShortcut::activated, this, &MacroRawEditWidget::close);
+    connect(returnSC, &QShortcut::activated, this, &MacroRawEditWidget::close);
 }
 
-void MacrosRawEditWidget::onSelectMode(int mode)
+void MacroRawEditWidget::onSelectMode(int mode)
 {
     switch(mode) {
     case ASCII:
@@ -139,7 +139,7 @@ void MacrosRawEditWidget::onSelectMode(int mode)
     currentMode = mode;
 }
 
-void MacrosRawEditWidget::onRawDataInput()
+void MacroRawEditWidget::onRawDataInput()
 {
     DataEncoder *dataEncoder = 0;
     switch(currentMode) {
@@ -159,7 +159,7 @@ void MacrosRawEditWidget::onRawDataInput()
     emit dataInputted(getData());
 }
 
-QString MacrosRawEditWidget::fromStringListToString(const QList<QString> &stringList)
+QString MacroRawEditWidget::fromStringListToString(const QList<QString> &stringList)
 {
     QString resultString;
     QListIterator<QString> it(stringList);
@@ -176,7 +176,7 @@ QString MacrosRawEditWidget::fromStringListToString(const QList<QString> &string
     return resultString;
 }
 
-void MacrosRawEditWidget::closeEvent(QCloseEvent *e)
+void MacroRawEditWidget::closeEvent(QCloseEvent *e)
 {
     savedWidgetSize = size();
     QWidget::closeEvent(e);

@@ -1,5 +1,5 @@
-#ifndef MACROSES_H
-#define MACROSES_H
+#ifndef MACROS_H
+#define MACROS_H
 
 #include <QMainWindow>
 #include <QAction>
@@ -12,9 +12,9 @@
 #include <QSettings>
 #include <QFileDialog>
 
-#include "MacrosWidget.h"
+#include "MacroWidget.h"
 
-class Macroses : public QMainWindow
+class Macros : public QMainWindow
 {
     Q_OBJECT
     enum MacrosMoveDirection
@@ -23,7 +23,7 @@ class Macroses : public QMainWindow
         MoveDown = 1
     };
 public:
-    explicit Macroses(QWidget *parent = 0);
+    explicit Macros(QWidget *parent = 0);
     void saveSettings(QSettings *settings);
     void loadSettings(QSettings *settings);
 signals:
@@ -37,22 +37,22 @@ private:
     QSpinBox *time;
     QAction *actionSetTime;
     QToolBar *toolBar;
-    QList<MacrosWidget*> macrosWidgets;
+    QList<MacroWidget*> macrosWidgets;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;
     QScrollArea *scrollArea;
     QFileDialog *fileDialog;
 
-    void addMacros();
+    void addMacro();
+    void deleteMacro();
+    void deleteMacro(MacroWidget *macro);
     void deleteMacros();
-    void deleteMacros(MacrosWidget *macros);
-    void deleteAllMacroses();
-    void moveMacrosUp();
-    void moveMacrosDown();
-    void moveMacros(MacrosWidget *macrosWidget, MacrosMoveDirection direction);
-    void loadMacroses();
+    void moveMacroUp();
+    void moveMacroDown();
+    void moveMacro(MacroWidget *macroWidget, MacrosMoveDirection direction);
+    void loadMacros();
     void startOrStop();
     void pause(bool check);
 };
 
-#endif // MACROSES_H
+#endif // MACROS_H
