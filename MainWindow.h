@@ -141,6 +141,7 @@ private:
     QString parityToString(int parity);
     QString stopBitsToString(int stopBits);
     void setMacrosMinimizeFeature(bool floating);
+    void toggleMacrosView();
 };
 
 #endif // MAIN_WINDOW_H

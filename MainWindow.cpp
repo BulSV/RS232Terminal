@@ -242,7 +242,7 @@ void MainWindow::connections()
     connect(m_bReadLogClear, SIGNAL(clicked()), m_eLogRead, SLOT(clear()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
     connect(actionStartStop, &QAction::triggered, this, &MainWindow::startStop);
-    connect(actionMacros, &QAction::triggered, macrosDockWidget, &QDockWidget::show);
+    connect(actionMacros, &QAction::triggered, this, &MainWindow::toggleMacrosView);
     connect(m_bSaveWriteLog, SIGNAL(clicked()), this, SLOT(saveWrite()));
     connect(m_bSaveReadLog, SIGNAL(clicked()), this, SLOT(saveRead()));
     connect(m_bRecordWriteLog, SIGNAL(toggled(bool)), this, SLOT(startWriteLog(bool)));
@@ -667,6 +667,17 @@ void MainWindow::setMacrosMinimizeFeature(bool floating)
         macrosDockWidget->setWindowFlags(Qt::Dialog | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
         macrosDockWidget->show();
     }
+}
+
+void MainWindow::toggleMacrosView()
+{
+    if(macrosDockWidget->toggleViewAction()->isChecked()) {
+        macrosDockWidget->close();
+
+        return;
+    }
+
+    macrosDockWidget->show();
 }
 
 // Перевод строки при приеме данных
