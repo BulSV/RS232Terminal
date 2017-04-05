@@ -142,6 +142,12 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     if(!dir.exists(dir.currentPath() + "/Macros")) {
         dir.mkpath(dir.currentPath() + "/Macros");
     }
+    if(!dir.exists(dir.currentPath() + "/WriteLogs")) {
+        dir.mkpath(dir.currentPath() + "/WriteLogs");
+    }
+    if(!dir.exists(dir.currentPath() + "/ReadLogs")) {
+        dir.mkpath(dir.currentPath() + "/ReadLogs");
+    }
     fileDialog->setDirectory(dir.currentPath() + "/Macros");
     fileDialog->setFileMode(QFileDialog::ExistingFiles);
 
@@ -276,77 +282,45 @@ void MainWindow::sendPackage(const QByteArray &data)
 
 void MainWindow::writeLogTimeout()
 {
-    writeLogFile.close();
-    m_bRecordWriteLog->setChecked(false);
-    logWrite = false;
     m_tWriteLog->stop();
+    writeLogFile.close();
+    logWrite = false;
 }
 
 void MainWindow::readLogTimeout()
 {
-    readLogFile.close();
-    m_bRecordReadLog->setChecked(false);
-    logRead = false;
     m_tReadLog->stop();
+    readLogFile.close();
+    logRead = false;
 }
 
 void MainWindow::startWriteLog(bool check)
 {
-    if(check) {
-        m_tWriteLog->stop();
-        writeLogFile.close();
-        logWrite = false;
-        m_bRecordWriteLog->setIcon(QIcon(":/Resources/Rec.png"));
+    if(!check) {
+        writeLogTimeout();
 
         return;
     }
-    QString path = fileDialog->getSaveFileName(this,
-                                               tr("Save File"),
-                                               QDir::currentPath()
-                                               + "/(WRITE)"
-                                               + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss")
-                                               + ".txt",
-                                               tr("Log Files (*.txt)"));
-    if(path.isEmpty()) {
-        m_bRecordWriteLog->setChecked(false);
-
-        return;
-    }
+    QString path = QDir::currentPath() + "/WriteLogs" + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt";
     writeLogFile.setFileName(path);
     writeLogFile.open(QIODevice::WriteOnly);
     m_tWriteLog->start();
     logWrite = true;
-    m_bRecordWriteLog->setIcon(QIcon(":/Resources/RecBlink.png"));
 }
 
 void MainWindow::startReadLog(bool check)
 {
     if(!check) {
-        m_tReadLog->stop();
-        readLogFile.close();
-        logRead = false;
-        m_bRecordReadLog->setIcon(QIcon(":/Resources/Rec.png"));
+        readLogTimeout();
 
         return;
     }
 
-    QString path = fileDialog->getSaveFileName(this,
-                                               tr("Save File"),
-                                               QDir::currentPath()
-                                               + "/(READ)_"
-                                               + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss")
-                                               + ".txt",
-                                               tr("Log Files (*.txt)"));
-    if(path.isEmpty()) {
-        m_bRecordReadLog->setChecked(false);
-
-        return;
-    }
+    QString path = QDir::currentPath() + "/ReadLogs" + "/(READ)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt";
     readLogFile.setFileName(path);
     readLogFile.open(QIODevice::WriteOnly);
     m_tReadLog->start();
     logRead = true;
-    m_bRecordReadLog->setIcon(QIcon(":/Resources/RecBlink.png"));
 }
 
 void MainWindow::updateIntervalsList(bool add)
@@ -451,7 +425,7 @@ void MainWindow::saveReadWriteLog(bool writeLog)
     QString defaultFileName = (writeLog ? "(WRITE)_" : "(READ)_") + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt";
     QString fileName = fileDialog->getSaveFileName(this,
                                                    tr("Save File"),
-                                                   QDir::currentPath() + "/" + defaultFileName,
+                                                   QDir::currentPath() + (writeLog ? "/WriteLogs/" : "/ReadLogs/") + defaultFileName,
                                                    tr("Log Files (*.txt)"));
     if(fileName.isEmpty()) {
         return;
@@ -532,7 +506,7 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macro)
 
 void MainWindow::displayWrittenData(const QByteArray &writeData)
 {
-    if (!m_cbDisplayWrite->isChecked()) {
+    if(!m_cbDisplayWrite->isChecked()) {
         return;
     }
 
