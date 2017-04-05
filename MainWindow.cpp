@@ -311,6 +311,7 @@ void MainWindow::connections()
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
     connect(m_port, SIGNAL(readyRead()), this, SLOT(received()));
     connect(macroses, &Macroses::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
+    connect(macrosesDockWidget, &QDockWidget::topLevelChanged, this, &MainWindow::setMacrosesMinimizeFeature);
 }
 
 void MainWindow::hiddenClicked()
@@ -773,6 +774,14 @@ QString MainWindow::stopBitsToString(int stopBits)
     }
 
     return stopBitsString;
+}
+
+void MainWindow::setMacrosesMinimizeFeature(bool floating)
+{
+    if(floating) {
+        macrosesDockWidget->setWindowFlags(Qt::Dialog | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
+        macrosesDockWidget->show();
+    }
 }
 
 // Перевод строки при приеме данных

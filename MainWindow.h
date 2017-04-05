@@ -163,6 +163,7 @@ private:
     QString bitsToString(int bits);
     QString parityToString(int parity);
     QString stopBitsToString(int stopBits);
+    void setMacrosesMinimizeFeature(bool floating);
 };
 
 #endif // MAIN_WINDOW_H
