@@ -119,6 +119,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     comPortConfigure->setModal(true);
 
     macrosesDockWidget->setWidget(macroses);
+    macrosesDockWidget->setFixedWidth(310);
     macrosesDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, macrosesDockWidget);
 
