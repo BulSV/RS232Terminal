@@ -138,7 +138,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     m_lRxCount->setFrameShape(QFrame::Box);
 
     QStringList buffer;
-    buffer << "HEX" << "ASCII" << "DEC";
+    buffer << "ASCII" << "HEX" << "DEC";
     m_cbSendMode->addItems(buffer);
     m_cbReadMode->addItems(buffer);
     m_cbWriteMode->addItems(buffer);
