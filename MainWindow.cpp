@@ -31,6 +31,13 @@ QString BITS = QObject::tr("Data bits: ");
 QString PARITY = QObject::tr("Parity: ");
 QString STOP_BITS = QObject::tr("Stop bits: ");
 
+const int DEFAULT_LOG_ROWS = 1000;
+const int DEFAULT_MODE = 0; // HEX
+const int DEFAULT_LOG_TIMEOUT = 600000; // ms
+const int DEFAULT_SEND_TIME = 0; // ms
+const bool DEFAULT_DISPLAYING = true;
+const bool DEFAULT_CR_LF = false;
+
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
     , toolBar(new QToolBar(this))
@@ -757,23 +764,23 @@ void MainWindow::loadSession()
         showMaximized();
     }
 
-    m_eLogRead->setLinesLimit(settings->value("main/max_write_log_rows", 1000).toInt());
-    m_eLogWrite->setLinesLimit(settings->value("main/max_read_log_rows", 1000).toInt());
+    m_eLogRead->setLinesLimit(settings->value("main/max_write_log_rows", DEFAULT_LOG_ROWS).toInt());
+    m_eLogWrite->setLinesLimit(settings->value("main/max_read_log_rows", DEFAULT_LOG_ROWS).toInt());
 
     comPortConfigure->loadSettings(settings);
     macros->loadSettings(settings);
 
-    m_cbWriteMode->setCurrentIndex(settings->value("main/write_mode", 0).toInt());
-    m_cbReadMode->setCurrentIndex(settings->value("main/read_mode", 0).toInt());
-    m_cbDisplayWrite->setChecked(settings->value("main/write_display", true).toBool());
-    m_cbDisplayRead->setChecked(settings->value("main/read_display", true).toBool());
-    m_tWriteLog->setInterval(settings->value("main/write_log_timeout", 600000).toInt());
-    m_tReadLog->setInterval(settings->value("main/read_log_timeout", 600000).toInt());
+    m_cbWriteMode->setCurrentIndex(settings->value("main/write_mode", DEFAULT_MODE).toInt());
+    m_cbReadMode->setCurrentIndex(settings->value("main/read_mode", DEFAULT_MODE).toInt());
+    m_cbDisplayWrite->setChecked(settings->value("main/write_display", DEFAULT_DISPLAYING).toBool());
+    m_cbDisplayRead->setChecked(settings->value("main/read_display", DEFAULT_DISPLAYING).toBool());
+    m_tWriteLog->setInterval(settings->value("main/write_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
+    m_tReadLog->setInterval(settings->value("main/read_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
 
-    m_sbRepeatSendInterval->setValue(settings->value("main/single_send_interval").toInt());
-    m_chbCR->setChecked(settings->value("main/CR", false).toBool());
-    m_chbLF->setChecked(settings->value("main/LF", false).toBool());
-    m_cbSendMode->setCurrentIndex(settings->value("main/mode", 0).toInt());
+    m_sbRepeatSendInterval->setValue(settings->value("main/single_send_interval", DEFAULT_SEND_TIME).toInt());
+    m_chbCR->setChecked(settings->value("main/CR", DEFAULT_CR_LF).toBool());
+    m_chbLF->setChecked(settings->value("main/LF", DEFAULT_CR_LF).toBool());
+    m_cbSendMode->setCurrentIndex(settings->value("main/mode", DEFAULT_MODE).toInt());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)

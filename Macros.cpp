@@ -6,6 +6,9 @@
 
 #include <QDebug>
 
+const int DEFAULT_TIME = 50; // ms
+const int DEFAULT_COUNT = 0;
+
 Macros::Macros(QWidget *parent)
     : QMainWindow(parent)
     , actionPause(new QAction(QIcon(":/Resources/Pause.png"), tr("Pause sending macros"), this))
@@ -82,10 +85,10 @@ void Macros::saveSettings(QSettings *settings)
 
 void Macros::loadSettings(QSettings *settings)
 {
-    time->setValue(settings->value("macros/time", 50).toInt());
+    time->setValue(settings->value("macros/time", DEFAULT_TIME).toInt());
     actionSetTime->setChecked(settings->value("macros/setTime", false).toBool());
 
-    int macrosCount = settings->value("macros/count", 0).toInt();
+    int macrosCount = settings->value("macros/count", DEFAULT_COUNT).toInt();
     for(int macroIndex = 1; macroIndex <= macrosCount; ++macroIndex) {
         addMacro();
         macrosWidgets.last()->loadSettings(settings, macroIndex);
