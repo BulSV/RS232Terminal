@@ -304,9 +304,9 @@ void MainWindow::startWriteLog(bool check)
 
         return;
     }
-    QString path = QDir::currentPath() + "/WriteLogs" + "/(WRITE)" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt";
+    QString path = QDir::currentPath() + "/WriteLogs" + "/(WRITE)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt";
     writeLogFile.setFileName(path);
-    if(writeLogFile.open(QIODevice::WriteOnly)) {
+    if(!writeLogFile.open(QIODevice::WriteOnly)) {
         QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
 
         return;
@@ -325,7 +325,7 @@ void MainWindow::startReadLog(bool check)
 
     QString path = QDir::currentPath() + "/ReadLogs" + "/(READ)_" + QDateTime::currentDateTime().toString("yyyy.MM.dd_HH.mm.ss") + ".txt";
     readLogFile.setFileName(path);
-    if(readLogFile.open(QIODevice::WriteOnly)) {
+    if(!readLogFile.open(QIODevice::WriteOnly)) {
         QMessageBox::critical(this, tr("Error"), tr("Could not save file"));
 
         return;
