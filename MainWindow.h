@@ -101,8 +101,6 @@ private:
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbReadDelayBetweenPackets;
     QLineEdit *m_leSendPackage;
-    QCheckBox *m_cbReadScroll;
-    QCheckBox *m_cbWriteScroll;
     QCheckBox *m_cbDisplayWrite;
     QCheckBox *m_cbDisplayRead;
     QCheckBox *m_chbCR;

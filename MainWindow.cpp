@@ -69,8 +69,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbReadDelayBetweenPackets(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , m_cbReadScroll(new QCheckBox(tr("Scrolling"), this))
-    , m_cbWriteScroll(new QCheckBox(tr("Scrolling"), this))
     , m_cbDisplayWrite(new QCheckBox(tr("Display"), this))
     , m_cbDisplayRead(new QCheckBox(tr("Display"), this))
     , m_chbCR(new QCheckBox("CR", this))
@@ -185,8 +183,7 @@ void MainWindow::view()
 
     QGridLayout *writeLayout = new QGridLayout;
     writeLayout->addWidget(m_cbWriteMode, 0, 0);
-    writeLayout->addWidget(m_cbWriteScroll, 0, 1);
-    writeLayout->addWidget(m_cbDisplayWrite, 0, 2);
+    writeLayout->addWidget(m_cbDisplayWrite, 0, 1);
     writeLayout->addWidget(m_bRecordWriteLog, 1, 0);
     writeLayout->addWidget(m_bSaveWriteLog, 1, 1);
     writeLayout->addWidget(m_bWriteLogClear, 1, 2);
@@ -200,8 +197,7 @@ void MainWindow::view()
 
     QGridLayout *readLayout = new QGridLayout;
     readLayout->addWidget(m_cbReadMode, 0, 0);
-    readLayout->addWidget(m_cbReadScroll, 0, 1);
-    readLayout->addWidget(m_cbDisplayRead, 0, 2);
+    readLayout->addWidget(m_cbDisplayRead, 0, 1);
     readLayout->addWidget(m_bRecordReadLog, 1, 0);
     readLayout->addWidget(m_bSaveReadLog, 1, 1);
     readLayout->addWidget(m_bReadLogClear, 1, 2);
@@ -532,10 +528,8 @@ void MainWindow::displayWrittenData(const QByteArray &writeData)
         writeStream << displayString + "\n";
     }
 
-    if(m_cbWriteScroll->isChecked()) {
-        QScrollBar *sb = m_eLogWrite->verticalScrollBar();
-        sb->setValue(sb->maximum());
-    }
+    QScrollBar *sb = m_eLogWrite->verticalScrollBar();
+    sb->setValue(sb->maximum());
 }
 
 DataEncoder *MainWindow::getEncoder(int mode)
@@ -698,10 +692,8 @@ void MainWindow::delayBetweenPacketsEnded()
     }
     readBuffer.clear();
 
-    if(m_cbReadScroll->isChecked()) {
-        QScrollBar *sb = m_eLogRead->verticalScrollBar();
-        sb->setValue(sb->maximum());
-    }
+    QScrollBar *sb = m_eLogRead->verticalScrollBar();
+    sb->setValue(sb->maximum());
 }
 
 void MainWindow::rxNone()
@@ -737,8 +729,6 @@ void MainWindow::saveSession()
     settings->setValue("main/read_mode", m_cbReadMode->currentIndex());
     settings->setValue("main/max_write_log_rows", m_eLogWrite->linesLimit());
     settings->setValue("main/max_read_log_rows", m_eLogRead->linesLimit());
-    settings->setValue("main/write_autoscroll", m_cbWriteScroll->isChecked());
-    settings->setValue("main/read_autoscroll", m_cbReadScroll->isChecked());
     settings->setValue("main/write_display", m_cbDisplayWrite->isChecked());
     settings->setValue("main/read_display", m_cbDisplayRead->isChecked());
     settings->setValue("main/write_log_timeout", m_tWriteLog->interval());
@@ -775,8 +765,6 @@ void MainWindow::loadSession()
 
     m_cbWriteMode->setCurrentIndex(settings->value("main/write_mode", 0).toInt());
     m_cbReadMode->setCurrentIndex(settings->value("main/read_mode", 0).toInt());
-    m_cbWriteScroll->setChecked(settings->value("main/write_autoscroll", true).toBool());
-    m_cbReadScroll->setChecked(settings->value("main/read_autoscroll", true).toBool());
     m_cbDisplayWrite->setChecked(settings->value("main/write_display", true).toBool());
     m_cbDisplayRead->setChecked(settings->value("main/read_display", true).toBool());
     m_tWriteLog->setInterval(settings->value("main/write_log_timeout", 600000).toInt());
