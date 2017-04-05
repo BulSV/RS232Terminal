@@ -12,7 +12,7 @@
 #include <QSettings>
 #include <QFileDialog>
 
-#include "MacroWidget.h"
+#include "Macro.h"
 
 class Macros : public QMainWindow
 {
@@ -37,7 +37,7 @@ private:
     QSpinBox *time;
     QAction *actionSetTime;
     QToolBar *toolBar;
-    QList<MacroWidget*> macrosWidgets;
+    QList<Macro*> macrosWidgets;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;
     QScrollArea *scrollArea;
@@ -45,11 +45,11 @@ private:
 
     void addMacro();
     void deleteMacro();
-    void deleteMacro(MacroWidget *macro);
+    void deleteMacro(Macro *macro);
     void deleteMacros();
     void moveMacroUp();
     void moveMacroDown();
-    void moveMacro(MacroWidget *macroWidget, MacrosMoveDirection direction);
+    void moveMacro(Macro *macroWidget, MacrosMoveDirection direction);
     void loadMacros();
     void startOrStop();
     void pause(bool check);

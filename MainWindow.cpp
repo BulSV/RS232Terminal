@@ -12,7 +12,7 @@
 #include <QGroupBox>
 
 #include "MainWindow.h"
-#include "MacroWidget.h"
+#include "Macro.h"
 #include "HexEncoder.h"
 #include "AsciiEncoder.h"
 #include "DecEncoder.h"
@@ -32,7 +32,7 @@ QString PARITY = QObject::tr("Parity: ");
 QString STOP_BITS = QObject::tr("Stop bits: ");
 
 const int DEFAULT_LOG_ROWS = 1000;
-const int DEFAULT_MODE = 0; // HEX
+const int DEFAULT_MODE = 0; // ASCII
 const int DEFAULT_LOG_TIMEOUT = 600000; // ms
 const int DEFAULT_SEND_TIME = 0; // ms
 const bool DEFAULT_DISPLAYING = true;
@@ -543,11 +543,11 @@ DataEncoder *MainWindow::getEncoder(int mode)
 {
     DataEncoder *dataEncoder = 0;
     switch(mode) {
-    case HEX:
-        dataEncoder = hexEncoder;
-        break;
     case ASCII:
         dataEncoder = asciiEncoder;
+        break;
+    case HEX:
+        dataEncoder = hexEncoder;
         break;
     default:
         dataEncoder = decEncoder;

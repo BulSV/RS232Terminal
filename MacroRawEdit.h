@@ -13,7 +13,7 @@
 #include "HexEncoder.h"
 #include "DecEncoder.h"
 
-class MacroRawEditWidget : public QWidget
+class MacroRawEdit : public QWidget
 {
     Q_OBJECT
     enum Modes
@@ -24,7 +24,7 @@ class MacroRawEditWidget : public QWidget
     };
 
 public:
-    explicit MacroRawEditWidget(QWidget *parent = 0);
+    explicit MacroRawEdit(QWidget *parent = 0);
     const QByteArray &getData() const;
     void setData(const QByteArray &data);
     void saveSettings(QSettings *settings, int macroIndex);

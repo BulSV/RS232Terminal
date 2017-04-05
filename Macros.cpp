@@ -73,8 +73,8 @@ void Macros::saveSettings(QSettings *settings)
     settings->setValue("macros/setTime", actionSetTime->isChecked());
 
     int macroIndex = 1;
-    QListIterator<MacroWidget*> it(macrosWidgets);
-    MacroWidget *m = 0;
+    QListIterator<Macro*> it(macrosWidgets);
+    Macro *m = 0;
     while(it.hasNext()) {
         m = it.next();
         m->saveSettings(settings, macroIndex);
@@ -100,25 +100,25 @@ void Macros::loadSettings(QSettings *settings)
 
 void Macros::addMacro()
 {
-    MacroWidget *macro = new MacroWidget(this);
+    Macro *macro = new Macro(this);
     macrosWidgets.append(macro);
     scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macro);
 
-    connect(macro, &MacroWidget::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
-    connect(macro, &MacroWidget::packageSended, this, &Macros::packageSended);
+    connect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
+    connect(macro, &Macro::packageSended, this, &Macros::packageSended);
 //    connect(macro, &MacroWidget::intervalChecked, this, &Macros::updateIntervalsList);
-    connect(macro, &MacroWidget::movedUp, this, &Macros::moveMacroUp);
-    connect(macro, &MacroWidget::movedDown, this, &Macros::moveMacroDown);
-    connect(actionSetTime, &QAction::triggered, macro, &MacroWidget::setCheckedInterval);
-    connect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &MacroWidget::setTime);
+    connect(macro, &Macro::movedUp, this, &Macros::moveMacroUp);
+    connect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
+    connect(actionSetTime, &QAction::triggered, macro, &Macro::setCheckedInterval);
+    connect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &Macro::setTime);
 }
 
 void Macros::deleteMacro()
 {
-    deleteMacro(qobject_cast<MacroWidget*>(sender()));
+    deleteMacro(qobject_cast<Macro*>(sender()));
 }
 
-void Macros::deleteMacro(MacroWidget *macro)
+void Macros::deleteMacro(Macro *macro)
 {
     if(macro == 0) {
         return;
@@ -127,13 +127,13 @@ void Macros::deleteMacro(MacroWidget *macro)
     macro->setCheckedPeriod(false);
     macrosWidgets.removeOne(macro);
     scrollAreaLayout->removeWidget(macro);
-    disconnect(macro, &MacroWidget::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
-    disconnect(macro, &MacroWidget::packageSended, this, &Macros::packageSended);
+    disconnect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
+    disconnect(macro, &Macro::packageSended, this, &Macros::packageSended);
 //    disconnect(macro, &MacroWidget::intervalChecked, this, &Macros::updateIntervalsList);
-    disconnect(macro, &MacroWidget::movedUp, this, &Macros::moveMacroUp);
-    disconnect(macro, &MacroWidget::movedDown, this, &Macros::moveMacroDown);
-    disconnect(actionSetTime, &QAction::triggered, macro, &MacroWidget::setCheckedInterval);
-    disconnect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &MacroWidget::setTime);
+    disconnect(macro, &Macro::movedUp, this, &Macros::moveMacroUp);
+    disconnect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
+    disconnect(actionSetTime, &QAction::triggered, macro, &Macro::setCheckedInterval);
+    disconnect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &Macro::setTime);
     delete macro;
     macro = 0;
 }
@@ -144,7 +144,7 @@ void Macros::deleteMacros()
                                        tr("Delete ALL macros?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
-        QListIterator<MacroWidget*> it(macrosWidgets);
+        QListIterator<Macro*> it(macrosWidgets);
         while(it.hasNext()) {
             deleteMacro(it.next());
         }
@@ -154,15 +154,15 @@ void Macros::deleteMacros()
 
 void Macros::moveMacroUp()
 {
-    moveMacro(qobject_cast<MacroWidget*>(sender()), MoveUp);
+    moveMacro(qobject_cast<Macro*>(sender()), MoveUp);
 }
 
 void Macros::moveMacroDown()
 {
-    moveMacro(qobject_cast<MacroWidget*>(sender()), MoveDown);
+    moveMacro(qobject_cast<Macro*>(sender()), MoveDown);
 }
 
-void Macros::moveMacro(MacroWidget *macroWidget, Macros::MacrosMoveDirection direction)
+void Macros::moveMacro(Macro *macroWidget, Macros::MacrosMoveDirection direction)
 {
     if(!macroWidget) {
         return;

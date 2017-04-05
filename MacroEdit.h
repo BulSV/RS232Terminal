@@ -14,16 +14,16 @@
 #include "AsciiEncoder.h"
 #include "HexEncoder.h"
 #include "DecEncoder.h"
-#include "MacroRawEditWidget.h"
+#include "MacroRawEdit.h"
 #include "OpenMacro.h"
 #include "SaveMacro.h"
 
-class MacroEditWidget : public QMainWindow
+class MacroEdit : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MacroEditWidget(QWidget *parent = 0);
-    virtual ~MacroEditWidget();
+    explicit MacroEdit(QWidget *parent = 0);
+    virtual ~MacroEdit();
     const QByteArray &getPackage();
     void saveSettings(QSettings *settings, int macroIndex);
     void loadSettings(QSettings *settings, int macroIndex);
@@ -53,7 +53,7 @@ private:
     DecEncoder *decEncoder;
     QByteArray package;
     QByteArray package_CR_LF;
-    MacroRawEditWidget *macroRawEditWidget;
+    MacroRawEdit *macroRawEdit;
     OpenMacro openMacro;
     SaveMacro saveMacro;
     QString macroOpenDir;

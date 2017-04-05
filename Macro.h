@@ -11,14 +11,14 @@
 #include <QByteArray>
 
 #include "RightClickedButton.h"
-#include "MacroEditWidget.h"
+#include "MacroEdit.h"
 #include "ClickableLabel.h"
 
-class MacroWidget : public QWidget
+class Macro : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MacroWidget(QWidget *parent = 0);
+    explicit Macro(QWidget *parent = 0);
 
     void saveSettings(QSettings *settings, int macroIndex);
     void loadSettings(QSettings *settings, int macroIndex);
@@ -54,7 +54,7 @@ private:
     RightClickedButton *buttonSend;
     ClickableLabel *buttonUp;
     ClickableLabel *buttonDown;
-    MacroEditWidget *macroEditWidget;
+    MacroEdit *macroEdit;
     QTimer *timerPeriod;
 
     void view();

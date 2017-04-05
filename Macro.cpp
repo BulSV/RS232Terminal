@@ -1,22 +1,22 @@
 #include <QMessageBox>
 
-#include "MacroWidget.h"
+#include "Macro.h"
 
 #include <QDebug>
 
 const int MAX_SYMBOLS_COUNT = 20;
 
-MacroWidget::MacroWidget(QWidget *parent)
-: QWidget(parent)
-, buttonDelete(new ClickableLabel(this))
-, checkBoxInterval(new QCheckBox(this))
-, checkBoxPeriod(new QCheckBox(this))
-, spinBoxTime(new QSpinBox(this))
-, buttonSend(new RightClickedButton(tr("Empty"), this))
-, buttonUp(new ClickableLabel(this))
-, buttonDown(new ClickableLabel(this))
-, macroEditWidget(new MacroEditWidget(this))
-, timerPeriod(new QTimer(this))
+Macro::Macro(QWidget *parent)
+    : QWidget(parent)
+    , buttonDelete(new ClickableLabel(this))
+    , checkBoxInterval(new QCheckBox(this))
+    , checkBoxPeriod(new QCheckBox(this))
+    , spinBoxTime(new QSpinBox(this))
+    , buttonSend(new RightClickedButton(tr("Empty"), this))
+    , buttonUp(new ClickableLabel(this))
+    , buttonDown(new ClickableLabel(this))
+    , macroEdit(new MacroEdit(this))
+    , timerPeriod(new QTimer(this))
 {
     spinBoxTime->setRange(0, 999999);
     spinBoxTime->setValue(50);
@@ -25,102 +25,102 @@ MacroWidget::MacroWidget(QWidget *parent)
     connections();
 }
 
-void MacroWidget::saveSettings(QSettings *settings, int macroIndex)
+void Macro::saveSettings(QSettings *settings, int macroIndex)
 {
     QString macroIndexString = QString::number(macroIndex);
     settings->setValue("macros/" + macroIndexString + "/interval", intervalIsChecked());
     settings->setValue("macros/" + macroIndexString + "/period", periodIsChecked());
     settings->setValue("macros/" + macroIndexString + "/time", getTime());
 
-    macroEditWidget->saveSettings(settings, macroIndex);
+    macroEdit->saveSettings(settings, macroIndex);
 }
 
-void MacroWidget::loadSettings(QSettings *settings, int macroIndex)
+void Macro::loadSettings(QSettings *settings, int macroIndex)
 {
     QString macroIndexString = QString::number(macroIndex);
     setCheckedInterval(settings->value("macros/" + macroIndexString + "/interval").toBool());
     setCheckedPeriod(settings->value("macros/" + macroIndexString + "/period").toBool());
     setTime(settings->value("macros/" + macroIndexString + "/time").toInt());
 
-    macroEditWidget->loadSettings(settings, macroIndex);
+    macroEdit->loadSettings(settings, macroIndex);
 }
 
-void MacroWidget::setCheckedInterval(bool check)
+void Macro::setCheckedInterval(bool check)
 {
     checkBoxInterval->setChecked(check);
 }
 
-bool MacroWidget::intervalIsChecked() const
+bool Macro::intervalIsChecked() const
 {
     return checkBoxInterval->isChecked();
 }
 
-void MacroWidget::setCheckedPeriod(bool check)
+void Macro::setCheckedPeriod(bool check)
 {
     checkBoxPeriod->setChecked(check);
 }
 
-bool MacroWidget::periodIsChecked() const
+bool Macro::periodIsChecked() const
 {
     return checkBoxPeriod->isChecked();
 }
 
-void MacroWidget::setEnabledInterval(bool enable)
+void Macro::setEnabledInterval(bool enable)
 {
     checkBoxInterval->setEnabled(enable);
 }
 
-bool MacroWidget::intervalIsEnabled() const
+bool Macro::intervalIsEnabled() const
 {
     return checkBoxInterval->isEnabled();
 }
 
-void MacroWidget::setEnabledPeriod(bool enable)
+void Macro::setEnabledPeriod(bool enable)
 {
     checkBoxPeriod->setEnabled(enable);
 }
 
-bool MacroWidget::periodIsEnabled() const
+bool Macro::periodIsEnabled() const
 {
     return checkBoxPeriod->isEnabled();
 }
 
-void MacroWidget::setTime(int time)
+void Macro::setTime(int time)
 {
     spinBoxTime->setValue(time);
 }
 
-int MacroWidget::getTime() const
+int Macro::getTime() const
 {
     return spinBoxTime->value();
 }
 
-const QByteArray &MacroWidget::getPackage() const
+const QByteArray &Macro::getPackage() const
 {
-    return macroEditWidget->getPackage();
+    return macroEdit->getPackage();
 }
 
-void MacroWidget::openMacroFile(const QString &fileName)
+void Macro::openMacroFile(const QString &fileName)
 {
-    macroEditWidget->openMacroFile(fileName);
+    macroEdit->openMacroFile(fileName);
 }
 
-void MacroWidget::deleteMacro()
+void Macro::deleteMacro()
 {
     int button = QMessageBox::question(this, tr("Warning"),
-    tr("Delete macro ") + buttonSend->text() + " ?",
-    QMessageBox::Yes | QMessageBox::No);
+                                       tr("Delete macro ") + buttonSend->text() + " ?",
+                                       QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
         emit deleted();
     }
 }
 
-void MacroWidget::sendPackage()
+void Macro::sendPackage()
 {
-    emit packageSended(macroEditWidget->getPackage());
+    emit packageSended(macroEdit->getPackage());
 }
 
-void MacroWidget::titleChanged()
+void Macro::titleChanged()
 {
     int symbolsCount = buttonSend->text().size();
     if(symbolsCount > MAX_SYMBOLS_COUNT) {
@@ -128,7 +128,7 @@ void MacroWidget::titleChanged()
     }
 }
 
-void MacroWidget::view()
+void Macro::view()
 {
     buttonDelete->setFixedWidth(25);
     checkBoxInterval->setFixedWidth(15);
@@ -177,17 +177,17 @@ void MacroWidget::view()
     layout()->setContentsMargins(0, 0, 0, 0);
 }
 
-void MacroWidget::connections()
+void Macro::connections()
 {
-    connect(checkBoxInterval, &QCheckBox::toggled, this, &MacroWidget::intervalChecked);
-    connect(checkBoxPeriod, &QCheckBox::toggled, this, &MacroWidget::periodChecked);
-    connect(buttonSend, &RightClickedButton::rightClicked, macroEditWidget, &MacroEditWidget::show);
-    connect(buttonSend, &RightClickedButton::clicked, this, &MacroWidget::sendPackage);
-    connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MacroWidget::sendTimeChanged);
-    connect(buttonDelete, &ClickableLabel::clicked, this, &MacroWidget::deleteMacro);
-    connect(timerPeriod, &QTimer::timeout, this, &MacroWidget::sendPackage);
-    connect(buttonUp, &ClickableLabel::clicked, this, &MacroWidget::movedUp);
-    connect(buttonDown, &ClickableLabel::clicked, this, &MacroWidget::movedDown);
-    connect(macroEditWidget, &MacroEditWidget::titleChanged, buttonSend, &RightClickedButton::setText);
-    connect(macroEditWidget, &MacroEditWidget::titleChanged, this, &MacroWidget::titleChanged);
+    connect(checkBoxInterval, &QCheckBox::toggled, this, &Macro::intervalChecked);
+    connect(checkBoxPeriod, &QCheckBox::toggled, this, &Macro::periodChecked);
+    connect(buttonSend, &RightClickedButton::rightClicked, macroEdit, &MacroEdit::show);
+    connect(buttonSend, &RightClickedButton::clicked, this, &Macro::sendPackage);
+    connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::sendTimeChanged);
+    connect(buttonDelete, &ClickableLabel::clicked, this, &Macro::deleteMacro);
+    connect(timerPeriod, &QTimer::timeout, this, &Macro::sendPackage);
+    connect(buttonUp, &ClickableLabel::clicked, this, &Macro::movedUp);
+    connect(buttonDown, &ClickableLabel::clicked, this, &Macro::movedDown);
+    connect(macroEdit, &MacroEdit::titleChanged, buttonSend, &RightClickedButton::setText);
+    connect(macroEdit, &MacroEdit::titleChanged, this, &Macro::titleChanged);
 }

@@ -21,7 +21,7 @@
 
 #include "RightClickedButton.h"
 #include "LimitedTextEdit.h"
-#include "MacroWidget.h"
+#include "Macro.h"
 #include "DataEncoder.h"
 #include "HexEncoder.h"
 #include "DecEncoder.h"
@@ -34,8 +34,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     enum DataMode
     {
-        HEX = 0,
-        ASCII = 1,
+        ASCII = 0,
+        HEX = 1,
         DEC = 2
     };
 public:

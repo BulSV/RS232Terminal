@@ -17,11 +17,11 @@ SOURCES += main.cpp\
     ComPortConfigure.cpp \
     ClickableLabel.cpp \
     Macros.cpp \
-    MacroEditWidget.cpp \
-    MacroRawEditWidget.cpp \
-    MacroWidget.cpp \
     SaveMacro.cpp \
-    OpenMacro.cpp
+    OpenMacro.cpp \
+    Macro.cpp \
+    MacroEdit.cpp \
+    MacroRawEdit.cpp
 
 HEADERS  += \
     MainWindow.h \
@@ -35,11 +35,11 @@ HEADERS  += \
     ComPortConfigure.h \
     ClickableLabel.h \
     Macros.h \
-    MacroEditWidget.h \
-    MacroRawEditWidget.h \
-    MacroWidget.h \
     SaveMacro.h \
-    OpenMacro.h
+    OpenMacro.h \
+    Macro.h \
+    MacroEdit.h \
+    MacroRawEdit.h
 
 RESOURCES += \
     Terminal.qrc
