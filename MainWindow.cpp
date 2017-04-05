@@ -514,7 +514,7 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macro)
 
     if(!m_tTx->isSingleShot()) {
         m_lTxCount->setStyleSheet("background: green");
-        m_tTx->singleShot(BLINK_TIME_TX, this, SLOT(txNone()));
+        m_tTx->singleShot(BLINK_TIME_TX, this, &MainWindow::txNone);
         m_tTx->setSingleShot(true);
     }
 }
@@ -678,7 +678,7 @@ void MainWindow::delayBetweenPacketsEnded()
 
     if(!m_tRx->isSingleShot()) {
         m_lRxCount->setStyleSheet("background: red");
-        m_tRx->singleShot(BLINK_TIME_RX, this, SLOT(rxNone()));
+        m_tRx->singleShot(BLINK_TIME_RX, this, &MainWindow::rxNone);
         m_tRx->setSingleShot(true);
     }
     rxCount+=readBuffer.size();
