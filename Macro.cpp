@@ -128,6 +128,26 @@ void Macro::titleChanged()
     }
 }
 
+void Macro::intervalToggled(bool toggled)
+{
+    if(toggled) {
+        checkBoxPeriod->setChecked(false);
+    }
+    checkBoxInterval->setChecked(toggled);
+
+    emit intervalChecked(toggled);
+}
+
+void Macro::periodToggled(bool toggled)
+{
+    if(toggled) {
+        checkBoxInterval->setChecked(false);
+    }
+    checkBoxPeriod->setChecked(toggled);
+
+    emit periodChecked(toggled);
+}
+
 void Macro::view()
 {
     buttonDelete->setFixedWidth(25);
@@ -179,8 +199,8 @@ void Macro::view()
 
 void Macro::connections()
 {
-    connect(checkBoxInterval, &QCheckBox::toggled, this, &Macro::intervalChecked);
-    connect(checkBoxPeriod, &QCheckBox::toggled, this, &Macro::periodChecked);
+    connect(checkBoxInterval, &QCheckBox::toggled, this, &Macro::intervalToggled);
+    connect(checkBoxPeriod, &QCheckBox::toggled, this, &Macro::periodToggled);
     connect(buttonSend, &RightClickedButton::rightClicked, macroEdit, &MacroEdit::show);
     connect(buttonSend, &RightClickedButton::clicked, this, &Macro::sendPackage);
     connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::sendTimeChanged);

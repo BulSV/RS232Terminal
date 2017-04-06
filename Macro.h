@@ -62,6 +62,8 @@ private:
     void deleteMacro();
     void sendPackage();
     void titleChanged();
+    void intervalToggled(bool toggled);
+    void periodToggled(bool toggled);
 };
 
 #endif // MACRO_WIDGET_H
