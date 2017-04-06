@@ -65,8 +65,6 @@ private slots:
     void sendPackage(const QByteArray &data);
     void sendPackage(const QByteArray &data, bool macro);
 private:
-    QWidget *widget;
-    QToolBar *toolBar;
     QAction *actionPortConfigure;
     QAction *actionStartStop;
     QAction *actionMacros;

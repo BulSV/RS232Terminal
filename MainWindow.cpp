@@ -40,11 +40,9 @@ const bool DEFAULT_CR_LF = false;
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
-    , toolBar(new QToolBar(this))
     , actionPortConfigure(new QAction(QIcon(":/Resources/ComPort.png"), tr("COM-port configure"), this))
     , actionStartStop(new QAction(QIcon(":/Resources/Play.png"), tr("Open COM-port"), this))
     , actionMacros(new QAction(QIcon(":/Resources/Macros.png"), tr("Macros"), this))
-    , statusBar(new QStatusBar(this))
     , portName(new QLabel(PORT + tr("None"), this))
     , baud(new QLabel(BAUD + tr("None"), this))
     , bits(new QLabel(BITS + tr("None"), this))
@@ -168,10 +166,12 @@ void MainWindow::view()
 {
     QList<QAction*> actions;
     actions << actionPortConfigure << actionStartStop << actionMacros;
+    QToolBar* toolBar = new QToolBar(this);
     addToolBar(Qt::TopToolBarArea, toolBar);
     toolBar->setMovable(false);
     toolBar->addActions(actions);
 
+    QStatusBar *statusBar = new QStatusBar(this);
     statusBar->addWidget(portName);
     statusBar->addWidget(baud);
     statusBar->addWidget(bits);
@@ -249,12 +249,12 @@ void MainWindow::view()
     dataLayout->setSpacing(0);
     dataLayout->setContentsMargins(0, 0, 0, 0);
 
-    QGridLayout *allLayouts = new QGridLayout;
-    allLayouts->setSpacing(5);
-    allLayouts->setContentsMargins(5, 5, 5, 5);
-    allLayouts->addLayout(dataLayout, 0, 0);
-    widget = new QWidget(this);
-    widget->setLayout(allLayouts);
+    QGridLayout *mainLayouts = new QGridLayout;
+    mainLayouts->setSpacing(5);
+    mainLayouts->setContentsMargins(5, 5, 5, 5);
+    mainLayouts->addLayout(dataLayout, 0, 0);
+    QWidget *widget = new QWidget(this);
+    widget->setLayout(mainLayouts);
     setCentralWidget(widget);
 }
 
