@@ -48,7 +48,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , bits(new QLabel(BITS + tr("None"), this))
     , parity(new QLabel(PARITY + tr("None"), this))
     , stopBits(new QLabel(STOP_BITS + tr("None"), this))
-    , m_cbSendMode(new QComboBox(this))
+    , manualSendMode(new QComboBox(this))
     , m_cbReadMode(new QComboBox(this))
     , m_cbWriteMode(new QComboBox(this))
     , m_tSend(new QTimer(this))
@@ -66,18 +66,18 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , saveReadLog(new QAction(QIcon(":/Resources/Save.png"), tr("Save read log"), this))
     , recordWriteLog(new QAction(QIcon(":/Resources/Rec.png"), tr("Record write log"), this))
     , recordReadLog(new QAction(QIcon(":/Resources/Rec.png"), tr("Record read log"), this))
-    , m_bSendPackage(new ClickableLabel("<img src=':/Resources/Send.png' width='50' height='25'/>", this))
+    , manualSendPacket(new QAction(QIcon(":/Resources/Send.png"), tr("Send packet"), this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
     , m_eLogRead(new LimitedTextEdit(this))
     , m_eLogWrite(new LimitedTextEdit(this))
-    , m_sbRepeatSendInterval(new QSpinBox(this))
-    , m_sbReadDelayBetweenPackets(new QSpinBox(this))
-    , m_leSendPackage(new QLineEdit(this))
+    , manualRepeatSendTime(new QSpinBox(this))
+    , readDelayBetweenPackets(new QSpinBox(this))
+    , manualPacketEdit(new QLineEdit(this))
     , displayWrite(new QAction(QIcon(":/Resources/Display.png"), tr("Hide write data"), this))
     , displayRead(new QAction(QIcon(":/Resources/Display.png"), tr("Hide read data"), this))
-    , m_chbCR(new QCheckBox("CR", this))
-    , m_chbLF(new QCheckBox("LF", this))
+    , manualCR(new QAction(QIcon(":/Resources/CR.png"), "Add CR", this))
+    , manualLF(new QAction(QIcon(":/Resources/LF.png"), "Add LF", this))
     , m_port(new QSerialPort(this))
     , comPortConfigure(new ComPortConfigure(m_port, this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
@@ -102,8 +102,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     displayWrite->setCheckable(true);
     displayRead->setCheckable(true);
-
-    m_bSendPackage->setToolTip(tr("Send packet"));
+    manualCR->setCheckable(true);
+    manualLF->setCheckable(true);
 
     m_eLogRead->displayTime("hh:mm:ss.zzz");
     m_eLogRead->setReadOnly(true);
@@ -120,10 +120,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     recordWriteLog->setCheckable(true);
     recordReadLog->setCheckable(true);
-    m_bSendPackage->setCheckable(true);
-    m_sbRepeatSendInterval->setRange(0, 100000);
-    m_sbReadDelayBetweenPackets->setRange(0, 10);
-    m_sbReadDelayBetweenPackets->setValue(10);
+    manualSendPacket->setCheckable(true);
+    manualRepeatSendTime->setRange(0, 100000);
+    readDelayBetweenPackets->setRange(0, 10);
+    readDelayBetweenPackets->setValue(10);
 
     portName->setFrameStyle(QFrame::Sunken);
     portName->setFrameShape(QFrame::Box);
@@ -142,7 +142,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     QStringList buffer;
     buffer << "ASCII" << "HEX" << "DEC";
-    m_cbSendMode->addItems(buffer);
+    manualSendMode->addItems(buffer);
     m_cbReadMode->addItems(buffer);
     m_cbWriteMode->addItems(buffer);
 
@@ -171,6 +171,26 @@ void MainWindow::view()
     toolBar->setMovable(false);
     toolBar->addActions(actions);
 
+    QWidgetAction *actionReadDelayBetweenPackets = new QWidgetAction(this);
+    actionReadDelayBetweenPackets->setDefaultWidget(readDelayBetweenPackets);
+    readDelayBetweenPackets->setToolTip(tr("Read delay\nbetween packets, ms"));
+    QWidgetAction *actionManualSendMode = new QWidgetAction(this);
+    actionManualSendMode->setDefaultWidget(manualSendMode);
+    manualSendMode->setToolTip(tr("Mode"));
+    QWidgetAction *actionManualPacketEdit = new QWidgetAction(this);
+    actionManualPacketEdit->setDefaultWidget(manualPacketEdit);
+    QWidgetAction *actionManualRepeatSendTime = new QWidgetAction(this);
+    actionManualRepeatSendTime->setDefaultWidget(manualRepeatSendTime);
+    manualRepeatSendTime->setToolTip(tr("Repeat send time, ms"));
+    actions.clear();
+    actions << actionReadDelayBetweenPackets << actionManualSendMode << actionManualPacketEdit
+            << actionManualPacketEdit << manualCR << manualLF << actionManualRepeatSendTime << manualSendPacket;
+    QToolBar* manualSendToolBar = new QToolBar(this);
+    addToolBar(Qt::BottomToolBarArea, manualSendToolBar);
+    manualSendToolBar->setMovable(false);
+    manualSendToolBar->addActions(actions);
+    manualSendToolBar->setStyleSheet("spacing:2px");
+
     QStatusBar *statusBar = new QStatusBar(this);
     statusBar->addWidget(portName);
     statusBar->addWidget(baud);
@@ -180,18 +200,6 @@ void MainWindow::view()
     statusBar->addWidget(m_lTxCount);
     statusBar->addWidget(m_lRxCount);
     setStatusBar(statusBar);
-
-    QHBoxLayout *sendPackageLayout = new QHBoxLayout;
-    sendPackageLayout->addWidget(new QLabel(tr("Read delay\nbetween packets, ms:"), this));
-    sendPackageLayout->addWidget(m_sbReadDelayBetweenPackets);
-    sendPackageLayout->addWidget(new QLabel(tr("Mode:"), this));
-    sendPackageLayout->addWidget(m_cbSendMode);
-    sendPackageLayout->addWidget(m_leSendPackage);
-    sendPackageLayout->addWidget(m_chbCR);
-    sendPackageLayout->addWidget(m_chbLF);
-    sendPackageLayout->addWidget(m_sbRepeatSendInterval);
-    sendPackageLayout->addWidget(m_bSendPackage);
-    sendPackageLayout->setSpacing(5);
 
     QWidgetAction *actionWriteMode = new QWidgetAction(this);
     actionWriteMode->setDefaultWidget(m_cbWriteMode);
@@ -245,7 +253,6 @@ void MainWindow::view()
 
     QGridLayout *dataLayout = new QGridLayout;
     dataLayout->addWidget(splitter, 0, 0);
-    dataLayout->addLayout(sendPackageLayout, 1, 0);
     dataLayout->setSpacing(0);
     dataLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -271,8 +278,8 @@ void MainWindow::connections()
     connect(saveReadLog, &QAction::triggered, this, &MainWindow::saveRead);
     connect(recordWriteLog, &QAction::triggered, this, &MainWindow::startWriteLog);
     connect(recordReadLog, &QAction::triggered, this, &MainWindow::startReadLog);
-    connect(m_bSendPackage, &ClickableLabel::clicked, this, &MainWindow::startSending);
-    connect(m_leSendPackage, &QLineEdit::returnPressed, [this](){startSending();});
+    connect(manualSendPacket, &QAction::triggered, this, &MainWindow::startSending);
+    connect(manualPacketEdit, &QLineEdit::returnPressed, [this](){startSending();});
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(singleSend()));
     connect(m_timerDelayBetweenPackets, &QTimer::timeout, this, &MainWindow::delayBetweenPacketsEnded);
@@ -425,7 +432,7 @@ void MainWindow::stop()
     m_lRxCount->setStyleSheet("background: none");
 
     actionPortConfigure->setEnabled(true);
-    m_bSendPackage->setChecked(false);
+    manualSendPacket->setChecked(false);
     m_tSend->stop();
     m_timerDelayBetweenPackets->stop();
     m_tIntervalSending->stop();
@@ -439,7 +446,7 @@ void MainWindow::stop()
 void MainWindow::received()
 {
     readBuffer += m_port->readAll();
-    int delay = m_sbReadDelayBetweenPackets->value();
+    int delay = readDelayBetweenPackets->value();
     if(delay == 0) {
         delayBetweenPacketsEnded();
 
@@ -450,8 +457,8 @@ void MainWindow::received()
 
 void MainWindow::singleSend()
 {
-    DataEncoder *dataEncoder = getEncoder(m_cbSendMode->currentIndex());
-    dataEncoder->setData(m_leSendPackage->text(), " ");
+    DataEncoder *dataEncoder = getEncoder(manualSendMode->currentIndex());
+    dataEncoder->setData(manualPacketEdit->text(), " ");
     sendPackage(dataEncoder->encodedByteArray(), false);
 }
 
@@ -503,13 +510,13 @@ void MainWindow::startSending(bool checked)
     }
 
     if(m_port->isOpen()) {
-        if(m_sbRepeatSendInterval->value() != 0) {
-            m_tSend->setInterval(m_sbRepeatSendInterval->value());
+        if(manualRepeatSendTime->value() != 0) {
+            m_tSend->setInterval(manualRepeatSendTime->value());
             m_tSend->start();
 
             return;
         }
-        m_bSendPackage->setChecked(false);
+        manualSendPacket->setChecked(false);
         singleSend();
     }
 }
@@ -522,12 +529,12 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macro)
 
     QByteArray modifiedData = writeData;
     if(!macro) {
-        m_tSend->setInterval(m_sbRepeatSendInterval->value());
+        m_tSend->setInterval(manualRepeatSendTime->value());
 
-        if(m_chbCR->isChecked()) {
+        if(manualCR->isChecked()) {
             modifiedData.append(CR);
         }
-        if(m_chbLF->isChecked()) {
+        if(manualLF->isChecked()) {
             modifiedData.append(LF);
         }
     }
@@ -801,10 +808,10 @@ void MainWindow::saveSession()
     comPortConfigure->saveSettings(settings);
     macros->saveSettings(settings);
 
-    settings->setValue("main/single_send_interval", m_sbRepeatSendInterval->value());
-    settings->setValue("main/mode", m_cbSendMode->currentIndex());
-    settings->setValue("main/CR", m_chbCR->isChecked());
-    settings->setValue("main/LF", m_chbLF->isChecked());
+    settings->setValue("main/single_send_interval", manualRepeatSendTime->value());
+    settings->setValue("main/mode", manualSendMode->currentIndex());
+    settings->setValue("main/CR", manualCR->isChecked());
+    settings->setValue("main/LF", manualLF->isChecked());
 }
 
 void MainWindow::loadSession()
@@ -834,10 +841,10 @@ void MainWindow::loadSession()
     m_tWriteLog->setInterval(settings->value("main/write_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
     m_tReadLog->setInterval(settings->value("main/read_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
 
-    m_sbRepeatSendInterval->setValue(settings->value("main/single_send_interval", DEFAULT_SEND_TIME).toInt());
-    m_chbCR->setChecked(settings->value("main/CR", DEFAULT_CR_LF).toBool());
-    m_chbLF->setChecked(settings->value("main/LF", DEFAULT_CR_LF).toBool());
-    m_cbSendMode->setCurrentIndex(settings->value("main/mode", DEFAULT_MODE).toInt());
+    manualRepeatSendTime->setValue(settings->value("main/single_send_interval", DEFAULT_SEND_TIME).toInt());
+    manualCR->setChecked(settings->value("main/CR", DEFAULT_CR_LF).toBool());
+    manualLF->setChecked(settings->value("main/LF", DEFAULT_CR_LF).toBool());
+    manualSendMode->setCurrentIndex(settings->value("main/mode", DEFAULT_MODE).toInt());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
