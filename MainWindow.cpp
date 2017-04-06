@@ -62,12 +62,12 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tRx(new QTimer(this))
     , macros(new Macros)
     , macrosDockWidget(new QDockWidget(tr("Macros"), this))
-    , clearWriteLog(new ClickableLabel("<img src=':/Resources/Clear.png' width='25' height='25'/>", this))
-    , clearReadLog(new ClickableLabel("<img src=':/Resources/Clear.png' width='25' height='25'/>", this))
-    , saveWriteLog(new ClickableLabel("<img src=':/Resources/Save.png' width='25' height='25'/>", this))
-    , saveReadLog(new ClickableLabel("<img src=':/Resources/Save.png' width='25' height='25'/>", this))
-    , recordWriteLog(new ClickableLabel("<img src=':/Resources/Rec.png' width='25' height='25'/>", this))
-    , recordReadLog(new ClickableLabel("<img src=':/Resources/Rec.png' width='25' height='25'/>", this))
+    , clearWriteLog(new QAction(QIcon(":/Resources/Clear.png"), tr("Clear displayed write data"), this))
+    , clearReadLog(new QAction(QIcon(":/Resources/Clear.png"), tr("Clear displayed read data"), this))
+    , saveWriteLog(new QAction(QIcon(":/Resources/Save.png"), tr("Save write log"), this))
+    , saveReadLog(new QAction(QIcon(":/Resources/Save.png"), tr("Save read log"), this))
+    , recordWriteLog(new QAction(QIcon(":/Resources/Rec.png"), tr("Record write log"), this))
+    , recordReadLog(new QAction(QIcon(":/Resources/Rec.png"), tr("Record read log"), this))
     , m_bSendPackage(new ClickableLabel("<img src=':/Resources/Send.png' width='50' height='25'/>", this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
@@ -76,8 +76,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbReadDelayBetweenPackets(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , displayWrite(new ClickableLabel("<img src=':/Resources/Display.png' width='25' height='25'/>", this))
-    , displayRead(new ClickableLabel("<img src=':/Resources/Display.png' width='25' height='25'/>", this))
+    , displayWrite(new QAction(QIcon(":/Resources/Display.png"), tr("Hide write data"), this))
+    , displayRead(new QAction(QIcon(":/Resources/Display.png"), tr("Hide read data"), this))
     , m_chbCR(new QCheckBox("CR", this))
     , m_chbLF(new QCheckBox("LF", this))
     , m_port(new QSerialPort(this))
@@ -104,16 +104,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
 
     displayWrite->setCheckable(true);
     displayRead->setCheckable(true);
-
-    displayWrite->setToolTip(tr("Hide write data"));
-    recordWriteLog->setToolTip(tr("Record write log"));
-    saveWriteLog->setToolTip(tr("Save write log"));
-    clearWriteLog->setToolTip(tr("Clear displayed write data"));
-
-    displayRead->setToolTip(tr("Hide read data"));
-    recordReadLog->setToolTip(tr("Record read log"));
-    saveReadLog->setToolTip(tr("Save read log"));
-    clearReadLog->setToolTip(tr("Clear displayed read data"));
 
     m_bSendPackage->setToolTip(tr("Send packet"));
 
@@ -203,38 +193,55 @@ void MainWindow::view()
     sendPackageLayout->addWidget(m_bSendPackage);
     sendPackageLayout->setSpacing(5);
 
+    QWidgetAction *actionWriteMode = new QWidgetAction(this);
+    actionWriteMode->setDefaultWidget(m_cbWriteMode);
+    actions.clear();
+    actions << actionWriteMode << displayWrite << recordWriteLog
+            << saveWriteLog << clearWriteLog;
+    QToolBar *writeToolBar = new QToolBar(this);
+    writeToolBar->setAllowedAreas(Qt::TopToolBarArea);
+    writeToolBar->setMovable(false);
+    writeToolBar->setStyleSheet("spacing:2px");
+    writeToolBar->addActions(actions);
+    QMainWindow *writeWindow = new QMainWindow(this);
+    writeWindow->addToolBar(writeToolBar);
+    writeWindow->setCentralWidget(m_eLogWrite);
+
     QGridLayout *writeLayout = new QGridLayout;
-    writeLayout->addWidget(m_cbWriteMode, 0, 0);
-    writeLayout->addWidget(displayWrite, 0, 1);
-    writeLayout->addWidget(recordWriteLog, 0, 2);
-    writeLayout->addWidget(saveWriteLog, 0, 3);
-    writeLayout->addWidget(clearWriteLog, 0, 4);
-    writeLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 5);
-    writeLayout->addWidget(m_eLogWrite, 1, 0, 1, 6);
-    writeLayout->setSpacing(5);
+    writeLayout->addWidget(writeWindow, 0, 0);
     writeLayout->setContentsMargins(5, 5, 5, 5);
 
     QGroupBox *gbWrite = new QGroupBox(tr("Write"), this);
     gbWrite->setLayout(writeLayout);
 
+
+    QWidgetAction *actionReadMode = new QWidgetAction(this);
+    actionReadMode->setDefaultWidget(m_cbReadMode);
+    actions.clear();
+    actions << actionReadMode << displayRead << recordReadLog
+            << saveReadLog << clearReadLog;
+    QToolBar *readToolBar = new QToolBar(this);
+    readToolBar->setAllowedAreas(Qt::TopToolBarArea);
+    readToolBar->setMovable(false);
+    readToolBar->setStyleSheet("spacing:2px");
+    readToolBar->addActions(actions);
+    QMainWindow *readWindow = new QMainWindow(this);
+    readWindow->addToolBar(readToolBar);
+    readWindow->setCentralWidget(m_eLogRead);
+
     QGridLayout *readLayout = new QGridLayout;
-    readLayout->addWidget(m_cbReadMode, 0, 0);
-    readLayout->addWidget(displayRead, 0, 1);
-    readLayout->addWidget(recordReadLog, 0, 2);
-    readLayout->addWidget(saveReadLog, 0, 3);
-    readLayout->addWidget(clearReadLog, 0, 4);
-    readLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 5);
-    readLayout->addWidget(m_eLogRead, 1, 0, 1, 6);
-    readLayout->setSpacing(5);
+    readLayout->addWidget(readWindow, 0, 0);
     readLayout->setContentsMargins(5, 5, 5, 5);
 
     QGroupBox *gbRead = new QGroupBox(tr("Read"), this);
     gbRead->setLayout(readLayout);
 
+
     QSplitter *splitter = new QSplitter;
     splitter->addWidget(gbWrite);
     splitter->addWidget(gbRead);
     splitter->setHandleWidth(1);
+    splitter->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
 
     QGridLayout *dataLayout = new QGridLayout;
     dataLayout->addWidget(splitter, 0, 0);
@@ -254,16 +261,16 @@ void MainWindow::view()
 void MainWindow::connections()
 {
     connect(actionPortConfigure, &QAction::triggered, comPortConfigure, &ComPortConfigure::show);
-    connect(displayWrite, &ClickableLabel::clicked, this, &MainWindow::toggleWriteDisplay);
-    connect(displayRead, &ClickableLabel::clicked, this, &MainWindow::toggleReadDisplay);
-    connect(clearReadLog, SIGNAL(clicked()), m_eLogRead, SLOT(clear()));
-    connect(clearWriteLog, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
+    connect(displayWrite, &QAction::triggered, this, &MainWindow::toggleWriteDisplay);
+    connect(displayRead, &QAction::triggered, this, &MainWindow::toggleReadDisplay);
+    connect(clearReadLog, &QAction::triggered, m_eLogRead, &LimitedTextEdit::clear);
+    connect(clearWriteLog, &QAction::triggered, m_eLogWrite, &LimitedTextEdit::clear);
     connect(actionStartStop, &QAction::triggered, this, &MainWindow::startStop);
     connect(actionMacros, &QAction::triggered, this, &MainWindow::toggleMacrosView);
-    connect(saveWriteLog, &ClickableLabel::clicked, this, &MainWindow::saveWrite);
-    connect(saveReadLog, &ClickableLabel::clicked, this, &MainWindow::saveRead);
-    connect(recordWriteLog, &ClickableLabel::clicked, this, &MainWindow::startWriteLog);
-    connect(recordReadLog, &ClickableLabel::clicked, this, &MainWindow::startReadLog);
+    connect(saveWriteLog, &QAction::triggered, this, &MainWindow::saveWrite);
+    connect(saveReadLog, &QAction::triggered, this, &MainWindow::saveRead);
+    connect(recordWriteLog, &QAction::triggered, this, &MainWindow::startWriteLog);
+    connect(recordReadLog, &QAction::triggered, this, &MainWindow::startReadLog);
     connect(m_bSendPackage, &ClickableLabel::clicked, this, &MainWindow::startSending);
     connect(m_leSendPackage, &QLineEdit::returnPressed, [this](){startSending();});
     connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
@@ -700,10 +707,10 @@ void MainWindow::toggleMacrosView()
 void MainWindow::toggleWriteDisplay(bool toggled)
 {
     if(toggled) {
-        displayWrite->setText("<img src=':/Resources/Display.png' width='25' height='25'/>");
+        displayWrite->setIcon(QIcon(":/Resources/Display.png"));
         displayWrite->setToolTip(tr("Hide write data"));
     } else {
-        displayWrite->setText("<img src=':/Resources/Hide.png' width='25' height='25'/>");
+        displayWrite->setIcon(QIcon(":/Resources/Hide.png"));
         displayWrite->setToolTip(tr("Display write data"));
     }
 }
@@ -711,10 +718,10 @@ void MainWindow::toggleWriteDisplay(bool toggled)
 void MainWindow::toggleReadDisplay(bool toggled)
 {
     if(toggled) {
-        displayRead->setText("<img src=':/Resources/Display.png' width='25' height='25'/>");
+        displayRead->setIcon(QIcon(":/Resources/Display.png"));
         displayRead->setToolTip(tr("Hide read data"));
     } else {
-        displayRead->setText("<img src=':/Resources/Hide.png' width='25' height='25'/>");
+        displayRead->setIcon(QIcon(":/Resources/Hide.png"));
         displayRead->setToolTip(tr("Display read data"));
     }
 }

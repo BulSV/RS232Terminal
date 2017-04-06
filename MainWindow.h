@@ -88,12 +88,12 @@ private:
     QTimer *m_tRx;
     Macros *macros;
     QDockWidget *macrosDockWidget;
-    ClickableLabel *clearWriteLog;
-    ClickableLabel *clearReadLog;
-    ClickableLabel *saveWriteLog;
-    ClickableLabel *saveReadLog;
-    ClickableLabel *recordWriteLog;
-    ClickableLabel *recordReadLog;
+    QAction *clearWriteLog;
+    QAction *clearReadLog;
+    QAction *saveWriteLog;
+    QAction *saveReadLog;
+    QAction *recordWriteLog;
+    QAction *recordReadLog;
     ClickableLabel *m_bSendPackage;
     QLabel *m_lTxCount;
     QLabel *m_lRxCount;
@@ -102,8 +102,8 @@ private:
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbReadDelayBetweenPackets;
     QLineEdit *m_leSendPackage;
-    ClickableLabel *displayWrite;
-    ClickableLabel *displayRead;
+    QAction *displayWrite;
+    QAction *displayRead;
     QCheckBox *m_chbCR;
     QCheckBox *m_chbLF;
 
