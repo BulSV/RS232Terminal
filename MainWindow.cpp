@@ -62,13 +62,13 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tRx(new QTimer(this))
     , macros(new Macros)
     , macrosDockWidget(new QDockWidget(tr("Macros"), this))
-    , clearWriteLog(new ClickableLabel("<img src=':/Resources/Clear.png' width='20' height='20'/>", this))
-    , clearReadLog(new ClickableLabel("<img src=':/Resources/Clear.png' width='20' height='20'/>", this))
-    , saveWriteLog(new ClickableLabel("<img src=':/Resources/Save.png' width='20' height='20'/>", this))
-    , saveReadLog(new ClickableLabel("<img src=':/Resources/Save.png' width='20' height='20'/>", this))
-    , recordWriteLog(new ClickableLabel("<img src=':/Resources/Rec.png' width='20' height='20'/>", this))
-    , recordReadLog(new ClickableLabel("<img src=':/Resources/Rec.png' width='20' height='20'/>", this))
-    , m_bSendPackage(new ClickableLabel("<img src=':/Resources/Send.png' width='20' height='20'/>", this))
+    , clearWriteLog(new ClickableLabel("<img src=':/Resources/Clear.png' width='25' height='25'/>", this))
+    , clearReadLog(new ClickableLabel("<img src=':/Resources/Clear.png' width='25' height='25'/>", this))
+    , saveWriteLog(new ClickableLabel("<img src=':/Resources/Save.png' width='25' height='25'/>", this))
+    , saveReadLog(new ClickableLabel("<img src=':/Resources/Save.png' width='25' height='25'/>", this))
+    , recordWriteLog(new ClickableLabel("<img src=':/Resources/Rec.png' width='25' height='25'/>", this))
+    , recordReadLog(new ClickableLabel("<img src=':/Resources/Rec.png' width='25' height='25'/>", this))
+    , m_bSendPackage(new ClickableLabel("<img src=':/Resources/Send.png' width='50' height='25'/>", this))
     , m_lTxCount(new QLabel("Tx: 0", this))
     , m_lRxCount(new QLabel("Rx: 0", this))
     , m_eLogRead(new LimitedTextEdit(this))
@@ -76,8 +76,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbReadDelayBetweenPackets(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , displayWrite(new ClickableLabel("<img src=':/Resources/Display.png' width='20' height='20'/>", this))
-    , displayRead(new ClickableLabel("<img src=':/Resources/Display.png' width='20' height='20'/>", this))
+    , displayWrite(new ClickableLabel("<img src=':/Resources/Display.png' width='25' height='25'/>", this))
+    , displayRead(new ClickableLabel("<img src=':/Resources/Display.png' width='25' height='25'/>", this))
     , m_chbCR(new QCheckBox("CR", this))
     , m_chbLF(new QCheckBox("LF", this))
     , m_port(new QSerialPort(this))
@@ -114,6 +114,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     recordReadLog->setToolTip(tr("Record read log"));
     saveReadLog->setToolTip(tr("Save read log"));
     clearReadLog->setToolTip(tr("Clear displayed read data"));
+
+    m_bSendPackage->setToolTip(tr("Send packet"));
 
     m_eLogRead->displayTime("hh:mm:ss.zzz");
     m_eLogRead->setReadOnly(true);
@@ -189,8 +191,6 @@ void MainWindow::view()
     statusBar->addWidget(m_lRxCount);
     setStatusBar(statusBar);
 
-    m_bSendPackage->setAlignment(Qt::AlignCenter);
-
     QHBoxLayout *sendPackageLayout = new QHBoxLayout;
     sendPackageLayout->addWidget(new QLabel(tr("Read delay\nbetween packets, ms:"), this));
     sendPackageLayout->addWidget(m_sbReadDelayBetweenPackets);
@@ -203,38 +203,28 @@ void MainWindow::view()
     sendPackageLayout->addWidget(m_bSendPackage);
     sendPackageLayout->setSpacing(5);
 
-    displayWrite->setAlignment(Qt::AlignCenter);
-    recordWriteLog->setAlignment(Qt::AlignCenter);
-    saveWriteLog->setAlignment(Qt::AlignCenter);
-    clearWriteLog->setAlignment(Qt::AlignCenter);
-
     QGridLayout *writeLayout = new QGridLayout;
     writeLayout->addWidget(m_cbWriteMode, 0, 0);
     writeLayout->addWidget(displayWrite, 0, 1);
-    writeLayout->addWidget(recordWriteLog, 1, 0);
-    writeLayout->addWidget(saveWriteLog, 1, 1);
-    writeLayout->addWidget(clearWriteLog, 1, 2);
-    writeLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 3, 2);
-    writeLayout->addWidget(m_eLogWrite, 2, 0, 1, 4);
+    writeLayout->addWidget(recordWriteLog, 0, 2);
+    writeLayout->addWidget(saveWriteLog, 0, 3);
+    writeLayout->addWidget(clearWriteLog, 0, 4);
+    writeLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 5);
+    writeLayout->addWidget(m_eLogWrite, 1, 0, 1, 6);
     writeLayout->setSpacing(5);
     writeLayout->setContentsMargins(5, 5, 5, 5);
 
     QGroupBox *gbWrite = new QGroupBox(tr("Write"), this);
     gbWrite->setLayout(writeLayout);
 
-    displayRead->setAlignment(Qt::AlignCenter);
-    recordReadLog->setAlignment(Qt::AlignCenter);
-    saveReadLog->setAlignment(Qt::AlignCenter);
-    clearReadLog->setAlignment(Qt::AlignCenter);
-
     QGridLayout *readLayout = new QGridLayout;
     readLayout->addWidget(m_cbReadMode, 0, 0);
     readLayout->addWidget(displayRead, 0, 1);
-    readLayout->addWidget(recordReadLog, 1, 0);
-    readLayout->addWidget(saveReadLog, 1, 1);
-    readLayout->addWidget(clearReadLog, 1, 2);
-    readLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 3, 2);
-    readLayout->addWidget(m_eLogRead, 2, 0, 1, 4);
+    readLayout->addWidget(recordReadLog, 0, 2);
+    readLayout->addWidget(saveReadLog, 0, 3);
+    readLayout->addWidget(clearReadLog, 0, 4);
+    readLayout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding), 0, 5);
+    readLayout->addWidget(m_eLogRead, 1, 0, 1, 6);
     readLayout->setSpacing(5);
     readLayout->setContentsMargins(5, 5, 5, 5);
 
@@ -710,10 +700,10 @@ void MainWindow::toggleMacrosView()
 void MainWindow::toggleWriteDisplay(bool toggled)
 {
     if(toggled) {
-        displayWrite->setText("<img src=':/Resources/Display.png' width='20' height='20'/>");
+        displayWrite->setText("<img src=':/Resources/Display.png' width='25' height='25'/>");
         displayWrite->setToolTip(tr("Hide write data"));
     } else {
-        displayWrite->setText("<img src=':/Resources/Hide.png' width='20' height='20'/>");
+        displayWrite->setText("<img src=':/Resources/Hide.png' width='25' height='25'/>");
         displayWrite->setToolTip(tr("Display write data"));
     }
 }
@@ -721,10 +711,10 @@ void MainWindow::toggleWriteDisplay(bool toggled)
 void MainWindow::toggleReadDisplay(bool toggled)
 {
     if(toggled) {
-        displayRead->setText("<img src=':/Resources/Display.png' width='20' height='20'/>");
+        displayRead->setText("<img src=':/Resources/Display.png' width='25' height='25'/>");
         displayRead->setToolTip(tr("Hide read data"));
     } else {
-        displayRead->setText("<img src=':/Resources/Hide.png' width='20' height='20'/>");
+        displayRead->setText("<img src=':/Resources/Hide.png' width='25' height='25'/>");
         displayRead->setToolTip(tr("Display read data"));
     }
 }

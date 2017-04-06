@@ -2,7 +2,6 @@
 #define CLICKABLE_LABEL_H
 
 #include <QLabel>
-#include <QIcon>
 
 class ClickableLabel : public QLabel
 {
@@ -19,8 +18,6 @@ signals:
 protected:
     virtual void mousePressEvent(QMouseEvent *e);
     virtual void mouseReleaseEvent(QMouseEvent *e);
-    virtual void enterEvent(QEvent *e);
-    virtual void leaveEvent(QEvent *e);
 private:
     bool checkable;
     bool checked;
