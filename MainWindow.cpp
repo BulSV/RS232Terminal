@@ -76,8 +76,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_sbRepeatSendInterval(new QSpinBox(this))
     , m_sbReadDelayBetweenPackets(new QSpinBox(this))
     , m_leSendPackage(new QLineEdit(this))
-    , m_cbDisplayWrite(new QCheckBox(tr("Display"), this))
-    , m_cbDisplayRead(new QCheckBox(tr("Display"), this))
+    , displayWrite(new ClickableLabel("<img src=':/Resources/Display.png' width='20' height='20'/>", this))
+    , displayRead(new ClickableLabel("<img src=':/Resources/Display.png' width='20' height='20'/>", this))
     , m_chbCR(new QCheckBox("CR", this))
     , m_chbLF(new QCheckBox("LF", this))
     , m_port(new QSerialPort(this))
@@ -101,6 +101,12 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     logRead = false;
     sendCount = 0;
     currentIntervalIndex = -1;
+
+    displayWrite->setCheckable(true);
+    displayRead->setCheckable(true);
+
+    displayWrite->setToolTip(tr("Hide write data"));
+    displayRead->setToolTip(tr("Hide read data"));
 
     m_eLogRead->displayTime("hh:mm:ss.zzz");
     m_eLogRead->setReadOnly(true);
@@ -188,9 +194,11 @@ void MainWindow::view()
     sendPackageLayout->addWidget(m_bSendPackage);
     sendPackageLayout->setSpacing(5);
 
+    displayWrite->setAlignment(Qt::AlignCenter);
+
     QGridLayout *writeLayout = new QGridLayout;
     writeLayout->addWidget(m_cbWriteMode, 0, 0);
-    writeLayout->addWidget(m_cbDisplayWrite, 0, 1);
+    writeLayout->addWidget(displayWrite, 0, 1);
     writeLayout->addWidget(m_bRecordWriteLog, 1, 0);
     writeLayout->addWidget(m_bSaveWriteLog, 1, 1);
     writeLayout->addWidget(m_bWriteLogClear, 1, 2);
@@ -202,9 +210,11 @@ void MainWindow::view()
     QGroupBox *gbWrite = new QGroupBox(tr("Write"), this);
     gbWrite->setLayout(writeLayout);
 
+    displayRead->setAlignment(Qt::AlignCenter);
+
     QGridLayout *readLayout = new QGridLayout;
     readLayout->addWidget(m_cbReadMode, 0, 0);
-    readLayout->addWidget(m_cbDisplayRead, 0, 1);
+    readLayout->addWidget(displayRead, 0, 1);
     readLayout->addWidget(m_bRecordReadLog, 1, 0);
     readLayout->addWidget(m_bSaveReadLog, 1, 1);
     readLayout->addWidget(m_bReadLogClear, 1, 2);
@@ -239,6 +249,8 @@ void MainWindow::view()
 void MainWindow::connections()
 {
     connect(actionPortConfigure, &QAction::triggered, comPortConfigure, &ComPortConfigure::show);
+    connect(displayWrite, &ClickableLabel::clicked, this, &MainWindow::toggleWriteDisplay);
+    connect(displayRead, &ClickableLabel::clicked, this, &MainWindow::toggleReadDisplay);
     connect(m_bReadLogClear, SIGNAL(clicked()), m_eLogRead, SLOT(clear()));
     connect(m_bWriteLogClear, SIGNAL(clicked()), m_eLogWrite, SLOT(clear()));
     connect(actionStartStop, &QAction::triggered, this, &MainWindow::startStop);
@@ -521,7 +533,7 @@ void MainWindow::sendPackage(const QByteArray &writeData, bool macro)
 
 void MainWindow::displayWrittenData(const QByteArray &writeData)
 {
-    if(!m_cbDisplayWrite->isChecked()) {
+    if(!displayWrite->isChecked()) {
         return;
     }
 
@@ -680,6 +692,28 @@ void MainWindow::toggleMacrosView()
     macrosDockWidget->show();
 }
 
+void MainWindow::toggleWriteDisplay(bool toggled)
+{
+    if(toggled) {
+        displayWrite->setText("<img src=':/Resources/Display.png' width='20' height='20'/>");
+        displayWrite->setToolTip(tr("Hide write data"));
+    } else {
+        displayWrite->setText("<img src=':/Resources/Hide.png' width='20' height='20'/>");
+        displayWrite->setToolTip(tr("Display write data"));
+    }
+}
+
+void MainWindow::toggleReadDisplay(bool toggled)
+{
+    if(toggled) {
+        displayRead->setText("<img src=':/Resources/Display.png' width='20' height='20'/>");
+        displayRead->setToolTip(tr("Hide read data"));
+    } else {
+        displayRead->setText("<img src=':/Resources/Hide.png' width='20' height='20'/>");
+        displayRead->setToolTip(tr("Display read data"));
+    }
+}
+
 // Перевод строки при приеме данных
 // Срабатывает по таймеру m_timerDelayBetweenPackets
 // Определяет отображаемую длину принятого пакета
@@ -695,11 +729,11 @@ void MainWindow::delayBetweenPacketsEnded()
     rxCount+=readBuffer.size();
     m_lRxCount->setText("Rx: " + QString::number(rxCount));
 
-    if(m_cbDisplayRead->isChecked() || logRead) {
+    if(displayRead->isChecked() || logRead) {
         DataEncoder *dataEncoder = getEncoder(m_cbReadMode->currentIndex());
         dataEncoder->setData(readBuffer);
 
-        if(m_cbDisplayRead->isChecked()) {
+        if(displayRead->isChecked()) {
             m_eLogRead->addLine(dataEncoder->encodedStringList().join(" "));
         }
 
@@ -747,8 +781,8 @@ void MainWindow::saveSession()
     settings->setValue("main/read_mode", m_cbReadMode->currentIndex());
     settings->setValue("main/max_write_log_rows", m_eLogWrite->linesLimit());
     settings->setValue("main/max_read_log_rows", m_eLogRead->linesLimit());
-    settings->setValue("main/write_display", m_cbDisplayWrite->isChecked());
-    settings->setValue("main/read_display", m_cbDisplayRead->isChecked());
+    settings->setValue("main/write_display", displayWrite->isChecked());
+    settings->setValue("main/read_display", displayRead->isChecked());
     settings->setValue("main/write_log_timeout", m_tWriteLog->interval());
     settings->setValue("main/read_log_timeout", m_tReadLog->interval());
 
@@ -783,8 +817,8 @@ void MainWindow::loadSession()
 
     m_cbWriteMode->setCurrentIndex(settings->value("main/write_mode", DEFAULT_MODE).toInt());
     m_cbReadMode->setCurrentIndex(settings->value("main/read_mode", DEFAULT_MODE).toInt());
-    m_cbDisplayWrite->setChecked(settings->value("main/write_display", DEFAULT_DISPLAYING).toBool());
-    m_cbDisplayRead->setChecked(settings->value("main/read_display", DEFAULT_DISPLAYING).toBool());
+    displayWrite->setChecked(settings->value("main/write_display", DEFAULT_DISPLAYING).toBool());
+    displayRead->setChecked(settings->value("main/read_display", DEFAULT_DISPLAYING).toBool());
     m_tWriteLog->setInterval(settings->value("main/write_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
     m_tReadLog->setInterval(settings->value("main/read_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
 

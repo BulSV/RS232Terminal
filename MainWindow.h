@@ -28,6 +28,7 @@
 #include "AsciiEncoder.h"
 #include "ComPortConfigure.h"
 #include "Macros.h"
+#include "ClickableLabel.h"
 
 class MainWindow : public QMainWindow
 {
@@ -101,8 +102,8 @@ private:
     QSpinBox *m_sbRepeatSendInterval;
     QSpinBox *m_sbReadDelayBetweenPackets;
     QLineEdit *m_leSendPackage;
-    QCheckBox *m_cbDisplayWrite;
-    QCheckBox *m_cbDisplayRead;
+    ClickableLabel *displayWrite;
+    ClickableLabel *displayRead;
     QCheckBox *m_chbCR;
     QCheckBox *m_chbLF;
 
@@ -142,6 +143,8 @@ private:
     QString stopBitsToString(int stopBits);
     void setMacrosMinimizeFeature(bool floating);
     void toggleMacrosView();
+    void toggleWriteDisplay(bool toggled);
+    void toggleReadDisplay(bool toggled);
 };
 
 #endif // MAIN_WINDOW_H

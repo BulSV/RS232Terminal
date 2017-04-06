@@ -11,6 +11,8 @@ ClickableLabel::ClickableLabel(QWidget *parent)
 
 ClickableLabel::ClickableLabel(const QString &text, QWidget *parent)
     : QLabel(text, parent)
+    , checkable(false)
+    , checked(false)
 {
     setLineWidth(1);
 }
@@ -20,12 +22,33 @@ void ClickableLabel::setCheckable(bool checkable)
     this->checkable = checkable;
 }
 
+void ClickableLabel::setChecked(bool checked)
+{
+    if(checkable) {
+        this->checked = checked;
+        if(checked) {
+            setFrameShape(QFrame::Panel);
+            setFrameShadow(QFrame::Sunken);
+        } else {
+            setFrameShape(QFrame::NoFrame);
+            setFrameShadow(QFrame::Plain);
+        }
+
+        emit clicked(checked);
+    }
+}
+
+bool ClickableLabel::isChecked() const
+{
+    return checked;
+}
+
 void ClickableLabel::mousePressEvent(QMouseEvent *e)
 {
     setFrameShape(QFrame::Panel);
     setFrameShadow(QFrame::Sunken);
     if(checkable) {
-        emit clicked(true);
+        checked = !checked;
     }
 
     QLabel::mousePressEvent(e);
@@ -33,26 +56,32 @@ void ClickableLabel::mousePressEvent(QMouseEvent *e)
 
 void ClickableLabel::mouseReleaseEvent(QMouseEvent *e)
 {
-    setFrameShape(QFrame::NoFrame);
-    setFrameShadow(QFrame::Plain);
+    if(!checked) {
+        setFrameShape(QFrame::NoFrame);
+        setFrameShadow(QFrame::Plain);
+    }
 
-    emit clicked();
+    emit clicked(checked);
 
     QLabel::mouseReleaseEvent(e);
 }
 
 void ClickableLabel::enterEvent(QEvent *e)
 {
-    setFrameShape(QFrame::Panel);
-    setFrameShadow(QFrame::Raised);
+    if(!checked) {
+        setFrameShape(QFrame::Panel);
+        setFrameShadow(QFrame::Raised);
+    }
 
     QLabel::enterEvent(e);
 }
 
 void ClickableLabel::leaveEvent(QEvent *e)
 {
-    setFrameShape(QFrame::NoFrame);
-    setFrameShadow(QFrame::Plain);
+    if(!checked) {
+        setFrameShape(QFrame::NoFrame);
+        setFrameShadow(QFrame::Plain);
+    }
 
     QLabel::leaveEvent(e);
 }

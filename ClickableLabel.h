@@ -11,6 +11,8 @@ public:
     explicit ClickableLabel(QWidget * parent = 0);
     explicit ClickableLabel(const QString &text, QWidget * parent = 0);
     void setCheckable(bool checkable);
+    void setChecked(bool checked);
+    bool isChecked() const;
 signals:
     void clicked(bool checked = false);
     // QWidget interface
@@ -21,6 +23,7 @@ protected:
     virtual void leaveEvent(QEvent *e);
 private:
     bool checkable;
+    bool checked;
 };
 
 #endif // CLICKABLE_LABEL_H
