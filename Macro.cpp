@@ -101,6 +101,12 @@ void Macro::openMacroFile(const QString &fileName)
     macroEdit->openMacroFile(fileName);
 }
 
+void Macro::stopSend()
+{
+    timerPeriod->stop();
+    buttonSend->setChecked(false);
+}
+
 void Macro::deleteMacro()
 {
     int button = QMessageBox::question(this, tr("Warning"),
@@ -115,8 +121,7 @@ void Macro::singleSend()
 {
     emit packetSended(macroEdit->getPackage());
     if(isSelected ||spinBoxTime->value() == 0 ) {
-        timerPeriod->stop();
-        buttonSend->setChecked(false);
+        stopSend();
 
         return;
     }

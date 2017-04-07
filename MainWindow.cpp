@@ -442,6 +442,8 @@ void MainWindow::stop()
     bits->setText(BITS + bitsToString(m_port->dataBits()));
     parity->setText(PARITY + parityToString(m_port->parity()));
     stopBits->setText(STOP_BITS + stopBitsToString(m_port->stopBits()));
+
+    macros->stopSend();
 }
 
 void MainWindow::received()
@@ -517,9 +519,9 @@ void MainWindow::startSending(bool checked)
 
             return;
         }
-        manualSendPacket->setChecked(false);
         singleSend();
     }
+    manualSendPacket->setChecked(false);
 }
 
 void MainWindow::sendPackage(const QByteArray &writeData, bool macro)

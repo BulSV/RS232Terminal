@@ -36,6 +36,7 @@ public:
 
     const QByteArray &getPacket() const;
     void openMacroFile(const QString &fileName);
+    void stopSend();
 signals:
     void deleted();
     void selected(bool select);
