@@ -21,6 +21,8 @@ Macro::Macro(QWidget *parent)
     spinBoxTime->setRange(0, 999999);
     spinBoxTime->setValue(50);
 
+    buttonSend->setCheckable(true);
+
     view();
     connections();
 }
@@ -47,6 +49,7 @@ void Macro::select()
 {
     isSelected = true;
     checkBoxSelect->setChecked(isSelected);
+
 }
 
 void Macro::deselect()
@@ -108,9 +111,36 @@ void Macro::deleteMacro()
     }
 }
 
-void Macro::sendPackage()
+void Macro::singleSend()
 {
     emit packetSended(macroEdit->getPackage());
+    if(!isSelected) {
+        if(spinBoxTime->value() != 0) {
+            timerPeriod->start(spinBoxTime->value());
+        } else {
+            timerPeriod->stop();
+            buttonSend->setChecked(false);
+        }
+    } else {
+        timerPeriod->stop();
+        buttonSend->setChecked(false);
+    }
+}
+
+void Macro::sendPacket(bool checked)
+{
+    if(!checked) {
+        timerPeriod->stop();
+
+        return;
+    }
+    if(spinBoxTime->value() != 0 && !isSelected) {
+        timerPeriod->start(spinBoxTime->value());
+
+        return;
+    }
+    buttonSend->setChecked(false);
+    singleSend();
 }
 
 void Macro::titleChanged()
@@ -179,10 +209,10 @@ void Macro::connections()
 {
     connect(checkBoxSelect, &QCheckBox::clicked, this, &Macro::selectTrigger);
     connect(buttonSend, &RightClickedButton::rightClicked, macroEdit, &MacroEdit::show);
-    connect(buttonSend, &RightClickedButton::clicked, this, &Macro::sendPackage);
+    connect(buttonSend, &RightClickedButton::clicked, this, &Macro::sendPacket);
+    connect(timerPeriod, &QTimer::timeout, this, &Macro::singleSend);
     connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::sendTimeChanged);
     connect(buttonDelete, &ClickableLabel::clicked, this, &Macro::deleteMacro);
-    connect(timerPeriod, &QTimer::timeout, this, &Macro::sendPackage);
     connect(buttonUp, &ClickableLabel::clicked, this, &Macro::movedUp);
     connect(buttonDown, &ClickableLabel::clicked, this, &Macro::movedDown);
     connect(macroEdit, &MacroEdit::titleChanged, buttonSend, &RightClickedButton::setText);

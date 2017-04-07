@@ -58,7 +58,8 @@ private:
     void view();
     void connections();
     void deleteMacro();
-    void sendPackage();
+    void singleSend();
+    void sendPacket(bool checked);
     void titleChanged();
     void selectTrigger();
 };
