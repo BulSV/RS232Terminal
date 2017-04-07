@@ -42,7 +42,7 @@ signals:
     void selected(bool select);
     void toggled();
     void packetSended(const QByteArray &packet);
-    void sendTimeChanged(int time);
+    void timeChanged(int time);
     void movedUp();
     void movedDown();
 private:

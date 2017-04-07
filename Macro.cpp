@@ -83,7 +83,15 @@ bool Macro::isEnabledSelectState() const
 
 void Macro::setTime(int time)
 {
+    if(time == 0) {
+        deselect();
+        enableSelectState(false);
+    } else {
+        enableSelectState(true);
+    }
     spinBoxTime->setValue(time);
+
+    emit timeChanged(time);
 }
 
 int Macro::getTime() const
@@ -212,7 +220,7 @@ void Macro::connections()
     connect(buttonSend, &RightClickedButton::rightClicked, macroEdit, &MacroEdit::show);
     connect(buttonSend, &RightClickedButton::clicked, this, &Macro::sendPacket);
     connect(timerPeriod, &QTimer::timeout, this, &Macro::singleSend);
-    connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::sendTimeChanged);
+    connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::setTime);
     connect(buttonDelete, &ClickableLabel::clicked, this, &Macro::deleteMacro);
     connect(buttonUp, &ClickableLabel::clicked, this, &Macro::movedUp);
     connect(buttonDown, &ClickableLabel::clicked, this, &Macro::movedDown);
