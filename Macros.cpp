@@ -27,6 +27,7 @@ Macros::Macros(QWidget *parent)
     , fileDialog(new QFileDialog(this))
 {
     actionPause->setCheckable(true);
+    actionPause->setEnabled(false);
     time->setRange(1, 60000);
     time->setToolTip(tr("Time, ms"));
     QToolBar *toolBar = new QToolBar(this);
@@ -214,9 +215,13 @@ void Macros::startOrStop()
     if(actionStartStop->toolTip() == tr("Start sending macros")) {
         actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
         actionStartStop->setToolTip(tr("Stop sending macros"));
+        actionPause->setEnabled(true);
     } else {
         actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
         actionStartStop->setToolTip(tr("Start sending macros"));
+        actionPause->setChecked(false);
+        actionPause->setToolTip("Pause sending macros");
+        actionPause->setEnabled(false);
     }
 }
 
