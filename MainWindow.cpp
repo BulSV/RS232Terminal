@@ -192,6 +192,9 @@ void MainWindow::view()
     manualSendToolBar->addActions(actions);
     manualSendToolBar->setStyleSheet("spacing:2px");
 
+    m_lTxCount->setToolTip(tr("Written bytes count"));
+    m_lRxCount->setToolTip(tr("Read bytes count"));
+
     QStatusBar *statusBar = new QStatusBar(this);
     statusBar->addWidget(portName);
     statusBar->addWidget(baud);
