@@ -2,8 +2,6 @@
     <qresource prefix="/">
         <file>Resources/elisat.png</file>
         <file>Resources/Add.png</file>
-        <file>Resources/Rec.png</file>
-        <file>Resources/RecBlink.png</file>
         <file>Resources/Terminal.ico</file>
         <file>Resources/Terminal.png</file>
         <file>Resources/arrow-up.png</file>
@@ -27,5 +25,6 @@
         <file>Resources/Hide.png</file>
         <file>Resources/Select.png</file>
         <file>Resources/Deselect.png</file>
+        <file>Resources/Record.png</file>
     </qresource>
 </RCC>
