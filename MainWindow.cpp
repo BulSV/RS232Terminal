@@ -10,6 +10,7 @@
 #include <QListIterator>
 #include <algorithm>
 #include <QGroupBox>
+#include <QWidgetAction>
 
 #include "MainWindow.h"
 #include "Macro.h"
@@ -286,7 +287,7 @@ void MainWindow::connections()
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(m_tReadLog, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
     connect(m_port, SIGNAL(readyRead()), this, SLOT(received()));
-    connect(macros, &Macros::packageSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
+    connect(macros, &Macros::packetSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
     connect(macrosDockWidget, &QDockWidget::topLevelChanged, this, &MainWindow::setMacrosMinimizeFeature);
 }
 

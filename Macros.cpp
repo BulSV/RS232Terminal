@@ -1,6 +1,8 @@
 #include <QGridLayout>
 #include <QScrollBar>
 #include <QMessageBox>
+#include <QToolBar>
+#include <QWidgetAction>
 
 #include "Macros.h"
 
@@ -17,8 +19,8 @@ Macros::Macros(QWidget *parent)
     , actionNew(new QAction(QIcon(":/Resources/Add.png"), tr("Add empty macro"), this))
     , actionLoad(new QAction(QIcon(":/Resources/Open.png"), tr("Load macros"), this))
     , time(new QSpinBox(this))
-    , actionSetTime(new QAction(QIcon(":/Resources/Time.png"), tr("Set time between macros"), this))
-    , toolBar(new QToolBar(this))
+    , selectMacro(new QAction(QIcon(":/Resources/Select.png"), tr("Select macros"), this))
+    , deselectMacro(new QAction(QIcon(":/Resources/Deselect.png"), tr("Deselect macros"), this))
     , mainWidget(new QWidget(this))
     , scrollAreaLayout(new QVBoxLayout)
     , scrollArea(new QScrollArea(this))
@@ -27,12 +29,13 @@ Macros::Macros(QWidget *parent)
     actionPause->setCheckable(true);
     time->setRange(1, 60000);
     time->setToolTip(tr("Time, ms"));
+    QToolBar *toolBar = new QToolBar(this);
+    toolBar->setStyleSheet("spacing:2px");
     QWidgetAction *actionTime = new QWidgetAction(toolBar);
     actionTime->setDefaultWidget(time);
-    actionSetTime->setCheckable(true);
     QList<QAction*> actions;
-    actions << actionDelete << actionSetTime << actionTime << actionNew
-            << actionLoad << actionStartStop << actionPause;
+    actions << actionDelete << selectMacro << deselectMacro << actionTime
+            << actionNew << actionLoad << actionStartStop << actionPause;
     toolBar->addActions(actions);
     toolBar->setMovable(false);
     addToolBar(Qt::TopToolBarArea, toolBar);
@@ -70,7 +73,6 @@ void Macros::saveSettings(QSettings *settings)
 {
     settings->remove("macros");
     settings->setValue("macros/time", time->value());
-    settings->setValue("macros/setTime", actionSetTime->isChecked());
 
     int macroIndex = 1;
     QListIterator<Macro*> it(macrosWidgets);
@@ -86,14 +88,14 @@ void Macros::saveSettings(QSettings *settings)
 void Macros::loadSettings(QSettings *settings)
 {
     time->setValue(settings->value("macros/time", DEFAULT_TIME).toInt());
-    actionSetTime->setChecked(settings->value("macros/setTime", false).toBool());
+    selectMacro->setChecked(settings->value("macros/setTime", false).toBool());
 
     int macrosCount = settings->value("macros/count", DEFAULT_COUNT).toInt();
     for(int macroIndex = 1; macroIndex <= macrosCount; ++macroIndex) {
         addMacro();
         macrosWidgets.last()->loadSettings(settings, macroIndex);
-        if(actionSetTime->isChecked()) {
-            macrosWidgets.last()->setCheckedInterval(true);
+        if(selectMacro->isChecked()) {
+            macrosWidgets.last()->deselect();
         }
     }
 }
@@ -105,11 +107,12 @@ void Macros::addMacro()
     scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macro);
 
     connect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
-    connect(macro, &Macro::packageSended, this, &Macros::packageSended);
+    connect(macro, &Macro::packetSended, this, &Macros::packetSended);
 //    connect(macro, &MacroWidget::intervalChecked, this, &Macros::updateIntervalsList);
     connect(macro, &Macro::movedUp, this, &Macros::moveMacroUp);
     connect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
-    connect(actionSetTime, &QAction::triggered, macro, &Macro::setCheckedInterval);
+    connect(selectMacro, &QAction::triggered, macro, &Macro::select);
+    connect(deselectMacro, &QAction::triggered, macro, &Macro::deselect);
     connect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &Macro::setTime);
 }
 
@@ -123,16 +126,16 @@ void Macros::deleteMacro(Macro *macro)
     if(macro == 0) {
         return;
     }
-    macro->setCheckedInterval(false);
-    macro->setCheckedPeriod(false);
+    macro->deselect();
     macrosWidgets.removeOne(macro);
     scrollAreaLayout->removeWidget(macro);
     disconnect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
-    disconnect(macro, &Macro::packageSended, this, &Macros::packageSended);
+    disconnect(macro, &Macro::packetSended, this, &Macros::packetSended);
 //    disconnect(macro, &MacroWidget::intervalChecked, this, &Macros::updateIntervalsList);
     disconnect(macro, &Macro::movedUp, this, &Macros::moveMacroUp);
     disconnect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
-    disconnect(actionSetTime, &QAction::triggered, macro, &Macro::setCheckedInterval);
+    disconnect(selectMacro, &QAction::triggered, macro, &Macro::select);
+    connect(deselectMacro, &QAction::triggered, macro, &Macro::deselect);
     disconnect(time, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &Macro::setTime);
     delete macro;
     macro = 0;

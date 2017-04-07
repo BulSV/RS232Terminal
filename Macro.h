@@ -23,47 +23,44 @@ public:
     void saveSettings(QSettings *settings, int macroIndex);
     void loadSettings(QSettings *settings, int macroIndex);
 
-    void setCheckedInterval(bool check);
-    bool intervalIsChecked() const;
-    void setCheckedPeriod(bool check);
-    bool periodIsChecked() const;
+    void select();
+    void deselect();
+    void selectToggle();
+    bool selectState() const;
 
-    void setEnabledInterval(bool enable);
-    bool intervalIsEnabled() const;
-    void setEnabledPeriod(bool enable);
-    bool periodIsEnabled() const;
+    void enableSelectState(bool enable);
+    bool isEnabledSelectState() const;
 
     void setTime(int time);
     int getTime() const;
 
-    const QByteArray &getPackage() const;
+    const QByteArray &getPacket() const;
     void openMacroFile(const QString &fileName);
 signals:
     void deleted();
-    void intervalChecked(bool checked);
-    void periodChecked(bool checked);
-    void packageSended(const QByteArray &package);
+    void selected(bool select);
+    void toggled();
+    void packetSended(const QByteArray &packet);
     void sendTimeChanged(int time);
     void movedUp();
     void movedDown();
 private:
     ClickableLabel *buttonDelete;
-    QCheckBox *checkBoxInterval;
-    QCheckBox *checkBoxPeriod;
+    QCheckBox *checkBoxSelect;
     QSpinBox *spinBoxTime;
     RightClickedButton *buttonSend;
     ClickableLabel *buttonUp;
     ClickableLabel *buttonDown;
     MacroEdit *macroEdit;
     QTimer *timerPeriod;
+    bool isSelected;
 
     void view();
     void connections();
     void deleteMacro();
     void sendPackage();
     void titleChanged();
-    void intervalToggled(bool toggled);
-    void periodToggled(bool toggled);
+    void selectTrigger();
 };
 
 #endif // MACRO_WIDGET_H

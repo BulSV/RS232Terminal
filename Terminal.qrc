@@ -23,8 +23,9 @@
         <file>Resources/Macros.png</file>
         <file>Resources/Send.png</file>
         <file>Resources/ComPort.png</file>
-        <file>Resources/Time.png</file>
         <file>Resources/Display.png</file>
         <file>Resources/Hide.png</file>
+        <file>Resources/Select.png</file>
+        <file>Resources/Deselect.png</file>
     </qresource>
 </RCC>

@@ -4,8 +4,6 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QSpinBox>
-#include <QWidgetAction>
-#include <QToolBar>
 #include <QList>
 #include <QVBoxLayout>
 #include <QScrollArea>
@@ -27,7 +25,7 @@ public:
     void saveSettings(QSettings *settings);
     void loadSettings(QSettings *settings);
 signals:
-    void packageSended(const QByteArray &package);
+    void packetSended(const QByteArray &package);
 private:
     QAction *actionPause;
     QAction *actionStartStop;
@@ -35,8 +33,8 @@ private:
     QAction *actionNew;
     QAction *actionLoad;
     QSpinBox *time;
-    QAction *actionSetTime;
-    QToolBar *toolBar;
+    QAction *selectMacro;
+    QAction *deselectMacro;
     QList<Macro*> macrosWidgets;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;

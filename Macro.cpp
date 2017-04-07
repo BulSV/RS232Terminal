@@ -9,14 +9,14 @@ const int MAX_SYMBOLS_COUNT = 20;
 Macro::Macro(QWidget *parent)
     : QWidget(parent)
     , buttonDelete(new ClickableLabel(this))
-    , checkBoxInterval(new QCheckBox(this))
-    , checkBoxPeriod(new QCheckBox(this))
+    , checkBoxSelect(new QCheckBox(this))
     , spinBoxTime(new QSpinBox(this))
     , buttonSend(new RightClickedButton(tr("Empty"), this))
     , buttonUp(new ClickableLabel(this))
     , buttonDown(new ClickableLabel(this))
     , macroEdit(new MacroEdit(this))
     , timerPeriod(new QTimer(this))
+    , isSelected(false)
 {
     spinBoxTime->setRange(0, 999999);
     spinBoxTime->setValue(50);
@@ -28,8 +28,7 @@ Macro::Macro(QWidget *parent)
 void Macro::saveSettings(QSettings *settings, int macroIndex)
 {
     QString macroIndexString = QString::number(macroIndex);
-    settings->setValue("macros/" + macroIndexString + "/interval", intervalIsChecked());
-    settings->setValue("macros/" + macroIndexString + "/period", periodIsChecked());
+    settings->setValue("macros/" + macroIndexString + "/selected", selectState());
     settings->setValue("macros/" + macroIndexString + "/time", getTime());
 
     macroEdit->saveSettings(settings, macroIndex);
@@ -38,51 +37,45 @@ void Macro::saveSettings(QSettings *settings, int macroIndex)
 void Macro::loadSettings(QSettings *settings, int macroIndex)
 {
     QString macroIndexString = QString::number(macroIndex);
-    setCheckedInterval(settings->value("macros/" + macroIndexString + "/interval").toBool());
-    setCheckedPeriod(settings->value("macros/" + macroIndexString + "/period").toBool());
+    settings->value("macros/" + macroIndexString + "/selected", false).toBool() ? select() : deselect();
     setTime(settings->value("macros/" + macroIndexString + "/time").toInt());
 
     macroEdit->loadSettings(settings, macroIndex);
 }
 
-void Macro::setCheckedInterval(bool check)
+void Macro::select()
 {
-    checkBoxInterval->setChecked(check);
+    isSelected = true;
+    checkBoxSelect->setChecked(isSelected);
 }
 
-bool Macro::intervalIsChecked() const
+void Macro::deselect()
 {
-    return checkBoxInterval->isChecked();
+    isSelected = false;
+    checkBoxSelect->setChecked(isSelected);
 }
 
-void Macro::setCheckedPeriod(bool check)
+void Macro::selectToggle()
 {
-    checkBoxPeriod->setChecked(check);
+    isSelected = !isSelected;
+    checkBoxSelect->setChecked(isSelected);
+
+    emit toggled();
 }
 
-bool Macro::periodIsChecked() const
+bool Macro::selectState() const
 {
-    return checkBoxPeriod->isChecked();
+    return checkBoxSelect->isChecked();
 }
 
-void Macro::setEnabledInterval(bool enable)
+void Macro::enableSelectState(bool enable)
 {
-    checkBoxInterval->setEnabled(enable);
+    checkBoxSelect->setEnabled(enable);
 }
 
-bool Macro::intervalIsEnabled() const
+bool Macro::isEnabledSelectState() const
 {
-    return checkBoxInterval->isEnabled();
-}
-
-void Macro::setEnabledPeriod(bool enable)
-{
-    checkBoxPeriod->setEnabled(enable);
-}
-
-bool Macro::periodIsEnabled() const
-{
-    return checkBoxPeriod->isEnabled();
+    return checkBoxSelect->isEnabled();
 }
 
 void Macro::setTime(int time)
@@ -95,7 +88,7 @@ int Macro::getTime() const
     return spinBoxTime->value();
 }
 
-const QByteArray &Macro::getPackage() const
+const QByteArray &Macro::getPacket() const
 {
     return macroEdit->getPackage();
 }
@@ -117,7 +110,7 @@ void Macro::deleteMacro()
 
 void Macro::sendPackage()
 {
-    emit packageSended(macroEdit->getPackage());
+    emit packetSended(macroEdit->getPackage());
 }
 
 void Macro::titleChanged()
@@ -128,31 +121,18 @@ void Macro::titleChanged()
     }
 }
 
-void Macro::intervalToggled(bool toggled)
+void Macro::selectTrigger()
 {
-    if(toggled) {
-        checkBoxPeriod->setChecked(false);
-    }
-    checkBoxInterval->setChecked(toggled);
+    isSelected = !isSelected;
+    checkBoxSelect->setChecked(isSelected);
 
-    emit intervalChecked(toggled);
-}
-
-void Macro::periodToggled(bool toggled)
-{
-    if(toggled) {
-        checkBoxInterval->setChecked(false);
-    }
-    checkBoxPeriod->setChecked(toggled);
-
-    emit periodChecked(toggled);
+    emit selected(isSelected);
 }
 
 void Macro::view()
 {
     buttonDelete->setFixedWidth(25);
-    checkBoxInterval->setFixedWidth(15);
-    checkBoxPeriod->setFixedWidth(15);
+    checkBoxSelect->setFixedWidth(15);
     spinBoxTime->setFixedWidth(60);
     buttonSend->setMaximumWidth(150);
     buttonUp->setFixedSize(16, 13);
@@ -162,8 +142,7 @@ void Macro::view()
     buttonDelete->setAlignment(Qt::AlignCenter);
     buttonDelete->setToolTip(tr("Delete macro"));
 
-    checkBoxInterval->setToolTip(tr("Interval"));
-    checkBoxPeriod->setToolTip(tr("Period"));
+    checkBoxSelect->setToolTip(tr("Select macro"));
 
     spinBoxTime->setToolTip(tr("Time, ms"));
 
@@ -185,8 +164,7 @@ void Macro::view()
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addWidget(buttonDelete);
-    mainLayout->addWidget(checkBoxInterval);
-    mainLayout->addWidget(checkBoxPeriod);
+    mainLayout->addWidget(checkBoxSelect);
     mainLayout->addWidget(spinBoxTime);
     mainLayout->addWidget(buttonSend);
     mainLayout->addLayout(upDownButtonsLayout);
@@ -199,8 +177,7 @@ void Macro::view()
 
 void Macro::connections()
 {
-    connect(checkBoxInterval, &QCheckBox::toggled, this, &Macro::intervalToggled);
-    connect(checkBoxPeriod, &QCheckBox::toggled, this, &Macro::periodToggled);
+    connect(checkBoxSelect, &QCheckBox::clicked, this, &Macro::selectTrigger);
     connect(buttonSend, &RightClickedButton::rightClicked, macroEdit, &MacroEdit::show);
     connect(buttonSend, &RightClickedButton::clicked, this, &Macro::sendPackage);
     connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::sendTimeChanged);
