@@ -114,17 +114,13 @@ void Macro::deleteMacro()
 void Macro::singleSend()
 {
     emit packetSended(macroEdit->getPackage());
-    if(!isSelected) {
-        if(spinBoxTime->value() != 0) {
-            timerPeriod->start(spinBoxTime->value());
-        } else {
-            timerPeriod->stop();
-            buttonSend->setChecked(false);
-        }
-    } else {
+    if(isSelected ||spinBoxTime->value() == 0 ) {
         timerPeriod->stop();
         buttonSend->setChecked(false);
+
+        return;
     }
+    timerPeriod->start(spinBoxTime->value());
 }
 
 void Macro::sendPacket(bool checked)
