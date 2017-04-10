@@ -297,13 +297,16 @@ void MainWindow::connections()
 void MainWindow::startStop()
 {
     if(actionStartStop->text() == tr("Open COM-port")) {
+        start();
+        if(!m_port->isOpen()) {
+            return;
+        }
         actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
         actionStartStop->setText(tr("Close COM-port"));
-        start();
     } else {
+        stop();
         actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
         actionStartStop->setText(tr("Open COM-port"));
-        stop();
     }
 }
 
@@ -440,11 +443,11 @@ void MainWindow::stop()
     m_tSend->stop();
     m_timerDelayBetweenPackets->stop();
     m_tIntervalSending->stop();
-    portName->setText(PORT + m_port->portName());
-    baud->setText(BAUD + baudToString(m_port->baudRate()));
-    bits->setText(BITS + bitsToString(m_port->dataBits()));
-    parity->setText(PARITY + parityToString(m_port->parity()));
-    stopBits->setText(STOP_BITS + stopBitsToString(m_port->stopBits()));
+    portName->setText(PORT + tr("None"));
+    baud->setText(BAUD + tr("None"));
+    bits->setText(BITS + tr("None"));
+    parity->setText(PARITY + tr("None"));
+    stopBits->setText(STOP_BITS + tr("None"));
 
     macros->stopSend();
 }
