@@ -101,14 +101,6 @@ void Macros::loadSettings(QSettings *settings)
     }
 }
 
-void Macros::stopSend()
-{
-    QListIterator<Macro*> it(macrosWidgets);
-    while(it.hasNext()) {
-        it.next()->stopSend();
-    }
-}
-
 void Macros::addMacro()
 {
     Macro *macro = new Macro(this);

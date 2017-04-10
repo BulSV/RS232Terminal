@@ -35,7 +35,6 @@ public:
 
     const QByteArray &getPacket() const;
     void openMacroFile(const QString &fileName);
-    void stopSend();
 signals:
     void deleted();
     void selected(bool select);
@@ -52,14 +51,12 @@ private:
     ClickableLabel *buttonUp;
     ClickableLabel *buttonDown;
     MacroEdit *macroEdit;
-    QTimer *timerPeriod;
     bool isSelected;
 
     void view();
     void connections();
     void deleteMacro();
-    void singleSend();
-    void sendPacket(bool checked);
+    void sendPacket();
     void titleChanged();
     void selectTrigger();
 };

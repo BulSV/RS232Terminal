@@ -24,7 +24,6 @@ public:
     explicit Macros(QWidget *parent = 0);
     void saveSettings(QSettings *settings);
     void loadSettings(QSettings *settings);
-    void stopSend();
 signals:
     void packetSended(const QByteArray &package);
 private:

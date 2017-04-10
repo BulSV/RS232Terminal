@@ -450,8 +450,6 @@ void MainWindow::stop()
     bits->setText(BITS + tr("None"));
     parity->setText(PARITY + tr("None"));
     stopBits->setText(STOP_BITS + tr("None"));
-
-    macros->stopSend();
 }
 
 void MainWindow::received()

@@ -15,13 +15,10 @@ Macro::Macro(QWidget *parent)
     , buttonUp(new ClickableLabel(this))
     , buttonDown(new ClickableLabel(this))
     , macroEdit(new MacroEdit(this))
-    , timerPeriod(new QTimer(this))
     , isSelected(false)
 {
     spinBoxTime->setRange(0, 999999);
     spinBoxTime->setValue(50);
-
-    buttonSend->setCheckable(true);
 
     view();
     connections();
@@ -109,12 +106,6 @@ void Macro::openMacroFile(const QString &fileName)
     macroEdit->openMacroFile(fileName);
 }
 
-void Macro::stopSend()
-{
-    timerPeriod->stop();
-    buttonSend->setChecked(false);
-}
-
 void Macro::deleteMacro()
 {
     int button = QMessageBox::question(this, tr("Warning"),
@@ -125,31 +116,9 @@ void Macro::deleteMacro()
     }
 }
 
-void Macro::singleSend()
+void Macro::sendPacket()
 {
     emit packetSended(macroEdit->getPackage());
-    if(isSelected ||spinBoxTime->value() == 0 ) {
-        stopSend();
-
-        return;
-    }
-    timerPeriod->start(spinBoxTime->value());
-}
-
-void Macro::sendPacket(bool checked)
-{
-    if(!checked) {
-        timerPeriod->stop();
-
-        return;
-    }
-    if(spinBoxTime->value() != 0 && !isSelected) {
-        timerPeriod->start(spinBoxTime->value());
-
-        return;
-    }
-    buttonSend->setChecked(false);
-    singleSend();
 }
 
 void Macro::titleChanged()
@@ -219,7 +188,6 @@ void Macro::connections()
     connect(checkBoxSelect, &QCheckBox::clicked, this, &Macro::selectTrigger);
     connect(buttonSend, &ClickableLabel::rightClicked, macroEdit, &MacroEdit::show);
     connect(buttonSend, &ClickableLabel::clicked, this, &Macro::sendPacket);
-    connect(timerPeriod, &QTimer::timeout, this, &Macro::singleSend);
     connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::setTime);
     connect(buttonDelete, &ClickableLabel::clicked, this, &Macro::deleteMacro);
     connect(buttonUp, &ClickableLabel::clicked, this, &Macro::movedUp);
