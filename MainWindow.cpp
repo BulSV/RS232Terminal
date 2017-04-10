@@ -117,7 +117,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     macrosDockWidget->setWidget(macros);
     macrosDockWidget->setFixedWidth(310);
     macrosDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, macrosDockWidget);
 
     recordWriteLog->setCheckable(true);
     recordReadLog->setCheckable(true);
@@ -292,6 +291,7 @@ void MainWindow::connections()
     connect(m_port, SIGNAL(readyRead()), this, SLOT(received()));
     connect(macros, &Macros::packetSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
     connect(macrosDockWidget, &QDockWidget::topLevelChanged, this, &MainWindow::setMacrosMinimizeFeature);
+    connect(macrosDockWidget, &QDockWidget::dockLocationChanged, this, &MainWindow::saveCurrentMacrosArea);
 }
 
 void MainWindow::startStop()
@@ -744,6 +744,11 @@ void MainWindow::toggleReadDisplay(bool toggled)
     }
 }
 
+void MainWindow::saveCurrentMacrosArea(Qt::DockWidgetArea area)
+{
+    macrosDockWidgetArea = area;
+}
+
 // Перевод строки при приеме данных
 // Срабатывает по таймеру m_timerDelayBetweenPackets
 // Определяет отображаемую длину принятого пакета
@@ -824,6 +829,9 @@ void MainWindow::saveSession()
     settings->setValue("main/mode", manualSendMode->currentIndex());
     settings->setValue("main/CR", manualCR->isChecked());
     settings->setValue("main/LF", manualLF->isChecked());
+
+    settings->setValue("main/macros_dock_widget_area", macrosDockWidgetArea);
+    settings->setValue("main/macros_dock_widget_hidden", macrosDockWidget->isHidden());
 }
 
 void MainWindow::loadSession()
@@ -854,6 +862,9 @@ void MainWindow::loadSession()
     manualCR->setChecked(settings->value("main/CR", DEFAULT_CR_LF).toBool());
     manualLF->setChecked(settings->value("main/LF", DEFAULT_CR_LF).toBool());
     manualSendMode->setCurrentIndex(settings->value("main/mode", DEFAULT_MODE).toInt());
+
+    addDockWidget(static_cast<Qt::DockWidgetArea>(settings->value("main/macros_dock_widget_area", Qt::RightDockWidgetArea).toInt()), macrosDockWidget);
+    macrosDockWidget->setHidden(settings->value("main/macros_dock_widget_hidden", true).toBool());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)

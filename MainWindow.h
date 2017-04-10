@@ -130,6 +130,8 @@ private:
     QSize currentWindowSize;
     QPoint currentWindowPos;
 
+    int macrosDockWidgetArea;
+
     void view();
     void saveSession();
     void loadSession();
@@ -147,6 +149,7 @@ private:
     void toggleMacrosView();
     void toggleWriteDisplay(bool toggled);
     void toggleReadDisplay(bool toggled);
+    void saveCurrentMacrosArea(Qt::DockWidgetArea area);
 };
 
 #endif // MAIN_WINDOW_H
