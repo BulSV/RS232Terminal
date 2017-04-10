@@ -10,7 +10,6 @@
 #include <QSettings>
 #include <QByteArray>
 
-#include "RightClickedButton.h"
 #include "MacroEdit.h"
 #include "ClickableLabel.h"
 
@@ -49,7 +48,7 @@ private:
     ClickableLabel *buttonDelete;
     QCheckBox *checkBoxSelect;
     QSpinBox *spinBoxTime;
-    RightClickedButton *buttonSend;
+    ClickableLabel *buttonSend;
     ClickableLabel *buttonUp;
     ClickableLabel *buttonDown;
     MacroEdit *macroEdit;

@@ -11,7 +11,7 @@ Macro::Macro(QWidget *parent)
     , buttonDelete(new ClickableLabel(this))
     , checkBoxSelect(new QCheckBox(this))
     , spinBoxTime(new QSpinBox(this))
-    , buttonSend(new RightClickedButton(tr("Empty"), this))
+    , buttonSend(new ClickableLabel(tr("Empty"), this))
     , buttonUp(new ClickableLabel(this))
     , buttonDown(new ClickableLabel(this))
     , macroEdit(new MacroEdit(this))
@@ -217,13 +217,13 @@ void Macro::view()
 void Macro::connections()
 {
     connect(checkBoxSelect, &QCheckBox::clicked, this, &Macro::selectTrigger);
-    connect(buttonSend, &RightClickedButton::rightClicked, macroEdit, &MacroEdit::show);
-    connect(buttonSend, &RightClickedButton::clicked, this, &Macro::sendPacket);
+    connect(buttonSend, &ClickableLabel::rightClicked, macroEdit, &MacroEdit::show);
+    connect(buttonSend, &ClickableLabel::clicked, this, &Macro::sendPacket);
     connect(timerPeriod, &QTimer::timeout, this, &Macro::singleSend);
     connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macro::setTime);
     connect(buttonDelete, &ClickableLabel::clicked, this, &Macro::deleteMacro);
     connect(buttonUp, &ClickableLabel::clicked, this, &Macro::movedUp);
     connect(buttonDown, &ClickableLabel::clicked, this, &Macro::movedDown);
-    connect(macroEdit, &MacroEdit::titleChanged, buttonSend, &RightClickedButton::setText);
+    connect(macroEdit, &MacroEdit::titleChanged, buttonSend, &ClickableLabel::setText);
     connect(macroEdit, &MacroEdit::titleChanged, this, &Macro::titleChanged);
 }

@@ -11,7 +11,6 @@ SOURCES += main.cpp\
     DataEncoder.cpp \
     AsciiEncoder.cpp \
     DecEncoder.cpp \
-    RightClickedButton.cpp \
     DataTable.cpp \
     LimitedTextEdit.cpp \
     ComPortConfigure.cpp \
@@ -29,7 +28,6 @@ HEADERS  += \
     HexEncoder.h \
     AsciiEncoder.h \
     DecEncoder.h \
-    RightClickedButton.h \
     DataTable.h \
     LimitedTextEdit.h \
     ComPortConfigure.h \

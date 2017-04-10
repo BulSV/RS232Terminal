@@ -1,4 +1,5 @@
 #include <QIcon>
+#include <QMouseEvent>
 
 #include "ClickableLabel.h"
 
@@ -53,10 +54,12 @@ bool ClickableLabel::isChecked() const
 
 void ClickableLabel::mousePressEvent(QMouseEvent *e)
 {
-    setFrameShape(QFrame::Panel);
-    setFrameShadow(QFrame::Sunken);
-    if(checkable) {
-        checked = !checked;
+    if(e->button() == Qt::LeftButton) {
+        setFrameShape(QFrame::Panel);
+        setFrameShadow(QFrame::Sunken);
+        if(checkable) {
+            checked = !checked;
+        }
     }
 
     QLabel::mousePressEvent(e);
@@ -64,12 +67,16 @@ void ClickableLabel::mousePressEvent(QMouseEvent *e)
 
 void ClickableLabel::mouseReleaseEvent(QMouseEvent *e)
 {
-    if(!checked) {
-        setFrameShape(QFrame::Panel);
-        setFrameShadow(QFrame::Raised);
+    if(e->button() == Qt::LeftButton) {
+        if(!checked) {
+            setFrameShape(QFrame::Panel);
+            setFrameShadow(QFrame::Raised);
+        }
+        emit clicked(checked);
     }
-
-    emit clicked(checked);
+    if(e->button() == Qt::RightButton) {
+        emit rightClicked();
+    }
 
     QLabel::mouseReleaseEvent(e);
 }

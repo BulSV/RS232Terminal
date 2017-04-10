@@ -14,6 +14,7 @@ public:
     bool isChecked() const;
 signals:
     void clicked(bool checked = false);
+    void rightClicked();
     // QWidget interface
 protected:
     virtual void mousePressEvent(QMouseEvent *e);

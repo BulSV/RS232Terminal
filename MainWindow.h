@@ -19,7 +19,6 @@
 #include <QStatusBar>
 #include <QDockWidget>
 
-#include "RightClickedButton.h"
 #include "LimitedTextEdit.h"
 #include "Macro.h"
 #include "DataEncoder.h"
