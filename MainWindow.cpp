@@ -38,6 +38,8 @@ const int DEFAULT_LOG_TIMEOUT = 600000; // ms
 const int DEFAULT_SEND_TIME = 0; // ms
 const bool DEFAULT_DISPLAYING = true;
 const bool DEFAULT_CR_LF = false;
+const Qt::DockWidgetArea DEFAULT_MACROS_AREA = Qt::RightDockWidgetArea;
+const bool DEFAULT_MACROS_HIDDEN = true;
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
@@ -569,15 +571,12 @@ void MainWindow::displayWrittenData(const QByteArray &writeData)
     dataEncoder->setData(writeData);
     QString displayString = dataEncoder->encodedStringList().join(" ");
     m_eLogWrite->addLine(displayString);
+    QScrollBar *sb = m_eLogWrite->verticalScrollBar();
+    sb->setValue(sb->maximum());
 
     if(logWrite) {
         QTextStream writeStream (&writeLogFile);
         writeStream << displayString + "\n";
-    }
-
-    if(displayWrite->isChecked()) {
-        QScrollBar *sb = m_eLogWrite->verticalScrollBar();
-        sb->setValue(sb->maximum());
     }
 }
 
@@ -770,6 +769,8 @@ void MainWindow::delayBetweenPacketsEnded()
 
         if(displayRead->isChecked()) {
             m_eLogRead->addLine(dataEncoder->encodedStringList().join(" "));
+            QScrollBar *sb = m_eLogRead->verticalScrollBar();
+            sb->setValue(sb->maximum());
         }
 
         if(logRead) {
@@ -778,11 +779,6 @@ void MainWindow::delayBetweenPacketsEnded()
         }
     }
     readBuffer.clear();
-
-    if(displayRead->isChecked()) {
-        QScrollBar *sb = m_eLogRead->verticalScrollBar();
-        sb->setValue(sb->maximum());
-    }
 }
 
 void MainWindow::rxNone()
@@ -863,8 +859,10 @@ void MainWindow::loadSession()
     manualLF->setChecked(settings->value("main/LF", DEFAULT_CR_LF).toBool());
     manualSendMode->setCurrentIndex(settings->value("main/mode", DEFAULT_MODE).toInt());
 
-    addDockWidget(static_cast<Qt::DockWidgetArea>(settings->value("main/macros_dock_widget_area", Qt::RightDockWidgetArea).toInt()), macrosDockWidget);
-    macrosDockWidget->setHidden(settings->value("main/macros_dock_widget_hidden", true).toBool());
+    addDockWidget(static_cast<Qt::DockWidgetArea>(settings->value("main/macros_dock_widget_area",
+                                                                  DEFAULT_MACROS_AREA).toInt()),
+                  macrosDockWidget);
+    macrosDockWidget->setHidden(settings->value("main/macros_dock_widget_hidden", DEFAULT_MACROS_HIDDEN).toBool());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
