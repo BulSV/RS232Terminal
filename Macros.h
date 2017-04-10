@@ -35,7 +35,7 @@ private:
     QSpinBox *time;
     QAction *selectMacro;
     QAction *deselectMacro;
-    QList<Macro*> macrosWidgets;
+    QList<Macro*> macros;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;
     QScrollArea *scrollArea;
@@ -47,7 +47,7 @@ private:
     void deleteMacros();
     void moveMacroUp();
     void moveMacroDown();
-    void moveMacro(Macro *macroWidget, MacrosMoveDirection direction);
+    void moveMacro(Macro *macro, MacrosMoveDirection direction);
     void loadMacros();
     void startOrStop();
     void pause(bool check);

@@ -76,7 +76,7 @@ void Macros::saveSettings(QSettings *settings)
     settings->setValue("macros/time", time->value());
 
     int macroIndex = 1;
-    QListIterator<Macro*> it(macrosWidgets);
+    QListIterator<Macro*> it(macros);
     Macro *m = 0;
     while(it.hasNext()) {
         m = it.next();
@@ -94,9 +94,9 @@ void Macros::loadSettings(QSettings *settings)
     int macrosCount = settings->value("macros/count", DEFAULT_COUNT).toInt();
     for(int macroIndex = 1; macroIndex <= macrosCount; ++macroIndex) {
         addMacro();
-        macrosWidgets.last()->loadSettings(settings, macroIndex);
+        macros.last()->loadSettings(settings, macroIndex);
         if(selectMacro->isChecked()) {
-            macrosWidgets.last()->deselect();
+            macros.last()->deselect();
         }
     }
 }
@@ -104,7 +104,7 @@ void Macros::loadSettings(QSettings *settings)
 void Macros::addMacro()
 {
     Macro *macro = new Macro(this);
-    macrosWidgets.append(macro);
+    macros.append(macro);
     scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macro);
 
     connect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
@@ -128,7 +128,7 @@ void Macros::deleteMacro(Macro *macro)
         return;
     }
     macro->deselect();
-    macrosWidgets.removeOne(macro);
+    macros.removeOne(macro);
     scrollAreaLayout->removeWidget(macro);
     disconnect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
     disconnect(macro, &Macro::packetSended, this, &Macros::packetSended);
@@ -148,11 +148,11 @@ void Macros::deleteMacros()
                                        tr("Delete ALL macros?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
-        QListIterator<Macro*> it(macrosWidgets);
+        QListIterator<Macro*> it(macros);
         while(it.hasNext()) {
             deleteMacro(it.next());
         }
-        macrosWidgets.clear();
+        macros.clear();
     }
 }
 
@@ -166,34 +166,34 @@ void Macros::moveMacroDown()
     moveMacro(qobject_cast<Macro*>(sender()), MoveDown);
 }
 
-void Macros::moveMacro(Macro *macroWidget, Macros::MacrosMoveDirection direction)
+void Macros::moveMacro(Macro *macro, Macros::MacrosMoveDirection direction)
 {
-    if(!macroWidget) {
+    if(!macro) {
         return;
     }
 
-    int macroIndex = macrosWidgets.indexOf(macroWidget);
+    int macroIndex = macros.indexOf(macro);
 
-    QVBoxLayout* tempLayout = qobject_cast<QVBoxLayout*>(macroWidget->parentWidget()->layout());
-    int index = tempLayout->indexOf(macroWidget);
+    QVBoxLayout* tempLayout = qobject_cast<QVBoxLayout*>(macro->parentWidget()->layout());
+    int index = tempLayout->indexOf(macro);
 
     if(direction == MoveUp) {
         if(macroIndex == 0) {
             return;
         }
 
-        macrosWidgets.swap(macroIndex, macroIndex - 1);
+        macros.swap(macroIndex, macroIndex - 1);
         --index;
     } else {
-        if(macroIndex == macrosWidgets.size() - 1) {
+        if(macroIndex == macros.size() - 1) {
             return;
         }
 
-        macrosWidgets.swap(macroIndex, macroIndex + 1);
+        macros.swap(macroIndex, macroIndex + 1);
         ++index;
     }
-    tempLayout->removeWidget(macroWidget);
-    tempLayout->insertWidget(index, macroWidget);
+    tempLayout->removeWidget(macro);
+    tempLayout->insertWidget(index, macro);
 }
 
 void Macros::loadMacros()
@@ -206,7 +206,7 @@ void Macros::loadMacros()
     QListIterator<QString> it(fileNames);
     while(it.hasNext()) {
         addMacro();
-        macrosWidgets.last()->openMacroFile(it.next());
+        macros.last()->openMacroFile(it.next());
     }
 }
 
