@@ -572,8 +572,10 @@ void MainWindow::displayWrittenData(const QByteArray &writeData)
         writeStream << displayString + "\n";
     }
 
-    QScrollBar *sb = m_eLogWrite->verticalScrollBar();
-    sb->setValue(sb->maximum());
+    if(displayWrite->isChecked()) {
+        QScrollBar *sb = m_eLogWrite->verticalScrollBar();
+        sb->setValue(sb->maximum());
+    }
 }
 
 DataEncoder *MainWindow::getEncoder(int mode)
@@ -769,8 +771,10 @@ void MainWindow::delayBetweenPacketsEnded()
     }
     readBuffer.clear();
 
-    QScrollBar *sb = m_eLogRead->verticalScrollBar();
-    sb->setValue(sb->maximum());
+    if(displayRead->isChecked()) {
+        QScrollBar *sb = m_eLogRead->verticalScrollBar();
+        sb->setValue(sb->maximum());
+    }
 }
 
 void MainWindow::rxNone()
