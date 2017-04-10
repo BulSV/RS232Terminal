@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include <QToolBar>
 #include <QWidgetAction>
+#include <algorithm>
 
 #include "Macros.h"
 
@@ -25,6 +26,8 @@ Macros::Macros(QWidget *parent)
     , scrollAreaLayout(new QVBoxLayout)
     , scrollArea(new QScrollArea(this))
     , fileDialog(new QFileDialog(this))
+    , intervalTimer(new QTimer(this))
+    , currentIntervalIndex(0)
 {
     actionPause->setCheckable(true);
     actionPause->setEnabled(false);
@@ -68,6 +71,7 @@ Macros::Macros(QWidget *parent)
     connect(actionLoad, &QAction::triggered, this, &Macros::loadMacros);
     connect(actionStartStop, &QAction::triggered, this, &Macros::startOrStop);
     connect(actionPause, &QAction::triggered, this, &Macros::pause);
+    connect(intervalTimer, &QTimer::timeout, this, &Macros::sendNextMacro);
 }
 
 void Macros::saveSettings(QSettings *settings)
@@ -109,7 +113,7 @@ void Macros::addMacro()
 
     connect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
     connect(macro, &Macro::packetSended, this, &Macros::packetSended);
-//    connect(macro, &MacroWidget::intervalChecked, this, &Macros::updateIntervalsList);
+    connect(macro, &Macro::selected, this, &Macros::updateIntervals);
     connect(macro, &Macro::movedUp, this, &Macros::moveMacroUp);
     connect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
     connect(selectMacro, &QAction::triggered, macro, &Macro::select);
@@ -132,7 +136,7 @@ void Macros::deleteMacro(Macro *macro)
     scrollAreaLayout->removeWidget(macro);
     disconnect(macro, &Macro::deleted, this, static_cast<void (Macros::*)()>(&Macros::deleteMacro));
     disconnect(macro, &Macro::packetSended, this, &Macros::packetSended);
-//    disconnect(macro, &MacroWidget::intervalChecked, this, &Macros::updateIntervalsList);
+    disconnect(macro, &Macro::selected, this, &Macros::updateIntervals);
     disconnect(macro, &Macro::movedUp, this, &Macros::moveMacroUp);
     disconnect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
     disconnect(selectMacro, &QAction::triggered, macro, &Macro::select);
@@ -216,24 +220,54 @@ void Macros::startOrStop()
         actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
         actionStartStop->setToolTip(tr("Stop sending macros"));
         actionPause->setEnabled(true);
+        sendNextMacro();
     } else {
         actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
         actionStartStop->setToolTip(tr("Start sending macros"));
         actionPause->setChecked(false);
         actionPause->setToolTip("Pause sending macros");
         actionPause->setEnabled(false);
+        intervalTimer->stop();
+        currentIntervalIndex = 0;
     }
 }
 
 void Macros::pause(bool check)
 {
     if(check) {
-//        m_tIntervalSending->stop();
+        intervalTimer->stop();
         actionPause->setToolTip("Resume sending macros");
-        qDebug() << "paused";
-    } else /*if(sendCount != 0)*/ {
-//        m_tIntervalSending->start();
+    } else {
+        intervalTimer->start();
         actionPause->setToolTip("Pause sending macros");
-        qDebug() << "resumed";
     }
+}
+
+void Macros::updateIntervals(bool add)
+{
+    qDebug() << add;
+    Macro *macro = qobject_cast<Macro*>(sender());
+    if(macro == 0) {
+        return;
+    }
+    int index = macros.indexOf(macro);
+    if(add) {
+        indexesOfIntervals.append(index);
+        std::sort(indexesOfIntervals.begin(), indexesOfIntervals.end(), qLess<int>());
+        qDebug() << index;
+
+        return;
+    }
+
+    indexesOfIntervals.removeOne(index);
+}
+
+void Macros::sendNextMacro()
+{
+    Macro *macro = macros.at(indexesOfIntervals.at(currentIntervalIndex++));
+    if(currentIntervalIndex >= indexesOfIntervals.size()) {
+        currentIntervalIndex = 0;
+    }
+    emit packetSended(macro->getPacket());
+    intervalTimer->start(macro->getTime());
 }

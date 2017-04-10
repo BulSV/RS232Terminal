@@ -41,6 +41,10 @@ private:
     QScrollArea *scrollArea;
     QFileDialog *fileDialog;
 
+    QTimer *intervalTimer;
+    QList<int> indexesOfIntervals;
+    int currentIntervalIndex;
+
     void addMacro();
     void deleteMacro();
     void deleteMacro(Macro *macro);
@@ -51,6 +55,8 @@ private:
     void loadMacros();
     void startOrStop();
     void pause(bool check);
+    void updateIntervals(bool add);
+    void sendNextMacro();
 };
 
 #endif // MACROS_H

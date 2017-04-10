@@ -81,7 +81,6 @@ private:
     QTimer *m_tSend;
     QTimer *m_tWriteLog;
     QTimer *m_tReadLog;
-    QTimer *m_tIntervalSending;
     QTimer *m_timerDelayBetweenPackets;
     QTimer *m_tTx;
     QTimer *m_tRx;
@@ -119,9 +118,6 @@ private:
     bool logRead;
 
     QByteArray readBuffer;
-    QList<int> indexesOfIntervals;
-    int sendCount;
-    int currentIntervalIndex;
 
     HexEncoder *hexEncoder;
     DecEncoder *decEncoder;
@@ -137,8 +133,6 @@ private:
     void loadSession();
     void connections();
 
-    void updateIntervalsList(bool add);
-    void sendNextMacro();
     void displayWrittenData(const QByteArray &writeData);
     DataEncoder *getEncoder(int mode);
     QString baudToString(int baud);

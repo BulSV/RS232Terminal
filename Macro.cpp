@@ -47,12 +47,16 @@ void Macro::select()
     isSelected = true;
     checkBoxSelect->setChecked(isSelected);
 
+    emit selected(isSelected);
+
 }
 
 void Macro::deselect()
 {
     isSelected = false;
     checkBoxSelect->setChecked(isSelected);
+
+    emit selected(isSelected);
 }
 
 void Macro::selectToggle()

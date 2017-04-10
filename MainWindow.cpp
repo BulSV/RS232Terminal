@@ -8,7 +8,6 @@
 #include <QScrollBar>
 #include <QDir>
 #include <QListIterator>
-#include <algorithm>
 #include <QGroupBox>
 #include <QWidgetAction>
 
@@ -57,7 +56,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , m_tSend(new QTimer(this))
     , m_tWriteLog(new QTimer(this))
     , m_tReadLog(new QTimer(this))
-    , m_tIntervalSending(new QTimer(this))
     , m_timerDelayBetweenPackets(new QTimer(this))
     , m_tTx(new QTimer(this))
     , m_tRx(new QTimer(this))
@@ -100,8 +98,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     rxCount = 0;
     logWrite = false;
     logRead = false;
-    sendCount = 0;
-    currentIntervalIndex = -1;
 
     displayWrite->setCheckable(true);
     displayRead->setCheckable(true);
@@ -285,7 +281,6 @@ void MainWindow::connections()
     connect(recordReadLog, &QAction::triggered, this, &MainWindow::startReadLog);
     connect(manualSendPacket, &QAction::triggered, this, &MainWindow::startSending);
     connect(manualPacketEdit, &QLineEdit::returnPressed, [this](){startSending();});
-    connect(m_tIntervalSending, SIGNAL(timeout()), this, SLOT(sendInterval()));
     connect(m_tSend, SIGNAL(timeout()), this, SLOT(singleSend()));
     connect(m_timerDelayBetweenPackets, &QTimer::timeout, this, &MainWindow::delayBetweenPacketsEnded);
     connect(m_tWriteLog, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
@@ -374,35 +369,6 @@ void MainWindow::startReadLog(bool check)
     logRead = true;
 }
 
-void MainWindow::updateIntervalsList(bool add)
-{
-//    MacroWidget *macro = qobject_cast<MacroWidget*>(sender());
-//    if(macro == 0) {
-//        return;
-//    }
-//    int index = macrosWidgets.indexOf(macro);
-//    if(add) {
-//        indexesOfIntervals.append(index);
-//        std::sort(indexesOfIntervals.begin(), indexesOfIntervals.end(), qLess<int>());
-
-//        return;
-//    }
-
-//    indexesOfIntervals.removeOne(index);
-}
-
-void MainWindow::sendNextMacro()
-{
-//    if(m_port->isOpen()) {
-//        MacroWidget *macro = macrosWidgets.at(indexesOfIntervals.at(currentIntervalIndex++));
-//        if(currentIntervalIndex >= indexesOfIntervals.size()) {
-//            currentIntervalIndex = 0;
-//        }
-//        sendPackage(macro->getPackage(), true);
-//        m_tIntervalSending->start(macro->getTime());
-//    }
-}
-
 void MainWindow::start()
 {
     m_port->close();
@@ -430,8 +396,6 @@ void MainWindow::start()
     bits->setText(BITS + bitsToString(m_port->dataBits()));
     parity->setText(PARITY + parityToString(m_port->parity()));
     stopBits->setText(STOP_BITS + stopBitsToString(m_port->stopBits()));
-
-//    sendNextMacros(); // FIXME
 }
 
 void MainWindow::stop()
@@ -444,7 +408,6 @@ void MainWindow::stop()
     manualSendPacket->setChecked(false);
     m_tSend->stop();
     m_timerDelayBetweenPackets->stop();
-    m_tIntervalSending->stop();
     portName->setText(PORT + tr("None"));
     baud->setText(BAUD + tr("None"));
     bits->setText(BITS + tr("None"));
