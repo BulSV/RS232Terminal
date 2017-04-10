@@ -805,9 +805,8 @@ void MainWindow::txHold()
 void MainWindow::saveSession()
 {
     settings->remove("main");
-    settings->setValue("main/size", size());
-    settings->setValue("main/position", pos());
-    settings->setValue("main/isMaximized", isMaximized());
+    settings->setValue("main/size", currentWindowSize);
+    settings->setValue("main/position", currentWindowPos);
 
     settings->setValue("main/write_mode", m_cbWriteMode->currentIndex());
     settings->setValue("main/read_mode", m_cbReadMode->currentIndex());
@@ -837,9 +836,6 @@ void MainWindow::loadSession()
     if(!pos.isNull()) {
         move(pos);
     }
-    if(settings->value("main/isMaximized").toBool()) {
-        showMaximized();
-    }
 
     m_eLogRead->setLinesLimit(settings->value("main/max_write_log_rows", DEFAULT_LOG_ROWS).toInt());
     m_eLogWrite->setLinesLimit(settings->value("main/max_read_log_rows", DEFAULT_LOG_ROWS).toInt());
@@ -865,4 +861,33 @@ void MainWindow::closeEvent(QCloseEvent *e)
     saveSession();
 
     QWidget::closeEvent(e);
+}
+
+void MainWindow::moveEvent(QMoveEvent *e)
+{
+    if(isMaximized()) {
+        currentWindowPos = e->pos();
+    } else {
+        currentWindowPos = e->oldPos();
+    }
+
+    QWidget::moveEvent(e);
+}
+
+void MainWindow::resizeEvent(QResizeEvent *e)
+{
+    if(isMaximized()) {
+        currentWindowSize = e->size();
+    } else {
+        currentWindowSize = e->oldSize();
+    }
+
+    QWidget::resizeEvent(e);
+}
+
+void MainWindow::showEvent(QShowEvent *e)
+{
+    currentWindowSize = size();
+
+    QWidget::showEvent(e);
 }

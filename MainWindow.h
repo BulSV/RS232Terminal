@@ -42,6 +42,9 @@ public:
     explicit MainWindow(QString title, QWidget *parent = 0);
 protected:
     virtual void closeEvent(QCloseEvent *e);
+    virtual void moveEvent(QMoveEvent *e);
+    virtual void resizeEvent(QResizeEvent *e);
+    virtual void showEvent(QShowEvent *e);
 private slots:
     void rxNone();
     void txNone();
@@ -123,6 +126,9 @@ private:
     HexEncoder *hexEncoder;
     DecEncoder *decEncoder;
     AsciiEncoder *asciiEncoder;
+
+    QSize currentWindowSize;
+    QPoint currentWindowPos;
 
     void view();
     void saveSession();
