@@ -126,7 +126,7 @@ void MacroEdit::saveMacroFile()
 
         return;
     }
-    formPackage();
+    formPacket();
     saveMacro.setData(package);
     saveMacro.save(macroFileName);
 }
@@ -137,7 +137,7 @@ void MacroEdit::saveAsMacroFile()
     if(fileName.isEmpty()) {
         return;
     }
-    formPackage();
+    formPacket();
     saveMacro.setData(package);
     if(!saveMacro.save(fileName)) {
         return;
@@ -151,7 +151,7 @@ void MacroEdit::saveAsMacroFile()
     emit titleChanged(fileName);
 }
 
-void MacroEdit::formPackage()
+void MacroEdit::formPacket()
 {
     QListIterator<DataTable*> itMacroGroups(macroGroups);
     QString hexData;
@@ -182,15 +182,15 @@ void MacroEdit::saveSettings(QSettings *settings, int macroIndex)
 {
     QString macroIndexString = QString::number(macroIndex);
     if(macroFileName.isEmpty()) {
-        formPackage();
-        QString packageString;
+        formPacket();
+        QString packetString;
         int packageSize = package.size();
         for(int i = 0; i < packageSize; ++i) {
-            packageString.append(QString::number((unsigned char)package.at(i), 16).toUpper());
-            packageString.append(" ");
+            packetString.append(QString::number((unsigned char)package.at(i), 16).toUpper());
+            packetString.append(" ");
         }
-        packageString.chop(1);
-        settings->setValue("macros/" + macroIndexString + "/package", packageString);
+        packetString.chop(1);
+        settings->setValue("macros/" + macroIndexString + "/packet", packetString);
     } else {
         settings->setValue("macros/" + macroIndexString + "/path", macroFileName);
     }
@@ -219,7 +219,7 @@ void MacroEdit::loadSettings(QSettings *settings, int macroIndex)
 
         emit titleChanged(fileName);
     } else {
-        QList<QString> packageList = settings->value("macros/" + macroIndexString + "/package").toString().split(" ");
+        QList<QString> packageList = settings->value("macros/" + macroIndexString + "/packet").toString().split(" ");
         int dataSize = packageList.size();
         bool ok;
         for(int i = 0; i < dataSize; ++i) {
@@ -329,7 +329,7 @@ void MacroEdit::view()
     scrollLayout->setContentsMargins(5, 5, 5, 5);
     scrollLayout->addWidget(scrollArea);
 
-    QGroupBox *packageGroups = new QGroupBox(tr("Package groups"), this);
+    QGroupBox *packageGroups = new QGroupBox(tr("Packet groups"), this);
     packageGroups->setLayout(scrollLayout);
 
     QGridLayout *editLayout = new QGridLayout;
@@ -443,7 +443,7 @@ void MacroEdit::fromAsciiInput()
     tableHex->setData(toUpper(tableHex->getData()));
     currentEditGroup->setData(tableHex->getData());
 
-    formPackage();
+    formPacket();
 }
 
 void MacroEdit::fromHexInput()
@@ -458,7 +458,7 @@ void MacroEdit::fromHexInput()
     tableHex->setData(toUpper(tableHex->getData()));
     currentEditGroup->setData(tableHex->getData());
 
-    formPackage();
+    formPacket();
 }
 
 void MacroEdit::fromDecInput()
@@ -473,7 +473,7 @@ void MacroEdit::fromDecInput()
     tableHex->setData(toUpper(tableHex->getData()));
     currentEditGroup->setData(tableHex->getData());
 
-    formPackage();
+    formPacket();
 }
 
 void MacroEdit::nonPrintableCharacters()
@@ -585,7 +585,7 @@ void MacroEdit::setRawData(const QByteArray &rawData)
 
 void MacroEdit::onEditRawData()
 {
-    formPackage();
+    formPacket();
     macroRawEdit->setData(package);
     macroRawEdit->setWindowTitle(windowTitle());
     macroRawEdit->show();

@@ -33,9 +33,9 @@ private:
     QAction *actionDelete;
     QAction *actionNew;
     QAction *actionLoad;
-    QSpinBox *time;
-    QAction *selectMacro;
-    QAction *deselectMacro;
+    QSpinBox *spinBoxTime;
+    QAction *actionSelectMacro;
+    QAction *actionDeselectMacro;
     QList<Macro*> macros;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;

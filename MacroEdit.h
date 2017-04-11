@@ -81,7 +81,7 @@ private:
     void fillEditGroup();
     void setRawData(const QByteArray &rawData);
     void onEditRawData();
-    void formPackage();
+    void formPacket();
     void addCR_LF();
     void newMacroFile();
     void openMacroFile();

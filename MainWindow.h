@@ -76,14 +76,14 @@ private:
     QLabel *parity;
     QLabel *stopBits;
     QComboBox *manualSendMode;
-    QComboBox *m_cbReadMode;
-    QComboBox *m_cbWriteMode;
-    QTimer *m_tSend;
-    QTimer *m_tWriteLog;
-    QTimer *m_tReadLog;
-    QTimer *m_timerDelayBetweenPackets;
-    QTimer *m_tTx;
-    QTimer *m_tRx;
+    QComboBox *readMode;
+    QComboBox *writeMode;
+    QTimer *manualSendTimer;
+    QTimer *writeLogTimer;
+    QTimer *readLogTimer;
+    QTimer *delayBetweenPacketsTimer;
+    QTimer *txTimer;
+    QTimer *rxTimer;
     Macros *macros;
     QDockWidget *macrosDockWidget;
     QAction *clearWriteLog;
@@ -93,10 +93,10 @@ private:
     QAction *recordWriteLog;
     QAction *recordReadLog;
     QAction *manualSendPacket;
-    QLabel *m_lTxCount;
-    QLabel *m_lRxCount;
-    LimitedTextEdit *m_eLogRead;
-    LimitedTextEdit *m_eLogWrite;
+    QLabel *txLabel;
+    QLabel *rxLabel;
+    LimitedTextEdit *sheetRead;
+    LimitedTextEdit *sheetWrite;
     QSpinBox *manualRepeatSendTime;
     QSpinBox *readDelayBetweenPackets;
     QLineEdit *manualPacketEdit;
@@ -105,7 +105,7 @@ private:
     QAction *manualCR;
     QAction *manualLF;
 
-    QSerialPort *m_port;
+    QSerialPort *port;
     ComPortConfigure *comPortConfigure;
     QSettings *settings;
     QFileDialog *fileDialog;
