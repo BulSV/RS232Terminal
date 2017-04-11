@@ -31,7 +31,7 @@ Macros::Macros(QWidget *parent)
 {
     actionPause->setCheckable(true);
     actionPause->setEnabled(false);
-    time->setRange(1, 60000);
+    time->setRange(0, 60000);
     time->setToolTip(tr("Time, ms"));
     QToolBar *toolBar = new QToolBar(this);
     toolBar->setStyleSheet("spacing:2px");
@@ -149,7 +149,7 @@ void Macros::deleteMacro(Macro *macro)
 void Macros::deleteMacros()
 {
     int button = QMessageBox::question(this, tr("Warning"),
-                                       tr("Delete ALL macros?"),
+                                       tr("Delete macros?"),
                                        QMessageBox::Yes | QMessageBox::No);
     if(button == QMessageBox::Yes) {
         QListIterator<Macro*> it(macros);
@@ -216,10 +216,14 @@ void Macros::loadMacros()
 
 void Macros::startOrStop()
 {
+    if(indexesOfIntervals.isEmpty()) {
+        return;
+    }
     if(actionStartStop->toolTip() == tr("Start sending macros")) {
         actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
         actionStartStop->setToolTip(tr("Stop sending macros"));
         actionPause->setEnabled(true);
+        blockForMultiSend(true);
         sendNextMacro();
     } else {
         actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
@@ -229,6 +233,7 @@ void Macros::startOrStop()
         actionPause->setEnabled(false);
         intervalTimer->stop();
         currentIntervalIndex = 0;
+        blockForMultiSend(false);
     }
 }
 
@@ -245,7 +250,6 @@ void Macros::pause(bool check)
 
 void Macros::updateIntervals(bool add)
 {
-    qDebug() << add;
     Macro *macro = qobject_cast<Macro*>(sender());
     if(macro == 0) {
         return;
@@ -254,7 +258,6 @@ void Macros::updateIntervals(bool add)
     if(add) {
         indexesOfIntervals.append(index);
         std::sort(indexesOfIntervals.begin(), indexesOfIntervals.end(), qLess<int>());
-        qDebug() << index;
 
         return;
     }
@@ -268,6 +271,23 @@ void Macros::sendNextMacro()
     if(currentIntervalIndex >= indexesOfIntervals.size()) {
         currentIntervalIndex = 0;
     }
+
     emit packetSended(macro->getPacket());
+
     intervalTimer->start(macro->getTime());
+}
+
+void Macros::blockForMultiSend(bool block)
+{
+    actionDelete->setDisabled(block);
+    selectMacro->setDisabled(block);
+    deselectMacro->setDisabled(block);
+    time->setDisabled(block);
+    actionNew->setDisabled(block);
+    actionLoad->setDisabled(block);
+
+    QListIterator<Macro*> it(macros);
+    while(it.hasNext()) {
+        it.next()->setDisabled(block);
+    }
 }

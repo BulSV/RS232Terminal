@@ -57,6 +57,7 @@ private:
     void pause(bool check);
     void updateIntervals(bool add);
     void sendNextMacro();
+    void blockForMultiSend(bool block);
 };
 
 #endif // MACROS_H
