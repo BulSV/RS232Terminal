@@ -83,6 +83,10 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , comPortConfigure(new ComPortConfigure(port, this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
+    , txCount(0)
+    , rxCount(0)
+    , logWrite(false)
+    , logRead(false)
     , hexEncoder(new HexEncoder)
     , decEncoder(new DecEncoder)
     , asciiEncoder(new AsciiEncoder)
@@ -93,11 +97,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     connections();
 
     port->setReadBufferSize(1);
-
-    txCount = 0;
-    rxCount = 0;
-    logWrite = false;
-    logRead = false;
 
     displayWrite->setCheckable(true);
     displayRead->setCheckable(true);
@@ -116,6 +115,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     macrosDockWidget->setWidget(macros);
     macrosDockWidget->setFixedWidth(310);
     macrosDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    setDockOptions(AllowNestedDocks | AllowTabbedDocks);
 
     recordWriteLog->setCheckable(true);
     recordReadLog->setCheckable(true);
