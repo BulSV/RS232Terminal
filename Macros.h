@@ -9,6 +9,8 @@
 #include <QScrollArea>
 #include <QSettings>
 #include <QFileDialog>
+#include <QSerialPort>
+#include <QLabel>
 
 #include "Macro.h"
 
@@ -25,6 +27,7 @@ public:
     void saveSettings(QSettings *settings);
     void loadSettings(QSettings *settings);
     void setWorkState(bool work);
+    void setPort(QSerialPort *port);
 signals:
     void packetSended(const QByteArray &package);
 private:
@@ -34,8 +37,8 @@ private:
     QAction *actionNew;
     QAction *actionLoad;
     QSpinBox *spinBoxTime;
-    QAction *actionSelectMacro;
-    QAction *actionDeselectMacro;
+    QAction *actionSelectMacros;
+    QAction *actionDeselectMacros;
     QList<Macro*> macros;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;
@@ -45,6 +48,9 @@ private:
     QTimer *intervalTimer;
     QList<int> indexesOfIntervals;
     int currentIntervalIndex;
+
+    QSerialPort *port;
+    QLabel *multiSentTime;
 
     void addMacro();
     void deleteMacro();
@@ -59,6 +65,8 @@ private:
     void updateIntervals(bool add);
     void sendNextMacro();
     void blockForMultiSend(bool block);
+    double packetSendTime(int packetBytesCount);
+    void calculateMultiSendCeiledTime();
 };
 
 #endif // MACROS_H

@@ -111,6 +111,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     comPortConfigure->setWindowTitle(tr("Port configure"));
     comPortConfigure->setModal(true);
 
+    macros->setPort(port);
     macros->setWorkState(false);
     macrosDockWidget->setWidget(macros);
     macrosDockWidget->setFixedWidth(310);
