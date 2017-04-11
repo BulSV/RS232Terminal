@@ -44,6 +44,9 @@ void Macro::loadSettings(QSettings *settings, int macroIndex)
 
 void Macro::select()
 {
+    if(spinBoxTime->value() == 0) {
+        return;
+    }
     isSelected = true;
     checkBoxSelect->setChecked(isSelected);
 
@@ -61,6 +64,9 @@ void Macro::deselect()
 
 void Macro::selectToggle()
 {
+    if(spinBoxTime->value() == 0 && !isSelected) {
+        return;
+    }
     isSelected = !isSelected;
     checkBoxSelect->setChecked(isSelected);
 
