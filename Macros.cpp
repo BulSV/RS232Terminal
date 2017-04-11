@@ -105,6 +105,10 @@ void Macros::loadSettings(QSettings *settings)
     }
 }
 
+void Macros::setWorkState(bool work)
+{
+}
+
 void Macros::addMacro()
 {
     Macro *macro = new Macro(this);
@@ -198,6 +202,7 @@ void Macros::moveMacro(Macro *macro, Macros::MacrosMoveDirection direction)
     }
     tempLayout->removeWidget(macro);
     tempLayout->insertWidget(index, macro);
+    std::sort(indexesOfIntervals.begin(), indexesOfIntervals.end(), qLess<int>());
 }
 
 void Macros::loadMacros()
