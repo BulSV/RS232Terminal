@@ -107,6 +107,17 @@ void Macros::loadSettings(QSettings *settings)
 
 void Macros::setWorkState(bool work)
 {
+    actionStartStop->setEnabled(work);
+    if(actionStartStop->toolTip() == tr("Stop sending macros")) {
+        actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
+        actionStartStop->setToolTip(tr("Start sending macros"));
+        actionPause->setChecked(false);
+        actionPause->setToolTip("Pause sending macros");
+        actionPause->setEnabled(false);
+        intervalTimer->stop();
+        currentIntervalIndex = 0;
+        blockForMultiSend(false);
+    }
 }
 
 void Macros::addMacro()

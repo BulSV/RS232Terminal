@@ -112,6 +112,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     comPortConfigure->setWindowTitle(tr("Port configure"));
     comPortConfigure->setModal(true);
 
+    macros->setWorkState(false);
     macrosDockWidget->setWidget(macros);
     macrosDockWidget->setFixedWidth(310);
     macrosDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -295,15 +296,8 @@ void MainWindow::startStop()
 {
     if(actionStartStop->text() == tr("Open COM-port")) {
         start();
-        if(!m_port->isOpen()) {
-            return;
-        }
-        actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
-        actionStartStop->setText(tr("Close COM-port"));
     } else {
         stop();
-        actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
-        actionStartStop->setText(tr("Open COM-port"));
     }
 }
 
@@ -396,6 +390,11 @@ void MainWindow::start()
     bits->setText(BITS + bitsToString(m_port->dataBits()));
     parity->setText(PARITY + parityToString(m_port->parity()));
     stopBits->setText(STOP_BITS + stopBitsToString(m_port->stopBits()));
+
+    actionStartStop->setIcon(QIcon(":/Resources/Stop.png"));
+    actionStartStop->setText(tr("Close COM-port"));
+
+    macros->setWorkState(true);
 }
 
 void MainWindow::stop()
@@ -413,6 +412,11 @@ void MainWindow::stop()
     bits->setText(BITS + tr("None"));
     parity->setText(PARITY + tr("None"));
     stopBits->setText(STOP_BITS + tr("None"));
+
+    actionStartStop->setIcon(QIcon(":/Resources/Play.png"));
+    actionStartStop->setText(tr("Open COM-port"));
+
+    macros->setWorkState(false);
 }
 
 void MainWindow::received()
