@@ -64,8 +64,8 @@ private slots:
     void received();
     void singleSend();
     void startSending(bool checked = true);
-    void sendPackage(const QByteArray &data);
-    void sendPackage(const QByteArray &data, bool macro);
+    void sendPacket(const QByteArray &data);
+    void sendPacket(const QByteArray &data, bool macro);
 private:
     QAction *actionPortConfigure;
     QAction *actionStartStop;
@@ -100,6 +100,7 @@ private:
     QSpinBox *manualRepeatSendTime;
     QSpinBox *readDelayBetweenPackets;
     QLineEdit *manualPacketEdit;
+    QLineEdit *separatorEdit;
     QAction *displayWrite;
     QAction *displayRead;
     QAction *manualCR;

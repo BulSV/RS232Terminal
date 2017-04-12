@@ -34,6 +34,8 @@ QString STOP_BITS = QObject::tr("Stop bits: ");
 const int DEFAULT_LOG_ROWS = 1000;
 const int DEFAULT_MODE = 0; // ASCII
 const int DEFAULT_LOG_TIMEOUT = 600000; // ms
+const int DEFAULT_READ_DELAY = 10; // ms
+const QString DEFAULT_SEPARATOR = " ";
 const int DEFAULT_SEND_TIME = 0; // ms
 const bool DEFAULT_DISPLAYING = true;
 const bool DEFAULT_CR_LF = false;
@@ -75,6 +77,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , manualRepeatSendTime(new QSpinBox(this))
     , readDelayBetweenPackets(new QSpinBox(this))
     , manualPacketEdit(new QLineEdit(this))
+    , separatorEdit(new QLineEdit(" ", this))
     , displayWrite(new QAction(QIcon(":/Resources/Display.png"), tr("Hide write data"), this))
     , displayRead(new QAction(QIcon(":/Resources/Display.png"), tr("Hide read data"), this))
     , manualCR(new QAction(QIcon(":/Resources/CR.png"), "Add CR", this))
@@ -182,8 +185,12 @@ void MainWindow::view()
     QWidgetAction *actionManualRepeatSendTime = new QWidgetAction(this);
     actionManualRepeatSendTime->setDefaultWidget(manualRepeatSendTime);
     manualRepeatSendTime->setToolTip(tr("Repeat send time, ms"));
+    QWidgetAction *actionSeparatorEdit = new QWidgetAction(this);
+    actionSeparatorEdit->setDefaultWidget(separatorEdit);
+    separatorEdit->setMaximumWidth(20);
+    separatorEdit->setToolTip(tr("Separator symbol"));
     actions.clear();
-    actions << actionReadDelayBetweenPackets << actionManualSendMode << actionManualPacketEdit
+    actions << actionReadDelayBetweenPackets << actionSeparatorEdit << actionManualSendMode << actionManualPacketEdit
             << actionManualPacketEdit << manualCR << manualLF << actionManualRepeatSendTime << manualSendPacket;
     QToolBar* manualSendToolBar = new QToolBar(this);
     addToolBar(Qt::BottomToolBarArea, manualSendToolBar);
@@ -288,7 +295,7 @@ void MainWindow::connections()
     connect(writeLogTimer, SIGNAL(timeout()), this, SLOT(writeLogTimeout()));
     connect(readLogTimer, SIGNAL(timeout()), this, SLOT(readLogTimeout()));
     connect(port, SIGNAL(readyRead()), this, SLOT(received()));
-    connect(macros, &Macros::packetSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPackage));
+    connect(macros, &Macros::packetSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPacket));
     connect(macrosDockWidget, &QDockWidget::topLevelChanged, this, &MainWindow::setMacrosMinimizeFeature);
     connect(macrosDockWidget, &QDockWidget::dockLocationChanged, this, &MainWindow::saveCurrentMacrosArea);
 }
@@ -302,7 +309,7 @@ void MainWindow::startStop()
     }
 }
 
-void MainWindow::sendPackage(const QByteArray &data)
+void MainWindow::sendPacket(const QByteArray &data)
 {
     Macros *macros = qobject_cast<Macros*>(sender());
     QPushButton *b = qobject_cast<QPushButton*>(sender());
@@ -310,7 +317,7 @@ void MainWindow::sendPackage(const QByteArray &data)
         return;
     }
     bool macro = b == 0 ? true : false;
-    sendPackage(data, macro);
+    sendPacket(data, macro);
 }
 
 void MainWindow::writeLogTimeout()
@@ -435,8 +442,8 @@ void MainWindow::received()
 void MainWindow::singleSend()
 {
     DataEncoder *dataEncoder = getEncoder(manualSendMode->currentIndex());
-    dataEncoder->setData(manualPacketEdit->text(), " ");
-    sendPackage(dataEncoder->encodedByteArray(), false);
+    dataEncoder->setData(manualPacketEdit->text(), separatorEdit->text());
+    sendPacket(dataEncoder->encodedByteArray(), false);
 }
 
 void MainWindow::saveReadWriteLog(bool writeLog)
@@ -498,7 +505,7 @@ void MainWindow::startSending(bool checked)
     manualSendPacket->setChecked(false);
 }
 
-void MainWindow::sendPackage(const QByteArray &writeData, bool macro)
+void MainWindow::sendPacket(const QByteArray &writeData, bool macro)
 {
     if(!port->isOpen() || writeData.isEmpty()) {
         return;
@@ -787,8 +794,10 @@ void MainWindow::saveSession()
     comPortConfigure->saveSettings(settings);
     macros->saveSettings(settings);
 
+    settings->setValue("main/read_delay_between_packets", readDelayBetweenPackets->value());
+    settings->setValue("main/separator", separatorEdit->text().isEmpty() ? DEFAULT_SEPARATOR : separatorEdit->text());
+    settings->setValue("main/manual_send_mode", manualSendMode->currentIndex());
     settings->setValue("main/single_send_interval", manualRepeatSendTime->value());
-    settings->setValue("main/mode", manualSendMode->currentIndex());
     settings->setValue("main/CR", manualCR->isChecked());
     settings->setValue("main/LF", manualLF->isChecked());
 
@@ -816,14 +825,18 @@ void MainWindow::loadSession()
     writeMode->setCurrentIndex(settings->value("main/write_mode", DEFAULT_MODE).toInt());
     readMode->setCurrentIndex(settings->value("main/read_mode", DEFAULT_MODE).toInt());
     displayWrite->setChecked(settings->value("main/write_display", DEFAULT_DISPLAYING).toBool());
+    toggleWriteDisplay(displayWrite->isChecked());
     displayRead->setChecked(settings->value("main/read_display", DEFAULT_DISPLAYING).toBool());
+    toggleReadDisplay(displayRead->isChecked());
     writeLogTimer->setInterval(settings->value("main/write_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
     readLogTimer->setInterval(settings->value("main/read_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
 
+    readDelayBetweenPackets->setValue(settings->value("main/read_delay_between_packets", DEFAULT_READ_DELAY).toInt());
+    separatorEdit->setText(settings->value("main/separator", DEFAULT_SEPARATOR).toString());
+    manualSendMode->setCurrentIndex(settings->value("main/manual_send_mode", DEFAULT_MODE).toInt());
     manualRepeatSendTime->setValue(settings->value("main/single_send_interval", DEFAULT_SEND_TIME).toInt());
     manualCR->setChecked(settings->value("main/CR", DEFAULT_CR_LF).toBool());
     manualLF->setChecked(settings->value("main/LF", DEFAULT_CR_LF).toBool());
-    manualSendMode->setCurrentIndex(settings->value("main/mode", DEFAULT_MODE).toInt());
 
     addDockWidget(static_cast<Qt::DockWidgetArea>(settings->value("main/macros_dock_widget_area",
                                                                   DEFAULT_MACROS_AREA).toInt()),
