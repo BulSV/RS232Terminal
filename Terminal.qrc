@@ -26,5 +26,7 @@
         <file>Resources/Select.png</file>
         <file>Resources/Deselect.png</file>
         <file>Resources/Record.png</file>
+        <file>Resources/SingleShot.png</file>
+        <file>Resources/Cycle.png</file>
     </qresource>
 </RCC>

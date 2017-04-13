@@ -39,6 +39,7 @@ private:
     QSpinBox *spinBoxTime;
     QAction *actionSelectMacros;
     QAction *actionDeselectMacros;
+    QAction *actionCycleSend;
     QList<Macro*> macros;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;
@@ -67,6 +68,7 @@ private:
     void blockForMultiSend(bool block);
     double packetSendTime(int packetBytesCount);
     void calculateMultiSendCeiledTime();
+    void cycleSingleSendMode();
 };
 
 #endif // MACROS_H
