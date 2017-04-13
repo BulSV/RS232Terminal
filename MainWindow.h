@@ -145,6 +145,7 @@ private:
     void toggleWriteDisplay(bool toggled);
     void toggleReadDisplay(bool toggled);
     void saveCurrentMacrosArea(Qt::DockWidgetArea area);
+    void onManualModeSelect();
 };
 
 #endif // MAIN_WINDOW_H

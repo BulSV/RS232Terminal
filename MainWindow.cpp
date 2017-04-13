@@ -99,7 +99,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     view();
     connections();
 
-    port->setReadBufferSize(1);
+//    port->setReadBufferSize(1);
 
     displayWrite->setCheckable(true);
     displayRead->setCheckable(true);
@@ -288,6 +288,7 @@ void MainWindow::connections()
     connect(saveReadLog, &QAction::triggered, this, &MainWindow::saveRead);
     connect(recordWriteLog, &QAction::triggered, this, &MainWindow::startWriteLog);
     connect(recordReadLog, &QAction::triggered, this, &MainWindow::startReadLog);
+    connect(manualSendMode, &QComboBox::currentTextChanged, this, &MainWindow::onManualModeSelect);
     connect(manualSendPacket, &QAction::triggered, this, &MainWindow::startSending);
     connect(manualPacketEdit, &QLineEdit::returnPressed, [this](){startSending();});
     connect(manualSendTimer, SIGNAL(timeout()), this, SLOT(singleSend()));
@@ -719,6 +720,17 @@ void MainWindow::toggleReadDisplay(bool toggled)
 void MainWindow::saveCurrentMacrosArea(Qt::DockWidgetArea area)
 {
     macrosDockWidgetArea = area;
+}
+
+void MainWindow::onManualModeSelect()
+{
+    if(manualSendMode->currentIndex() == ASCII) {
+        separatorEdit->setEnabled(false);
+
+        return;
+    }
+
+    separatorEdit->setEnabled(true);
 }
 
 // Перевод строки при приеме данных
