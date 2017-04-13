@@ -24,7 +24,7 @@ class MacroEdit : public QMainWindow
 public:
     explicit MacroEdit(QWidget *parent = 0);
     virtual ~MacroEdit();
-    const QByteArray &getPackage();
+    const QByteArray &getPacket();
     void saveSettings(QSettings *settings, int macroIndex);
     void loadSettings(QSettings *settings, int macroIndex);
     void openMacroFile(const QString &fileName);
@@ -51,8 +51,8 @@ private:
     AsciiEncoder *asciiEncoder;
     HexEncoder *hexEncoder;
     DecEncoder *decEncoder;
-    QByteArray package;
-    QByteArray package_CR_LF;
+    QByteArray packet;
+    QByteArray packet_CR_LF;
     MacroRawEdit *macroRawEdit;
     OpenMacro openMacro;
     SaveMacro saveMacro;

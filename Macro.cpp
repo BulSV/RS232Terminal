@@ -11,7 +11,7 @@ Macro::Macro(QWidget *parent)
     , buttonDelete(new ClickableLabel(this))
     , checkBoxSelect(new QCheckBox(this))
     , spinBoxTime(new QSpinBox(this))
-    , buttonSend(new ClickableLabel(tr("Empty"), this))
+    , buttonSend(new ClickableLabel(tr("No name"), this))
     , buttonUp(new ClickableLabel(this))
     , buttonDown(new ClickableLabel(this))
     , macroEdit(new MacroEdit(this))
@@ -108,7 +108,7 @@ int Macro::getTime() const
 
 const QByteArray &Macro::getPacket() const
 {
-    return macroEdit->getPackage();
+    return macroEdit->getPacket();
 }
 
 void Macro::openMacroFile(const QString &fileName)
@@ -128,7 +128,7 @@ void Macro::deleteMacro()
 
 void Macro::sendPacket()
 {
-    emit packetSended(macroEdit->getPackage());
+    emit packetSended(macroEdit->getPacket());
 }
 
 void Macro::titleChanged()

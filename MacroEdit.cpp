@@ -14,6 +14,7 @@ const int TABLE_WIDTH = 250;
 const int GROUP_BYTES_COUNT = 8;
 const char CR = 0x0A;
 const char LF = 0x0D;
+const QString TITLE = QObject::tr("Macro edit - %1");
 
 #include <QDebug>
 
@@ -43,9 +44,9 @@ MacroEdit::MacroEdit(QWidget *parent)
     , fileOpenDialog(new QFileDialog(this, tr("Open Macro File"), macroOpenDir, "Terminal Macro File (*.tmf)"))
     , fileSaveAsDialog(new QFileDialog(this, tr("Save Macro File"), macroSaveDir, "Terminal Macro File (*.tmf)"))
 {
-    setWindowTitle(tr("Macro Edit - No Name"));
+    setWindowTitle(TITLE.arg("No name"));
 
-    emit titleChanged(QString(tr("No Name")));
+    emit titleChanged(QString(tr("No name")));
 
     actionCR->setCheckable(true);
     actionLF->setCheckable(true);
@@ -91,12 +92,12 @@ MacroEdit::~MacroEdit()
 
 void MacroEdit::addCR_LF()
 {
-    package_CR_LF = package;
+    packet_CR_LF = packet;
     if(actionCR->isChecked()) {
-        package_CR_LF.append(CR);
+        packet_CR_LF.append(CR);
     }
     if(actionLF->isChecked()) {
-        package_CR_LF.append(LF);
+        packet_CR_LF.append(LF);
     }
 }
 
@@ -108,10 +109,10 @@ void MacroEdit::newMacroFile()
     }
     clearSelectedGroup();
     macroFileName.clear();
-    package.clear();
-    setWindowTitle(tr("Macro Edit - No Name"));
+    packet.clear();
+    setWindowTitle(TITLE.arg("No name"));
 
-    emit titleChanged(QString(tr("No Name")));
+    emit titleChanged(QString(tr("No name")));
 }
 
 void MacroEdit::openMacroFile()
@@ -127,7 +128,7 @@ void MacroEdit::saveMacroFile()
         return;
     }
     formPacket();
-    saveMacro.setData(package);
+    saveMacro.setData(packet);
     saveMacro.save(macroFileName);
 }
 
@@ -138,7 +139,7 @@ void MacroEdit::saveAsMacroFile()
         return;
     }
     formPacket();
-    saveMacro.setData(package);
+    saveMacro.setData(packet);
     if(!saveMacro.save(fileName)) {
         return;
     }
@@ -146,7 +147,7 @@ void MacroEdit::saveAsMacroFile()
     QFileInfo fileInfo(fileName);
     fileName = fileInfo.fileName();
     fileName.chop(4);
-    setWindowTitle(tr("Macro Edit - ") + fileName);
+    setWindowTitle(TITLE.arg(fileName));
 
     emit titleChanged(fileName);
 }
@@ -168,14 +169,14 @@ void MacroEdit::formPacket()
     }
     hexData.chop(1);
     hexEncoder->setData(hexData, " ");
-    package = hexEncoder->encodedByteArray();
+    packet = hexEncoder->encodedByteArray();
 }
 
-const QByteArray &MacroEdit::getPackage()
+const QByteArray &MacroEdit::getPacket()
 {
     addCR_LF();
 
-    return package_CR_LF;
+    return packet_CR_LF;
 }
 
 void MacroEdit::saveSettings(QSettings *settings, int macroIndex)
@@ -184,9 +185,9 @@ void MacroEdit::saveSettings(QSettings *settings, int macroIndex)
     if(macroFileName.isEmpty()) {
         formPacket();
         QString packetString;
-        int packageSize = package.size();
+        int packageSize = packet.size();
         for(int i = 0; i < packageSize; ++i) {
-            packetString.append(QString::number((unsigned char)package.at(i), 16).toUpper());
+            packetString.append(QString::number((unsigned char)packet.at(i), 16).toUpper());
             packetString.append(" ");
         }
         packetString.chop(1);
@@ -215,7 +216,7 @@ void MacroEdit::loadSettings(QSettings *settings, int macroIndex)
         QFileInfo fileInfo(fileName);
         fileName = fileInfo.fileName();
         fileName.chop(4);
-        setWindowTitle(tr("Macro Edit - ") + fileName);
+        setWindowTitle(TITLE.arg(fileName));
 
         emit titleChanged(fileName);
     } else {
@@ -223,9 +224,9 @@ void MacroEdit::loadSettings(QSettings *settings, int macroIndex)
         int dataSize = packageList.size();
         bool ok;
         for(int i = 0; i < dataSize; ++i) {
-            package.append(static_cast<char>(packageList.at(i).toInt(&ok, 16)));
+            packet.append(static_cast<char>(packageList.at(i).toInt(&ok, 16)));
         }
-        setRawData(package);
+        setRawData(packet);
     }
     actionCR->setChecked(settings->value("macros/" + macroIndexString + "/CR").toBool());
     actionLF->setChecked(settings->value("macros/" + macroIndexString + "/LF").toBool());
@@ -254,7 +255,7 @@ void MacroEdit::openMacroFile(const QString &fileName)
     QFileInfo fileInfo(fileName);
     QString title = fileInfo.fileName();
     title.chop(4);
-    setWindowTitle(tr("Macro Edit - ") + title);
+    setWindowTitle(TITLE.arg(title));
 
     emit titleChanged(title);
 }
@@ -586,7 +587,7 @@ void MacroEdit::setRawData(const QByteArray &rawData)
 void MacroEdit::onEditRawData()
 {
     formPacket();
-    macroRawEdit->setData(package);
+    macroRawEdit->setData(packet);
     macroRawEdit->setWindowTitle(windowTitle());
     macroRawEdit->show();
 }
