@@ -224,7 +224,10 @@ void MacroEdit::loadSettings(QSettings *settings, int macroIndex)
         int dataSize = packageList.size();
         bool ok;
         for(int i = 0; i < dataSize; ++i) {
-            packet.append(static_cast<char>(packageList.at(i).toInt(&ok, 16)));
+            char byte = static_cast<char>(packageList.at(i).toInt(&ok, 16));
+            if(ok) {
+                packet.append(byte);
+            }
         }
         setRawData(packet);
     }
