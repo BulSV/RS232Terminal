@@ -322,6 +322,9 @@ void Macros::sendNextMacro()
     if(currentIntervalIndex >= indexesOfIntervals.size()) {
         currentIntervalIndex = 0;
         if(actionCycleSend->isChecked()) {
+
+            emit packetSended(macro->getPacket());
+
             startOrStop();
 
             return;
