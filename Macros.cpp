@@ -40,7 +40,7 @@ Macros::Macros(QWidget *parent)
     actionPause->setCheckable(true);
     actionPause->setEnabled(false);
     actionCycleSend->setCheckable(true);
-    spinBoxTime->setRange(0, 60000);
+    spinBoxTime->setRange(1, 60000);
     spinBoxTime->setToolTip(tr("Time, ms"));
     QToolBar *toolBar = new QToolBar(this);
     toolBar->setStyleSheet("spacing:2px");
@@ -130,14 +130,18 @@ void Macros::setWorkState(bool work)
         currentIntervalIndex = 0;
         blockForMultiSend(false);
     }
+    QListIterator<Macro*> it(macros);
+    Macro *m = 0;
+    while(it.hasNext()) {
+        m = it.next();
+        m->setTime(m->getTime());
+    }
     if(!work) {
         multiSentTime->setText(MULTI_SEND_TIME.arg("None"));
-    } else {
-        calculateMultiSendCeiledTime();
     }
 }
 
-void Macros::setPort(QSerialPort *port)
+void Macros::setPort(const QSerialPort *port)
 {
     this->port = port;
 }
@@ -145,6 +149,7 @@ void Macros::setPort(QSerialPort *port)
 void Macros::addMacro()
 {
     Macro *macro = new Macro(this);
+    macro->setPort(port);
     macros.append(macro);
     scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macro);
 
@@ -156,7 +161,7 @@ void Macros::addMacro()
     connect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
     connect(actionSelectMacros, &QAction::triggered, macro, &Macro::select);
     connect(actionDeselectMacros, &QAction::triggered, macro, &Macro::deselect);
-    connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &Macro::setTime);
+    connect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macros::setSelectedMacrosTime);
 }
 
 void Macros::deleteMacro()
@@ -180,7 +185,7 @@ void Macros::deleteMacro(Macro *macro)
     disconnect(macro, &Macro::movedDown, this, &Macros::moveMacroDown);
     disconnect(actionSelectMacros, &QAction::triggered, macro, &Macro::select);
     disconnect(actionDeselectMacros, &QAction::triggered, macro, &Macro::deselect);
-    disconnect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), macro, &Macro::setTime);
+    disconnect(spinBoxTime, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &Macros::setSelectedMacrosTime);
     delete macro;
     macro = 0;
 }
@@ -344,18 +349,6 @@ void Macros::blockForMultiSend(bool block)
     }
 }
 
-double Macros::packetSendTime(int packetBytesCount)
-{
-    double startBit = 1;
-    double dataBits = port->dataBits();
-    double parityBit = port->parity() == QSerialPort::NoParity ? 0 : 1;
-    double stopBits = port->stopBits() == QSerialPort::OneAndHalfStop ? 1.5 : static_cast<double>(port->stopBits());
-    double speed = port->baudRate();
-    double packetTime = (startBit + dataBits + parityBit + stopBits) * packetBytesCount / speed;
-
-    return packetTime;
-}
-
 void Macros::calculateMultiSendCeiledTime()
 {
     if(port == 0 || !port->isOpen()) {
@@ -365,14 +358,11 @@ void Macros::calculateMultiSendCeiledTime()
     }
 
     QListIterator<int> it(indexesOfIntervals);
-    int index = 0;
-    double time = 0;
+    double totalTime = 0;
     while(it.hasNext()) {
-        index = it.next();
-        time += packetSendTime(macros.at(index)->getPacket().size());
-        time += macros.at(index)->getTime();
+        totalTime += macros.at(it.next())->getTime();
     }
-    multiSentTime->setText(MULTI_SEND_TIME.arg(QString::number(time, 'f', 3)));
+    multiSentTime->setText(MULTI_SEND_TIME.arg(QString::number(totalTime, 'f', 3)));
 }
 
 void Macros::cycleSingleSendMode()
@@ -383,5 +373,13 @@ void Macros::cycleSingleSendMode()
     } else {
         actionCycleSend->setIcon(QIcon(":/Resources/Cycle.png"));
         actionCycleSend->setToolTip(tr("Cycle sending mode"));
+    }
+}
+
+void Macros::setSelectedMacrosTime()
+{
+    QListIterator<int> it(indexesOfIntervals);
+    while(it.hasNext()) {
+        macros[it.next()]->setTime(spinBoxTime->value());
     }
 }

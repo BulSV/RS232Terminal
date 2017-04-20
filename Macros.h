@@ -27,7 +27,7 @@ public:
     void saveSettings(QSettings *settings);
     void loadSettings(QSettings *settings);
     void setWorkState(bool work);
-    void setPort(QSerialPort *port);
+    void setPort(const QSerialPort *port);
 signals:
     void packetSended(const QByteArray &package);
 private:
@@ -50,7 +50,7 @@ private:
     QList<int> indexesOfIntervals;
     int currentIntervalIndex;
 
-    QSerialPort *port;
+    const QSerialPort *port;
     QLabel *multiSentTime;
 
     void addMacro();
@@ -66,9 +66,9 @@ private:
     void updateIntervals(bool add);
     void sendNextMacro();
     void blockForMultiSend(bool block);
-    double packetSendTime(int packetBytesCount);
     void calculateMultiSendCeiledTime();
     void cycleSingleSendMode();
+    void setSelectedMacrosTime();
 };
 
 #endif // MACROS_H

@@ -1,4 +1,5 @@
 #include <QMessageBox>
+#include <QtMath>
 
 #include "Macro.h"
 
@@ -15,9 +16,8 @@ Macro::Macro(QWidget *parent)
     , buttonUp(new ClickableLabel(this))
     , buttonDown(new ClickableLabel(this))
     , macroEdit(new MacroEdit(this))
-    , isSelected(false)
 {
-    spinBoxTime->setRange(0, 999999);
+    spinBoxTime->setRange(1, 60000);
     spinBoxTime->setValue(50);
 
     view();
@@ -42,35 +42,24 @@ void Macro::loadSettings(QSettings *settings, int macroIndex)
     macroEdit->loadSettings(settings, macroIndex);
 }
 
+void Macro::setPort(const QSerialPort *port)
+{
+    this->port = port;
+}
+
 void Macro::select()
 {
-    if(spinBoxTime->value() == 0) {
-        return;
-    }
-    isSelected = true;
-    checkBoxSelect->setChecked(isSelected);
+    checkBoxSelect->setChecked(true);
 
-    emit selected(isSelected);
+    emit selected(true);
 
 }
 
 void Macro::deselect()
 {
-    isSelected = false;
-    checkBoxSelect->setChecked(isSelected);
+    checkBoxSelect->setChecked(false);
 
-    emit selected(isSelected);
-}
-
-void Macro::selectToggle()
-{
-    if(spinBoxTime->value() == 0 && !isSelected) {
-        return;
-    }
-    isSelected = !isSelected;
-    checkBoxSelect->setChecked(isSelected);
-
-    emit toggled();
+    emit selected(false);
 }
 
 bool Macro::selectState() const
@@ -90,12 +79,14 @@ bool Macro::isEnabledSelectState() const
 
 void Macro::setTime(int time)
 {
-    if(time == 0) {
-        deselect();
-        enableSelectState(false);
-    } else {
-        enableSelectState(true);
+    int minimumTime = 1;
+    if(port->isOpen()) {
+        minimumTime = qCeil(packetSendTime());
+        if(time < minimumTime) {
+            time = minimumTime;
+        }
     }
+    spinBoxTime->setMinimum(minimumTime);
     spinBoxTime->setValue(time);
 
     emit timeChanged(time);
@@ -141,10 +132,19 @@ void Macro::titleChanged()
 
 void Macro::selectTrigger()
 {
-    isSelected = !isSelected;
-    checkBoxSelect->setChecked(isSelected);
+    emit selected(selectState());
+}
 
-    emit selected(isSelected);
+double Macro::packetSendTime()
+{
+    double startBit = 1;
+    double dataBits = port->dataBits();
+    double parityBit = port->parity() == QSerialPort::NoParity ? 0 : 1;
+    double stopBits = port->stopBits() == QSerialPort::OneAndHalfStop ? 1.5 : static_cast<double>(port->stopBits());
+    double speed = port->baudRate();
+    double packetTime = (startBit + dataBits + parityBit + stopBits) * macroEdit->getPacket().size() / speed;
+
+    return packetTime * 1000;
 }
 
 void Macro::view()

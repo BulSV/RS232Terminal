@@ -1,5 +1,5 @@
-#ifndef MACRO_WIDGET_H
-#define MACRO_WIDGET_H
+#ifndef MACRO_H
+#define MACRO_H
 
 #include <QWidget>
 #include <QHBoxLayout>
@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QSettings>
 #include <QByteArray>
+#include <QSerialPort>
 
 #include "MacroEdit.h"
 #include "ClickableLabel.h"
@@ -22,9 +23,10 @@ public:
     void saveSettings(QSettings *settings, int macroIndex);
     void loadSettings(QSettings *settings, int macroIndex);
 
+    void setPort(const QSerialPort *port);
+
     void select();
     void deselect();
-    void selectToggle();
     bool selectState() const;
 
     void enableSelectState(bool enable);
@@ -38,7 +40,6 @@ public:
 signals:
     void deleted();
     void selected(bool select);
-    void toggled();
     void packetSended(const QByteArray &packet);
     void timeChanged(int time);
     void movedUp();
@@ -51,7 +52,7 @@ private:
     ClickableLabel *buttonUp;
     ClickableLabel *buttonDown;
     MacroEdit *macroEdit;
-    bool isSelected;
+    const QSerialPort *port;
 
     void view();
     void connections();
@@ -59,6 +60,7 @@ private:
     void sendPacket();
     void titleChanged();
     void selectTrigger();
+    double packetSendTime();
 };
 
-#endif // MACRO_WIDGET_H
+#endif // MACRO_H
