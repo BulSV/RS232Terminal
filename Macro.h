@@ -13,6 +13,7 @@
 
 #include "MacroEdit.h"
 #include "ClickableLabel.h"
+#include "PacketTimeCalculator.h"
 
 class Macro : public QWidget
 {
@@ -23,7 +24,7 @@ public:
     void saveSettings(QSettings *settings, int macroIndex);
     void loadSettings(QSettings *settings, int macroIndex);
 
-    void setPort(const QSerialPort *port);
+    void setPacketTimeCalculator(PacketTimeCalculator *packetTimeCalculator);
 
     void select();
     void deselect();
@@ -52,7 +53,7 @@ private:
     ClickableLabel *buttonUp;
     ClickableLabel *buttonDown;
     MacroEdit *macroEdit;
-    const QSerialPort *port;
+    PacketTimeCalculator *packetTimeCalculator;
 
     void view();
     void connections();
@@ -60,7 +61,6 @@ private:
     void sendPacket();
     void titleChanged();
     void selectTrigger();
-    double packetSendTime();
 };
 
 #endif // MACRO_H

@@ -21,7 +21,7 @@ SOURCES += main.cpp\
     Macro.cpp \
     MacroEdit.cpp \
     MacroRawEdit.cpp \
-    PacketSendTime.cpp
+    PacketTimeCalculator.cpp
 
 HEADERS  += \
     MainWindow.h \
@@ -39,7 +39,7 @@ HEADERS  += \
     Macro.h \
     MacroEdit.h \
     MacroRawEdit.h \
-    PacketSendTime.h
+    PacketTimeCalculator.h
 
 RESOURCES += \
     Terminal.qrc

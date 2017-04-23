@@ -34,7 +34,7 @@ Macros::Macros(QWidget *parent)
     , fileDialog(new QFileDialog(this))
     , intervalTimer(new QTimer(this))
     , currentIntervalIndex(0)
-    , port(0)
+    , packetTimeCalculator(0)
     , multiSentTime(new QLabel(MULTI_SEND_TIME.arg("None")))
 {
     actionPause->setCheckable(true);
@@ -141,15 +141,15 @@ void Macros::setWorkState(bool work)
     }
 }
 
-void Macros::setPort(const QSerialPort *port)
+void Macros::setPacketTimeCalculator(PacketTimeCalculator *packetTimeCalculator)
 {
-    this->port = port;
+    this->packetTimeCalculator = packetTimeCalculator;
 }
 
 void Macros::addMacro()
 {
     Macro *macro = new Macro(this);
-    macro->setPort(port);
+    macro->setPacketTimeCalculator(packetTimeCalculator);
     macros.append(macro);
     scrollAreaLayout->insertWidget(scrollAreaLayout->count() - 1, macro);
 
@@ -354,7 +354,7 @@ void Macros::blockForMultiSend(bool block)
 
 void Macros::calculateMultiSendCeiledTime()
 {
-    if(port == 0 || !port->isOpen()) {
+    if(!packetTimeCalculator->isValid()) {
         multiSentTime->setText(MULTI_SEND_TIME.arg("None"));
 
         return;

@@ -86,6 +86,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , comPortConfigure(new ComPortConfigure(port, this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
     , fileDialog(new QFileDialog(this))
+    , packetTimeCalculator(new PacketTimeCalculator(port))
     , txCount(0)
     , rxCount(0)
     , logWrite(false)
@@ -114,7 +115,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     comPortConfigure->setWindowTitle(tr("Port configure"));
     comPortConfigure->setModal(true);
 
-    macros->setPort(port);
+    macros->setPacketTimeCalculator(packetTimeCalculator);
     macros->setWorkState(false);
     macrosDockWidget->setWidget(macros);
     macrosDockWidget->setFixedWidth(310);

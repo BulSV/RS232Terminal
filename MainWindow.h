@@ -28,6 +28,7 @@
 #include "ComPortConfigure.h"
 #include "Macros.h"
 #include "ClickableLabel.h"
+#include "PacketTimeCalculator.h"
 
 class MainWindow : public QMainWindow
 {
@@ -110,6 +111,7 @@ private:
     ComPortConfigure *comPortConfigure;
     QSettings *settings;
     QFileDialog *fileDialog;
+    PacketTimeCalculator *packetTimeCalculator;
 
     QFile writeLogFile;
     QFile readLogFile;

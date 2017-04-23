@@ -1,11 +1,20 @@
-#include "PacketSendTime.h"
+#include "PacketTimeCalculator.h"
 
-PacketSendTime::PacketSendTime(const QSerialPort *port)
+PacketTimeCalculator::PacketTimeCalculator(const QSerialPort *port)
 {
     this->port = port;
 }
 
-double PacketSendTime::calculateTime(int bytesCount)
+bool PacketTimeCalculator::isValid() const
+{
+    if(port == 0 || !port->isOpen()) {
+        return false;
+    }
+
+    return true;
+}
+
+double PacketTimeCalculator::calculateTime(int bytesCount)
 {
     double startBit = 1;
     double dataBits = port->dataBits();

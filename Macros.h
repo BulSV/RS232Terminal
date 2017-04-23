@@ -13,6 +13,7 @@
 #include <QLabel>
 
 #include "Macro.h"
+#include "PacketTimeCalculator.h"
 
 class Macros : public QMainWindow
 {
@@ -27,7 +28,7 @@ public:
     void saveSettings(QSettings *settings);
     void loadSettings(QSettings *settings);
     void setWorkState(bool work);
-    void setPort(const QSerialPort *port);
+    void setPacketTimeCalculator(PacketTimeCalculator *packetTimeCalculator);
 signals:
     void packetSended(const QByteArray &package);
 private:
@@ -50,7 +51,7 @@ private:
     QList<int> indexesOfIntervals;
     int currentIntervalIndex;
 
-    const QSerialPort *port;
+    PacketTimeCalculator *packetTimeCalculator;
     QLabel *multiSentTime;
 
     void addMacro();

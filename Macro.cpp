@@ -42,9 +42,9 @@ void Macro::loadSettings(QSettings *settings, int macroIndex)
     macroEdit->loadSettings(settings, macroIndex);
 }
 
-void Macro::setPort(const QSerialPort *port)
+void Macro::setPacketTimeCalculator(PacketTimeCalculator *packetTimeCalculator)
 {
-    this->port = port;
+    this->packetTimeCalculator = packetTimeCalculator;
 }
 
 void Macro::select()
@@ -80,8 +80,8 @@ bool Macro::isEnabledSelectState() const
 void Macro::setTime(int time)
 {
     int minimumTime = 1;
-    if(port->isOpen()) {
-        minimumTime = qCeil(packetSendTime());
+    if(packetTimeCalculator != 0 && packetTimeCalculator->isValid()) {
+        minimumTime = qCeil(packetTimeCalculator->calculateTime(getPacket().size()));
         if(time < minimumTime) {
             time = minimumTime;
         }
@@ -133,18 +133,6 @@ void Macro::titleChanged()
 void Macro::selectTrigger()
 {
     emit selected(selectState());
-}
-
-double Macro::packetSendTime()
-{
-    double startBit = 1;
-    double dataBits = port->dataBits();
-    double parityBit = port->parity() == QSerialPort::NoParity ? 0 : 1;
-    double stopBits = port->stopBits() == QSerialPort::OneAndHalfStop ? 1.5 : static_cast<double>(port->stopBits());
-    double speed = port->baudRate();
-    double packetTime = (startBit + dataBits + parityBit + stopBits) * macroEdit->getPacket().size() / speed;
-
-    return packetTime * 1000;
 }
 
 void Macro::view()
