@@ -76,9 +76,9 @@ private:
     QLabel *bits;
     QLabel *parity;
     QLabel *stopBits;
-    QComboBox *manualSendMode;
-    QComboBox *readMode;
-    QComboBox *writeMode;
+    QComboBox *manualSendEncodingMode;
+    QComboBox *readEncodingMode;
+    QComboBox *writeEncodingMode;
     QTimer *manualSendTimer;
     QTimer *writeLogTimer;
     QTimer *readLogTimer;
@@ -106,6 +106,7 @@ private:
     QAction *displayRead;
     QAction *manualCR;
     QAction *manualLF;
+    QAction *manualSendMode;
 
     QSerialPort *port;
     ComPortConfigure *comPortConfigure;
@@ -148,6 +149,7 @@ private:
     void toggleReadDisplay(bool toggled);
     void saveCurrentMacrosArea(Qt::DockWidgetArea area);
     void onManualModeSelect();
+    void toggleManualSendMode();
 };
 
 #endif // MAIN_WINDOW_H
