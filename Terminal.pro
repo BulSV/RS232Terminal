@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     OpenMacro.cpp \
     Macro.cpp \
     MacroEdit.cpp \
-    MacroRawEdit.cpp
+    MacroRawEdit.cpp \
+    PacketSendTime.cpp
 
 HEADERS  += \
     MainWindow.h \
@@ -37,7 +38,8 @@ HEADERS  += \
     OpenMacro.h \
     Macro.h \
     MacroEdit.h \
-    MacroRawEdit.h
+    MacroRawEdit.h \
+    PacketSendTime.h
 
 RESOURCES += \
     Terminal.qrc
