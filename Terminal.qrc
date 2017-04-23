@@ -28,5 +28,7 @@
         <file>Resources/Record.png</file>
         <file>Resources/SingleShot.png</file>
         <file>Resources/Cycle.png</file>
+        <file>Resources/Period.png</file>
+        <file>Resources/Single.png</file>
     </qresource>
 </RCC>
