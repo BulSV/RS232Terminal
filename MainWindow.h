@@ -101,7 +101,7 @@ private:
     QSpinBox *manualRepeatSendTime;
     QSpinBox *readDelayBetweenPackets;
     QLineEdit *manualPacketEdit;
-    QLineEdit *separatorEdit;
+    QLineEdit *manualSeparatorEdit;
     QAction *displayWrite;
     QAction *displayRead;
     QAction *manualCR;
@@ -150,6 +150,7 @@ private:
     void saveCurrentMacrosArea(Qt::DockWidgetArea area);
     void onManualModeSelect();
     void toggleManualSendMode();
+    void manualPacketEdited();
 };
 
 #endif // MAIN_WINDOW_H

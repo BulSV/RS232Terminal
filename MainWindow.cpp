@@ -10,6 +10,7 @@
 #include <QListIterator>
 #include <QGroupBox>
 #include <QWidgetAction>
+#include <QtMath>
 
 #include "MainWindow.h"
 #include "Macro.h"
@@ -78,7 +79,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , manualRepeatSendTime(new QSpinBox(this))
     , readDelayBetweenPackets(new QSpinBox(this))
     , manualPacketEdit(new QLineEdit(this))
-    , separatorEdit(new QLineEdit(" ", this))
+    , manualSeparatorEdit(new QLineEdit(" ", this))
     , displayWrite(new QAction(QIcon(":/Resources/Display.png"), DEFAULT_WRITE_DISPLAYING, this))
     , displayRead(new QAction(QIcon(":/Resources/Display.png"), DEFAULT_READ_DISPLAYING, this))
     , manualCR(new QAction(QIcon(":/Resources/CR.png"), tr("Add CR"), this))
@@ -186,9 +187,9 @@ void MainWindow::view()
     actionManualRepeatSendTime->setDefaultWidget(manualRepeatSendTime);
     manualRepeatSendTime->setToolTip(tr("Repeat send time, ms"));
     QWidgetAction *actionSeparatorEdit = new QWidgetAction(this);
-    actionSeparatorEdit->setDefaultWidget(separatorEdit);
-    separatorEdit->setMaximumWidth(20);
-    separatorEdit->setToolTip(tr("Separator symbol"));
+    actionSeparatorEdit->setDefaultWidget(manualSeparatorEdit);
+    manualSeparatorEdit->setMaximumWidth(20);
+    manualSeparatorEdit->setToolTip(tr("Separator symbol"));
     actions.clear();
     actions << actionReadDelayBetweenPackets << actionSeparatorEdit << actionManualSendMode << actionManualPacketEdit
             << actionManualPacketEdit << manualCR << manualLF << manualSendMode << actionManualRepeatSendTime << manualSendPacket;
@@ -289,6 +290,7 @@ void MainWindow::connections()
     connect(recordWriteLog, &QAction::triggered, this, &MainWindow::startWriteLog);
     connect(recordReadLog, &QAction::triggered, this, &MainWindow::startReadLog);
     connect(manualSendEncodingMode, &QComboBox::currentTextChanged, this, &MainWindow::onManualModeSelect);
+    connect(manualSendEncodingMode, &QComboBox::currentTextChanged, this, &MainWindow::manualPacketEdited);
     connect(manualSendPacket, &QAction::triggered, this, &MainWindow::startSending);
     connect(manualPacketEdit, &QLineEdit::returnPressed, [this](){startSending();});
     connect(manualSendTimer, SIGNAL(timeout()), this, SLOT(singleSend()));
@@ -300,6 +302,7 @@ void MainWindow::connections()
     connect(macros, &Macros::packetSended, this, static_cast<void (MainWindow::*)(const QByteArray &)>(&MainWindow::sendPacket));
     connect(macrosDockWidget, &QDockWidget::topLevelChanged, this, &MainWindow::setMacrosMinimizeFeature);
     connect(macrosDockWidget, &QDockWidget::dockLocationChanged, this, &MainWindow::saveCurrentMacrosArea);
+    connect(manualPacketEdit, &QLineEdit::textEdited, this, &MainWindow::manualPacketEdited);
 }
 
 void MainWindow::startStop()
@@ -444,7 +447,7 @@ void MainWindow::received()
 void MainWindow::singleSend()
 {
     DataEncoder *dataEncoder = getEncoder(manualSendEncodingMode->currentIndex());
-    dataEncoder->setData(manualPacketEdit->text(), separatorEdit->text());
+    dataEncoder->setData(manualPacketEdit->text(), manualSeparatorEdit->text());
     sendPacket(dataEncoder->encodedByteArray(), false);
 }
 
@@ -726,12 +729,12 @@ void MainWindow::saveCurrentMacrosArea(Qt::DockWidgetArea area)
 void MainWindow::onManualModeSelect()
 {
     if(manualSendEncodingMode->currentIndex() == ASCII) {
-        separatorEdit->setEnabled(false);
+        manualSeparatorEdit->setEnabled(false);
 
         return;
     }
 
-    separatorEdit->setEnabled(true);
+    manualSeparatorEdit->setEnabled(true);
 }
 
 void MainWindow::toggleManualSendMode()
@@ -749,6 +752,17 @@ void MainWindow::toggleManualSendMode()
             manualSendTimer->stop();
         }
     }
+}
+
+void MainWindow::manualPacketEdited()
+{
+    int minimumTime = 1;
+    if(packetTimeCalculator != 0 && packetTimeCalculator->isValid()) {
+        DataEncoder *dataEncoder = getEncoder(manualSendEncodingMode->currentIndex());
+        dataEncoder->setData(manualPacketEdit->text(), manualSeparatorEdit->text());
+        minimumTime = qCeil(packetTimeCalculator->calculateTime(dataEncoder->encodedByteArray().size()));
+    }
+    manualRepeatSendTime->setMinimum(minimumTime);
 }
 
 // Перевод строки при приеме данных
@@ -825,7 +839,7 @@ void MainWindow::saveSession()
     macros->saveSettings(settings);
 
     settings->setValue("main/read_delay_between_packets", readDelayBetweenPackets->value());
-    settings->setValue("main/separator", separatorEdit->text().isEmpty() ? DEFAULT_SEPARATOR : separatorEdit->text());
+    settings->setValue("main/separator", manualSeparatorEdit->text().isEmpty() ? DEFAULT_SEPARATOR : manualSeparatorEdit->text());
     settings->setValue("main/manual_encoding_send_mode", manualSendEncodingMode->currentIndex());
     settings->setValue("main/repeat_send_interval", manualRepeatSendTime->value());
     settings->setValue("main/send_mode", manualSendMode->toolTip() == DEFAULT_SEND_MODE ? 0 : 1);
@@ -873,7 +887,7 @@ void MainWindow::loadSession()
     readLogTimer->setInterval(settings->value("main/read_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
 
     readDelayBetweenPackets->setValue(settings->value("main/read_delay_between_packets", DEFAULT_READ_DELAY).toInt());
-    separatorEdit->setText(settings->value("main/separator", DEFAULT_SEPARATOR).toString());
+    manualSeparatorEdit->setText(settings->value("main/separator", DEFAULT_SEPARATOR).toString());
     manualSendEncodingMode->setCurrentIndex(settings->value("main/manual_encoding_send_mode", DEFAULT_MODE).toInt());
     manualRepeatSendTime->setValue(settings->value("main/repeat_send_interval", DEFAULT_SEND_TIME).toInt());
     if(settings->value("main/send_mode", 0).toInt() == 0) {
