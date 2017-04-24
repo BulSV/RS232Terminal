@@ -284,6 +284,7 @@ void MainWindow::connections()
     connect(clearReadLog, &QAction::triggered, sheetRead, &LimitedTextEdit::clear);
     connect(clearWriteLog, &QAction::triggered, sheetWrite, &LimitedTextEdit::clear);
     connect(actionStartStop, &QAction::triggered, this, &MainWindow::startStop);
+    connect(actionStartStop, &QAction::triggered, this, &MainWindow::manualPacketEdited);
     connect(actionMacros, &QAction::triggered, this, &MainWindow::toggleMacrosView);
     connect(saveWriteLog, &QAction::triggered, this, &MainWindow::saveWrite);
     connect(saveReadLog, &QAction::triggered, this, &MainWindow::saveRead);
