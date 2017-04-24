@@ -145,8 +145,8 @@ private:
     QString stopBitsToString(int stopBits);
     void setMacrosMinimizeFeature(bool floating);
     void toggleMacrosView();
-    void toggleWriteDisplay(bool toggled);
-    void toggleReadDisplay(bool toggled);
+    void toggleWriteDisplay();
+    void toggleReadDisplay();
     void saveCurrentMacrosArea(Qt::DockWidgetArea area);
     void onManualModeSelect();
     void toggleManualSendMode();

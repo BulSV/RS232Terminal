@@ -25,23 +25,23 @@ const int BLINK_TIME_RX = 200;
 #define CR 0x0D
 #define LF 0x0A
 
-QString PORT = QObject::tr("Port: ");
-QString BAUD = QObject::tr("Baud rate: ");
-QString BITS = QObject::tr("Data bits: ");
-QString PARITY = QObject::tr("Parity: ");
-QString STOP_BITS = QObject::tr("Stop bits: ");
-
+const QString PORT = QObject::tr("Port: ");
+const QString BAUD = QObject::tr("Baud rate: ");
+const QString BITS = QObject::tr("Data bits: ");
+const QString PARITY = QObject::tr("Parity: ");
+const QString STOP_BITS = QObject::tr("Stop bits: ");
 const int DEFAULT_LOG_ROWS = 1000;
 const int DEFAULT_MODE = 0; // ASCII
 const int DEFAULT_LOG_TIMEOUT = 600000; // ms
 const int DEFAULT_READ_DELAY = 10; // ms
 const QString DEFAULT_SEPARATOR = " ";
 const int DEFAULT_SEND_TIME = 0; // ms
-const bool DEFAULT_DISPLAYING = true;
 const bool DEFAULT_CR_LF = false;
 const Qt::DockWidgetArea DEFAULT_MACROS_AREA = Qt::RightDockWidgetArea;
 const bool DEFAULT_MACROS_HIDDEN = true;
 const QString DEFAULT_SEND_MODE = QObject::tr("Single send");
+const QString DEFAULT_WRITE_DISPLAYING = QObject::tr("Displaying write data");
+const QString DEFAULT_READ_DISPLAYING = QObject::tr("Displaying read data");
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
@@ -79,8 +79,8 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , readDelayBetweenPackets(new QSpinBox(this))
     , manualPacketEdit(new QLineEdit(this))
     , separatorEdit(new QLineEdit(" ", this))
-    , displayWrite(new QAction(QIcon(":/Resources/Display.png"), tr("Hide write data"), this))
-    , displayRead(new QAction(QIcon(":/Resources/Display.png"), tr("Hide read data"), this))
+    , displayWrite(new QAction(QIcon(":/Resources/Display.png"), DEFAULT_WRITE_DISPLAYING, this))
+    , displayRead(new QAction(QIcon(":/Resources/Display.png"), DEFAULT_READ_DISPLAYING, this))
     , manualCR(new QAction(QIcon(":/Resources/CR.png"), tr("Add CR"), this))
     , manualLF(new QAction(QIcon(":/Resources/LF.png"), tr("Add LF"), this))
     , manualSendMode(new QAction(QIcon(":Resources/Single.png"), DEFAULT_SEND_MODE, this))
@@ -102,10 +102,6 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     view();
     connections();
 
-//    port->setReadBufferSize(1);
-
-    displayWrite->setCheckable(true);
-    displayRead->setCheckable(true);
     manualCR->setCheckable(true);
     manualLF->setCheckable(true);
 
@@ -542,7 +538,7 @@ void MainWindow::sendPacket(const QByteArray &writeData, bool macro)
 
 void MainWindow::displayWrittenData(const QByteArray &writeData)
 {
-    if(!displayWrite->isChecked()) {
+    if(displayWrite->toolTip() != DEFAULT_WRITE_DISPLAYING) {
         return;
     }
 
@@ -700,25 +696,25 @@ void MainWindow::toggleMacrosView()
     macrosDockWidget->show();
 }
 
-void MainWindow::toggleWriteDisplay(bool toggled)
+void MainWindow::toggleWriteDisplay()
 {
-    if(toggled) {
-        displayWrite->setIcon(QIcon(":/Resources/Display.png"));
-        displayWrite->setToolTip(tr("Hide write data"));
-    } else {
+    if(displayWrite->toolTip() == DEFAULT_WRITE_DISPLAYING) {
         displayWrite->setIcon(QIcon(":/Resources/Hide.png"));
-        displayWrite->setToolTip(tr("Display write data"));
+        displayWrite->setToolTip(tr("Hiding write data"));
+    } else {
+        displayWrite->setIcon(QIcon(":/Resources/Display.png"));
+        displayWrite->setToolTip(DEFAULT_WRITE_DISPLAYING);
     }
 }
 
-void MainWindow::toggleReadDisplay(bool toggled)
+void MainWindow::toggleReadDisplay()
 {
-    if(toggled) {
-        displayRead->setIcon(QIcon(":/Resources/Display.png"));
-        displayRead->setToolTip(tr("Hide read data"));
-    } else {
+    if(displayRead->toolTip() == DEFAULT_READ_DISPLAYING) {
         displayRead->setIcon(QIcon(":/Resources/Hide.png"));
-        displayRead->setToolTip(tr("Display read data"));
+        displayRead->setToolTip(tr("Hiding read data"));
+    } else {
+        displayRead->setIcon(QIcon(":/Resources/Display.png"));
+        displayRead->setToolTip(DEFAULT_READ_DISPLAYING);
     }
 }
 
@@ -748,6 +744,10 @@ void MainWindow::toggleManualSendMode()
         manualSendMode->setIcon(QIcon(":Resources/Single.png"));
         manualSendMode->setToolTip(tr("Single send"));
         manualRepeatSendTime->setEnabled(false);
+        if(manualSendPacket->isChecked()) {
+            manualSendPacket->setChecked(false);
+            manualSendTimer->stop();
+        }
     }
 }
 
@@ -766,11 +766,11 @@ void MainWindow::delayBetweenPacketsEnded()
     rxCount+=readBuffer.size();
     rxLabel->setText("Rx: " + QString::number(rxCount));
 
-    if(displayRead->isChecked() || logRead) {
+    if(displayRead->toolTip() == DEFAULT_READ_DISPLAYING || logRead) {
         DataEncoder *dataEncoder = getEncoder(readEncodingMode->currentIndex());
         dataEncoder->setData(readBuffer);
 
-        if(displayRead->isChecked()) {
+        if(displayRead->toolTip() == DEFAULT_READ_DISPLAYING) {
             sheetRead->addLine(dataEncoder->encodedStringList().join(" "));
             QScrollBar *sb = sheetRead->verticalScrollBar();
             sb->setValue(sb->maximum());
@@ -816,8 +816,8 @@ void MainWindow::saveSession()
     settings->setValue("main/read_encoding_mode", readEncodingMode->currentIndex());
     settings->setValue("main/max_write_sheet_rows", sheetWrite->linesLimit());
     settings->setValue("main/max_read_sheet_rows", sheetRead->linesLimit());
-    settings->setValue("main/write_display", displayWrite->isChecked());
-    settings->setValue("main/read_display", displayRead->isChecked());
+    settings->setValue("main/write_display", displayWrite->toolTip() == DEFAULT_WRITE_DISPLAYING ? 0 : 1);
+    settings->setValue("main/read_display", displayRead->toolTip() == DEFAULT_READ_DISPLAYING ? 0 : 1);
     settings->setValue("main/write_log_timeout", writeLogTimer->interval());
     settings->setValue("main/read_log_timeout", readLogTimer->interval());
 
@@ -855,10 +855,20 @@ void MainWindow::loadSession()
 
     writeEncodingMode->setCurrentIndex(settings->value("main/write_encoding_mode", DEFAULT_MODE).toInt());
     readEncodingMode->setCurrentIndex(settings->value("main/read_encoding_mode", DEFAULT_MODE).toInt());
-    displayWrite->setChecked(settings->value("main/write_display", DEFAULT_DISPLAYING).toBool());
-    toggleWriteDisplay(displayWrite->isChecked());
-    displayRead->setChecked(settings->value("main/read_display", DEFAULT_DISPLAYING).toBool());
-    toggleReadDisplay(displayRead->isChecked());
+    if(settings->value("main/write_display", 0).toInt() == 0) {
+        displayWrite->setIcon(QIcon(":/Resources/Display.png"));
+        displayWrite->setToolTip(DEFAULT_WRITE_DISPLAYING);
+    } else {
+        displayWrite->setIcon(QIcon(":/Resources/Hide.png"));
+        displayWrite->setToolTip(tr("Hiding write data"));
+    }
+    if(settings->value("main/read_display", 0).toInt() == 0) {
+        displayRead->setIcon(QIcon(":/Resources/Display.png"));
+        displayRead->setToolTip(DEFAULT_READ_DISPLAYING);
+    } else {
+        displayRead->setIcon(QIcon(":/Resources/Hide.png"));
+        displayRead->setToolTip(tr("Hiding read data"));
+    }
     writeLogTimer->setInterval(settings->value("main/write_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
     readLogTimer->setInterval(settings->value("main/read_log_timeout", DEFAULT_LOG_TIMEOUT).toInt());
 
