@@ -41,6 +41,7 @@ const bool DEFAULT_DISPLAYING = true;
 const bool DEFAULT_CR_LF = false;
 const Qt::DockWidgetArea DEFAULT_MACROS_AREA = Qt::RightDockWidgetArea;
 const bool DEFAULT_MACROS_HIDDEN = true;
+const QString DEFAULT_SEND_MODE = QObject::tr("Single send");
 
 MainWindow::MainWindow(QString title, QWidget *parent)
     : QMainWindow(parent)
@@ -82,7 +83,7 @@ MainWindow::MainWindow(QString title, QWidget *parent)
     , displayRead(new QAction(QIcon(":/Resources/Display.png"), tr("Hide read data"), this))
     , manualCR(new QAction(QIcon(":/Resources/CR.png"), tr("Add CR"), this))
     , manualLF(new QAction(QIcon(":/Resources/LF.png"), tr("Add LF"), this))
-    , manualSendMode(new QAction(QIcon(":Resources/Single.png"), tr("Single send"), this))
+    , manualSendMode(new QAction(QIcon(":Resources/Single.png"), DEFAULT_SEND_MODE, this))
     , port(new QSerialPort(this))
     , comPortConfigure(new ComPortConfigure(port, this))
     , settings(new QSettings("settings.ini", QSettings::IniFormat))
@@ -499,7 +500,7 @@ void MainWindow::startSending(bool checked)
     }
 
     if(port->isOpen()) {
-        if(manualSendMode->toolTip() != tr("Single send")) {
+        if(manualSendMode->toolTip() != DEFAULT_SEND_MODE) {
             manualSendTimer->setInterval(manualRepeatSendTime->value());
             manualSendTimer->start();
 
@@ -739,7 +740,7 @@ void MainWindow::onManualModeSelect()
 
 void MainWindow::toggleManualSendMode()
 {
-    if(manualSendMode->toolTip() == tr("Single send")) {
+    if(manualSendMode->toolTip() == DEFAULT_SEND_MODE) {
         manualSendMode->setIcon(QIcon(":Resources/Period.png"));
         manualSendMode->setToolTip(tr("Periodic send"));
         manualRepeatSendTime->setEnabled(true);
@@ -827,7 +828,7 @@ void MainWindow::saveSession()
     settings->setValue("main/separator", separatorEdit->text().isEmpty() ? DEFAULT_SEPARATOR : separatorEdit->text());
     settings->setValue("main/manual_encoding_send_mode", manualSendEncodingMode->currentIndex());
     settings->setValue("main/repeat_send_interval", manualRepeatSendTime->value());
-    settings->setValue("main/send_mode", manualSendMode->toolTip() == tr("Single send") ? 0 : 1);
+    settings->setValue("main/send_mode", manualSendMode->toolTip() == DEFAULT_SEND_MODE ? 0 : 1);
     settings->setValue("main/CR", manualCR->isChecked());
     settings->setValue("main/LF", manualLF->isChecked());
 

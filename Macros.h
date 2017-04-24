@@ -40,7 +40,7 @@ private:
     QSpinBox *spinBoxTime;
     QAction *actionSelectMacros;
     QAction *actionDeselectMacros;
-    QAction *actionCycleSend;
+    QAction *actionSendMode;
     QList<Macro*> macros;
     QWidget *mainWidget;
     QVBoxLayout *scrollAreaLayout;

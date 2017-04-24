@@ -15,7 +15,7 @@
 const int DEFAULT_TIME = 50; // ms
 const int DEFAULT_COUNT = 0;
 const QString MULTI_SEND_TIME = QObject::tr("Multiple send time, ms: %1");
-const bool DEFAULT_CYCLE_MODE = false;
+const QString DEFAULT_SEND_MODE = QObject::tr("Single shot sending mode");
 
 Macros::Macros(QWidget *parent)
     : QMainWindow(parent)
@@ -27,7 +27,7 @@ Macros::Macros(QWidget *parent)
     , spinBoxTime(new QSpinBox(this))
     , actionSelectMacros(new QAction(QIcon(":/Resources/Select.png"), tr("Select macros"), this))
     , actionDeselectMacros(new QAction(QIcon(":/Resources/Deselect.png"), tr("Deselect macros"), this))
-    , actionCycleSend(new QAction(QIcon(":/Resources/Cycle.png"), tr("Cycle sending mode"), this))
+    , actionSendMode(new QAction(QIcon(":/Resources/Cycle.png"), tr("Cycle sending mode"), this))
     , mainWidget(new QWidget(this))
     , scrollAreaLayout(new QVBoxLayout)
     , scrollArea(new QScrollArea(this))
@@ -39,7 +39,6 @@ Macros::Macros(QWidget *parent)
 {
     actionPause->setCheckable(true);
     actionPause->setEnabled(false);
-    actionCycleSend->setCheckable(true);
     spinBoxTime->setRange(1, 60000);
     spinBoxTime->setToolTip(tr("Time, ms"));
     QToolBar *toolBar = new QToolBar(this);
@@ -48,7 +47,7 @@ Macros::Macros(QWidget *parent)
     actionTime->setDefaultWidget(spinBoxTime);
     QList<QAction*> actions;
     actions << actionDelete << actionSelectMacros << actionDeselectMacros << actionTime
-            << actionNew << actionLoad << actionStartStop << actionPause << actionCycleSend;
+            << actionNew << actionLoad << actionStartStop << actionPause << actionSendMode;
     toolBar->addActions(actions);
     toolBar->setMovable(false);
     addToolBar(Qt::TopToolBarArea, toolBar);
@@ -84,7 +83,7 @@ Macros::Macros(QWidget *parent)
     connect(actionLoad, &QAction::triggered, this, &Macros::loadMacros);
     connect(actionStartStop, &QAction::triggered, this, &Macros::startOrStop);
     connect(actionPause, &QAction::triggered, this, &Macros::pause);
-    connect(actionCycleSend, &QAction::toggled, this, &Macros::cycleSingleSendMode);
+    connect(actionSendMode, &QAction::triggered, this, &Macros::cycleSingleSendMode);
     connect(intervalTimer, &QTimer::timeout, this, &Macros::sendNextMacro);
 }
 
@@ -92,7 +91,7 @@ void Macros::saveSettings(QSettings *settings)
 {
     settings->remove("macros");
     settings->setValue("macros/time", spinBoxTime->value());
-    settings->setValue("macros/cycle_send_mode", actionCycleSend->isChecked());
+    settings->setValue("macros/send_mode", actionSendMode->toolTip() == DEFAULT_SEND_MODE ? 0 : 1);
 
     int macroIndex = 1;
     QListIterator<Macro*> it(macros);
@@ -108,7 +107,13 @@ void Macros::saveSettings(QSettings *settings)
 void Macros::loadSettings(QSettings *settings)
 {
     spinBoxTime->setValue(settings->value("macros/time", DEFAULT_TIME).toInt());
-    actionCycleSend->setChecked(settings->value("macros/cycle_send_mode", DEFAULT_CYCLE_MODE).toBool());
+    if(settings->value("macros/send_mode", 0).toInt() == 0) {
+        actionSendMode->setIcon(QIcon(":/Resources/SingleShot.png"));
+        actionSendMode->setToolTip(tr("Single shot sending mode"));
+    } else {
+        actionSendMode->setIcon(QIcon(":/Resources/Cycle.png"));
+        actionSendMode->setToolTip(tr("Cycle sending mode"));
+    }
 
     int macrosCount = settings->value("macros/count", DEFAULT_COUNT).toInt();
     for(int macroIndex = 1; macroIndex <= macrosCount; ++macroIndex) {
@@ -321,7 +326,7 @@ void Macros::sendNextMacro()
     Macro *macro = macros.at(indexesOfIntervals.at(currentIntervalIndex++));
     if(currentIntervalIndex >= indexesOfIntervals.size()) {
         currentIntervalIndex = 0;
-        if(actionCycleSend->isChecked()) {
+        if(actionSendMode->toolTip() == DEFAULT_SEND_MODE) {
 
             emit packetSended(macro->getPacket());
 
@@ -344,7 +349,7 @@ void Macros::blockForMultiSend(bool block)
     spinBoxTime->setDisabled(block);
     actionNew->setDisabled(block);
     actionLoad->setDisabled(block);
-    actionCycleSend->setDisabled(block);
+    actionSendMode->setDisabled(block);
 
     QListIterator<Macro*> it(macros);
     while(it.hasNext()) {
@@ -370,12 +375,12 @@ void Macros::calculateMultiSendCeiledTime()
 
 void Macros::cycleSingleSendMode()
 {
-    if(actionCycleSend->isChecked()) {
-        actionCycleSend->setIcon(QIcon(":/Resources/SingleShot.png"));
-        actionCycleSend->setToolTip(tr("Single shot sending mode"));
+    if(actionSendMode->toolTip() == DEFAULT_SEND_MODE) {
+        actionSendMode->setIcon(QIcon(":/Resources/Cycle.png"));
+        actionSendMode->setToolTip(tr("Cycle sending mode"));
     } else {
-        actionCycleSend->setIcon(QIcon(":/Resources/Cycle.png"));
-        actionCycleSend->setToolTip(tr("Cycle sending mode"));
+        actionSendMode->setIcon(QIcon(":/Resources/SingleShot.png"));
+        actionSendMode->setToolTip(tr("Single shot sending mode"));
     }
 }
 
