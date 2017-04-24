@@ -135,6 +135,15 @@ void Macro::selectTrigger()
     emit selected(selectState());
 }
 
+void Macro::onPacketChanged()
+{
+    int minimumTime = 1;
+    if(packetTimeCalculator != 0 && packetTimeCalculator->isValid()) {
+        minimumTime = qCeil(packetTimeCalculator->calculateTime(getPacket().size()));
+    }
+    spinBoxTime->setMinimum(minimumTime);
+}
+
 void Macro::view()
 {
     buttonDelete->setFixedWidth(25);
@@ -192,4 +201,5 @@ void Macro::connections()
     connect(buttonDown, &ClickableLabel::clicked, this, &Macro::movedDown);
     connect(macroEdit, &MacroEdit::titleChanged, buttonSend, &ClickableLabel::setText);
     connect(macroEdit, &MacroEdit::titleChanged, this, &Macro::titleChanged);
+    connect(macroEdit, &MacroEdit::packetChanged, this, &Macro::onPacketChanged);
 }

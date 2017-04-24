@@ -30,6 +30,7 @@ public:
     void openMacroFile(const QString &fileName);
 signals:
     void titleChanged(const QString &title);
+    void packetChanged(const QByteArray &packet);
 private:
     QToolBar *toolBar;
     QAction *actionNew;
@@ -87,6 +88,7 @@ private:
     void openMacroFile();
     void saveMacroFile();
     void saveAsMacroFile();
+    void onPacketChanged();
 };
 
 #endif // MACRO_EDIT_WIDGET_H

@@ -61,6 +61,7 @@ private:
     void sendPacket();
     void titleChanged();
     void selectTrigger();
+    void onPacketChanged();
 };
 
 #endif // MACRO_H

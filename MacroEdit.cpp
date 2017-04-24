@@ -152,6 +152,11 @@ void MacroEdit::saveAsMacroFile()
     emit titleChanged(fileName);
 }
 
+void MacroEdit::onPacketChanged()
+{
+    emit packetChanged(getPacket());
+}
+
 void MacroEdit::formPacket()
 {
     QListIterator<DataTable*> itMacroGroups(macroGroups);
@@ -277,6 +282,8 @@ void MacroEdit::connections()
 
     connect(actionRawEdit, &QAction::triggered, this, &MacroEdit::onEditRawData);
     connect(actionClearSelectedGroup, &QAction::triggered, this, &MacroEdit::clearSelectedGroup);
+    connect(actionCR, &QAction::triggered, this, &MacroEdit::onPacketChanged);
+    connect(actionLF, &QAction::triggered, this, &MacroEdit::onPacketChanged);
     connect(actionAddGroup, &QAction::triggered, this, &MacroEdit::addGroup);
     connect(actionDeleteGroup, &QAction::triggered, this, &MacroEdit::deleteGroup);
 
