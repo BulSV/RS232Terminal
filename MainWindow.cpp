@@ -294,6 +294,8 @@ void MainWindow::connections()
     connect(manualSendEncodingMode, &QComboBox::currentTextChanged, this, &MainWindow::manualPacketEdited);
     connect(manualSendPacket, &QAction::triggered, this, &MainWindow::startSending);
     connect(manualPacketEdit, &QLineEdit::returnPressed, [this](){startSending();});
+    connect(manualCR, &QAction::triggered, this, &MainWindow::manualPacketEdited);
+    connect(manualLF, &QAction::triggered, this, &MainWindow::manualPacketEdited);
     connect(manualSendTimer, SIGNAL(timeout()), this, SLOT(singleSend()));
     connect(manualSendMode, &QAction::triggered, this, &MainWindow::toggleManualSendMode);
     connect(delayBetweenPacketsTimer, &QTimer::timeout, this, &MainWindow::delayBetweenPacketsEnded);
@@ -761,7 +763,8 @@ void MainWindow::manualPacketEdited()
     if(packetTimeCalculator != 0 && packetTimeCalculator->isValid()) {
         DataEncoder *dataEncoder = getEncoder(manualSendEncodingMode->currentIndex());
         dataEncoder->setData(manualPacketEdit->text(), manualSeparatorEdit->text());
-        minimumTime = qCeil(packetTimeCalculator->calculateTime(dataEncoder->encodedByteArray().size()));
+        int additionalBytes = (manualCR->isChecked() ? 1 : 0) + (manualLF->isChecked() ? 1 : 0);
+        minimumTime = qCeil(packetTimeCalculator->calculateTime(dataEncoder->encodedByteArray().size() + additionalBytes));
     }
     manualRepeatSendTime->setMinimum(minimumTime);
 }
